@@ -10,3 +10,12 @@
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-text-size-adjust: 100%;
 }
+
+body {
+	margin: 0;
+}
+
+html, body, #app {
+	width: 100%;
+	height: 100%;
+}

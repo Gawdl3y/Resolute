@@ -33,6 +33,7 @@ fn main() -> anyhow::Result<()> {
 				.with_state_flags(StateFlags::POSITION | StateFlags::SIZE | StateFlags::MAXIMIZED)
 				.build(),
 		)
+		.plugin(tauri_plugin_store::Builder::default().build())
 		.invoke_handler(tauri::generate_handler![show_window, load_manifest])
 		.setup(|app| {
 			let window = app.get_window("main").expect("unable to get main window");
