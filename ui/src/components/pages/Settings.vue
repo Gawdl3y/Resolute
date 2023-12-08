@@ -52,6 +52,7 @@ async function findResonitePath() {
 	}
 
 	await settings.store.set('resonitePath', dir);
+	await settings.store.save();
 }
 </script>
 
