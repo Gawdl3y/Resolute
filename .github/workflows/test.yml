@@ -2,7 +2,7 @@ name: Tests
 on: [push, pull_request]
 jobs:
   clippy:
-    name: Clippy
+    name: Lint Rust with Clippy
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -21,7 +21,7 @@ jobs:
         env:
           RUSTFLAGS: -Dwarnings
 
-  lint:
+  eslint:
     name: Lint JavaScript with ESLint
     runs-on: ubuntu-22.04
     steps:
@@ -39,7 +39,7 @@ jobs:
       - name: Run ESLint on changed files
         uses: tj-actions/eslint-changed-files@v21
 
-  format:
+  prettier:
     name: Lint formatting with Prettier
     runs-on: ubuntu-22.04
     steps:
