@@ -46,7 +46,7 @@ on:
 
 jobs:
   tauri:
-    name: Build Tauri app
+    name: Build app
     strategy:
       fail-fast: false
       matrix:

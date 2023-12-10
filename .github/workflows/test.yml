@@ -7,7 +7,7 @@ on:
 
 jobs:
   clippy:
-    name: Lint backend with Clippy
+    name: Lint backend
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -33,7 +33,7 @@ jobs:
           RUSTFLAGS: -Dwarnings
 
   eslint:
-    name: Lint frontend with ESLint
+    name: Lint frontend
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -52,7 +52,7 @@ jobs:
         uses: tj-actions/eslint-changed-files@v21
 
   prettier:
-    name: Check formatting with Prettier
+    name: Check formatting
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -68,7 +68,7 @@ jobs:
           clean_node_folder: false
 
   tauri:
-    name: Build Tauri app
+    name: Build app
     uses: ./.github/workflows/build-tauri-app.yml
     secrets:
       updaterKey: ${{ secrets.TAURI_UPDATER_KEY }}
