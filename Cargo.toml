@@ -6,3 +6,7 @@ resolver = "2"
 lto = "thin"
 codegen-units = 1
 panic = "abort"
+
+[profile.ci]
+inherits = "release"
+codegen-units = 16
