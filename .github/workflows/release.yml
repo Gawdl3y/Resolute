@@ -4,6 +4,7 @@ on:
     branches: ['release']
 permissions:
   contents: write
+
 jobs:
   test:
     name: Test
@@ -11,7 +12,7 @@ jobs:
 
   release:
     name: Release
-    needs: [test]
+    needs: test
     uses: ./.github/workflows/build-tauri-app.yml
     with:
       tagName: __VERSION__

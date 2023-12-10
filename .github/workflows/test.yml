@@ -4,6 +4,7 @@ on:
     branches-ignore: ['release']
   pull_request:
   workflow_call:
+
 jobs:
   clippy:
     name: Lint Rust with Clippy
@@ -19,6 +20,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Cargo dependency cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ github.ref }}
+          save-if: false
 
       - name: Run Clippy
         run: cargo clippy
@@ -36,6 +43,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
