@@ -9,15 +9,19 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
   - Downloading
   - Caching
   - Parsing
+- Rudimentary mod management
+	- Listing
+	- Installation
 
 ## Planned features / Goals
 
-- Mod management
+- Proper mod management
   - Listing (installed and all available)
   - Installation
+	- Tracking installed mods
   - Updating (automatic and manual checks)
   - Deletion
-  - Detection of already-installed mods
+  - Detection of externally-installed mods
 - Dependency resolution
   - Automatic installation
   - Conflict warnings
