@@ -55,7 +55,7 @@
 		"updater": {
 			"active": true,
 			"dialog": true,
-			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY0RDM2QjQ5NjFCRUEwNEEKUldSS29MNWhTV3ZUOUFrOVBjcXgzYjYyaUFjM0xmZVVOSlBLemw2WG1GdXVwQjZ4eU5VRmF6bmwK",
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFREFBMzMxM0Q2MjNDNTUKUldSVlBHSTlNYVBhZmlOcjFScm80c2dYSElvS2o0MTlGQ3VRU0tvTXdiY3FDdnp4WWVQelJ3cm0K",
 			"endpoints": [
 				"https://github.com/Gawdl3y/Resolute/releases/latest/download/latest.json"
 			]
