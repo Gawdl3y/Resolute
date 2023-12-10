@@ -60,6 +60,7 @@ jobs:
           clean_node_folder: false
 
   tauri:
+    name: Build Tauri app
     uses: ./.github/workflows/build-tauri-app.yml
     with:
       args: -- --profile ci
