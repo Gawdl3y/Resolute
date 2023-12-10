@@ -14,7 +14,14 @@ tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
 resolute = { path = "../resolute" }
-tauri = { version = "1.5", features = [ "dialog-ask", "path-all", "fs-exists", "dialog-open", "shell-open"] }
+tauri = { version = "1.5", features = [
+	"updater",
+	"dialog-ask",
+	"path-all",
+	"fs-exists",
+	"dialog-open",
+	"shell-open",
+] }
 tokio = { version = "1.34", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
