@@ -6,6 +6,11 @@
 				<template #title>Dashboard</template>
 			</el-menu-item>
 
+			<el-menu-item index="/mods">
+				<el-icon><i-ep-goods /></el-icon>
+				<template #title>All Mods</template>
+			</el-menu-item>
+
 			<el-menu-item index="/settings">
 				<el-icon><i-ep-setting /></el-icon>
 				<template #title>Settings</template>

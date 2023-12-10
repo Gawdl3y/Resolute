@@ -27,7 +27,7 @@ pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
 				ResoluteMod {
 					id,
 					authors,
-					versions: build_mod_versions_map(entry.versions),
+					versions: build_mod_versions_map(entry.versions, &entry.category),
 					name: entry.name,
 					description: entry.description,
 					category: entry.category,
@@ -57,14 +57,14 @@ fn build_mod_authors(authors: ManifestAuthors) -> Vec<ModAuthor> {
 }
 
 /// Build a versions map from manifest data
-fn build_mod_versions_map(versions: ManifestEntryVersions) -> HashMap<String, ModVersion> {
+fn build_mod_versions_map(versions: ManifestEntryVersions, category: &str) -> HashMap<String, ModVersion> {
 	versions
 		.into_iter()
 		.map(|(semver, version)| ModVersion {
 			semver,
 			dependencies: build_mod_version_dependencies(version.dependencies),
 			conflicts: build_mod_version_dependencies(version.conflicts),
-			artifacts: build_mod_version_artifacts(version.artifacts),
+			artifacts: build_mod_version_artifacts(version.artifacts, category),
 			release_url: version.release_url,
 		})
 		.map(|version| (version.semver.clone(), version))
@@ -84,8 +84,11 @@ fn build_mod_version_dependencies(dependencies: Option<ManifestEntryDependencies
 }
 
 /// Build an artifacts map from manifest data for a mod version
-fn build_mod_version_artifacts(artifacts: Vec<ManifestEntryArtifact>) -> Vec<ModArtifact> {
-	artifacts.into_iter().map(|artifact| artifact.into()).collect()
+fn build_mod_version_artifacts(artifacts: Vec<ManifestEntryArtifact>, category: &str) -> Vec<ModArtifact> {
+	artifacts
+		.into_iter()
+		.map(|artifact| ModArtifact::from_manifest_and_category(artifact, category))
+		.collect()
 }
 
 /// ResoniteMods mapped by their ID
@@ -138,9 +141,23 @@ pub struct ModArtifact {
 	pub install_location: Option<String>,
 }
 
+impl ModArtifact {
+	fn from_manifest_and_category(value: ManifestEntryArtifact, category: &str) -> Self {
+		Self {
+			url: value.url,
+			sha256: value.sha256,
+			filename: value.filename,
+			install_location: value.install_location.or_else(|| match category {
+				"Plugins" => Some("/Libraries".to_owned()),
+				_ => None,
+			}),
+		}
+	}
+}
+
 impl From<ManifestEntryArtifact> for ModArtifact {
 	fn from(value: ManifestEntryArtifact) -> Self {
-		ModArtifact {
+		Self {
 			url: value.url,
 			sha256: value.sha256,
 			filename: value.filename,

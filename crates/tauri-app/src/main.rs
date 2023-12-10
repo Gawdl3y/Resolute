@@ -1,18 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::io;
+use std::{io, path::PathBuf};
 
 use anyhow::Context;
 use log::{debug, warn};
 use resolute::{
+	download::Downloader,
 	manifest,
-	mods::{self, ResoluteModMap},
+	mods::{self, ModVersion, ResoluteModMap},
 };
-use tauri::{Manager, WindowEvent};
+use tauri::{AppHandle, Manager, Window, WindowEvent, Wry};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
+use tauri_plugin_store::{with_store, StoreCollection};
 use tauri_plugin_window_state::StateFlags;
-use tokio::{fs, join};
+use tokio::{fs, join, sync::Mutex};
 
 #[cfg(debug_assertions)]
 const LOG_TARGETS: [LogTarget; 3] = [LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview];
@@ -37,7 +39,9 @@ fn main() -> anyhow::Result<()> {
 				.build(),
 		)
 		.plugin(tauri_plugin_store::Builder::default().build())
-		.invoke_handler(tauri::generate_handler![show_window, load_manifest])
+		.invoke_handler(tauri::generate_handler![show_window, load_manifest, download_version])
+		.manage(Downloader::default())
+		.manage(ResoluteState::default())
 		.setup(|app| {
 			let window = app.get_window("main").expect("unable to get main window");
 
@@ -71,7 +75,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Creates any missing app directories
-async fn create_app_dirs(app: tauri::AppHandle) -> Result<(), String> {
+async fn create_app_dirs(app: AppHandle) -> Result<(), String> {
 	// Create all of the directories
 	let resolver = app.path_resolver();
 	let results: [Result<(), io::Error>; 3] = join!(
@@ -101,12 +105,12 @@ async fn create_app_dirs(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn show_window(window: tauri::Window) {
+fn show_window(window: Window) {
 	window.show().expect("unable to show main window");
 }
 
 #[tauri::command]
-async fn load_manifest(app: tauri::AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
+async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
 	// Build the config for all manifest operations
 	let config = manifest::ManifestConfig::default().cache(
 		app.path_resolver()
@@ -131,7 +135,37 @@ async fn load_manifest(app: tauri::AppHandle, bypass_cache: bool) -> Result<Reso
 	.await
 	.map_err(|err| format!("Error loading manifest: {}", err))??;
 
+	let state = app.state::<ResoluteState>();
+	*state.mods.lock().await = mods.clone();
 	Ok(mods)
+}
+
+#[tauri::command]
+async fn download_version(app: AppHandle, version: ModVersion) -> Result<(), String> {
+	// Retrieve the Resonite path setting
+	let stores = app.state::<StoreCollection<Wry>>();
+	let resonite_path: String = serde_json::from_value(
+		with_store(app.clone(), stores, ".settings.dat", |store| {
+			Ok(store.get("resonitePath").cloned())
+		})
+		.map_err(|err| format!("Unable to retrieve Resonite path setting: {}", err))?
+		.ok_or("No Resonite path is configured")?,
+	)
+	.map_err(|err| format!("Unable to deserialize Resonite path setting value: {}", err))?;
+
+	// Download the version
+	let downloader = app.state::<Downloader>();
+	downloader
+		.download_version(&version, PathBuf::from(resonite_path).as_path(), |_, _| {})
+		.await
+		.map_err(|err| format!("Unable to download mod version: {}", err))?;
+
+	Ok(())
+}
+
+#[derive(Default)]
+struct ResoluteState {
+	mods: Mutex<ResoluteModMap>,
 }
 
 #[derive(Clone, serde::Serialize)]

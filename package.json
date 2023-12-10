@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@tauri-apps/api": "^1.5.1",
 		"element-plus": "^2.4.3",
+		"pinia": "^2.1.7",
 		"tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
 		"tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
 		"unplugin-auto-import": "^0.17.1",
