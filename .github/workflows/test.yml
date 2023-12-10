@@ -70,3 +70,6 @@ jobs:
   tauri:
     name: Build Tauri app
     uses: ./.github/workflows/build-tauri-app.yml
+    secrets:
+      updaterKey: ${{ secrets.TAURI_UPDATER_KEY }}
+      updaterKeyPassword: ${{ secrets.TAURI_UPDATER_KEY_PASSWORD }}

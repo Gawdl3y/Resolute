@@ -40,9 +40,9 @@ on:
     # Secrets for the updater
     secrets:
       updaterKey:
-        required: false
+        required: true
       updaterKeyPassword:
-        required: false
+        required: true
 
 jobs:
   tauri:
