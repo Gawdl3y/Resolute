@@ -54,8 +54,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Prettier
-        run: npm run format:check
+      - name: Run Prettier on changed files
+        uses: creyD/prettier_action@v4.3
+        with:
+          dry: true
+          only_changed: true
+          prettier_options: --check .
 
   tauri:
     name: Build Tauri app
