@@ -11,15 +11,14 @@ const compat = new FlatCompat({
 });
 
 export default [
+	{ ignores: ['ui/dist', 'target'] },
+
 	js.configs.recommended,
 	...compat.extends('plugin:vue/vue3-recommended'),
 	...compat.extends('plugin:prettier-vue/recommended'),
 
 	{
-		files: ['ui/src/**/*.{js,vue}'],
-		plugins: {
-			vue,
-		},
-		rules: {},
+		files: ['**/*.vue'],
+		plugins: { vue },
 	},
 ];

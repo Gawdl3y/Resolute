@@ -10,8 +10,8 @@
 		"tauri": "tauri",
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
-		"format": "prettier --write ui",
-		"format:check": "prettier --check ui"
+		"format": "prettier --write .",
+		"format:check": "prettier --check ."
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^1.5.1",
