@@ -21,8 +21,8 @@ jobs:
         env:
           RUSTFLAGS: -Dwarnings
 
-  eslint:
-    name: ESLint
+  lint:
+    name: Lint JavaScript with ESLint
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -38,6 +38,24 @@ jobs:
 
       - name: Run ESLint on changed files
         uses: tj-actions/eslint-changed-files@v21
+
+  format:
+    name: Lint formatting with Prettier
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prettier
+        run: npm run format:check
 
   tauri:
     name: Build Tauri app
