@@ -51,7 +51,9 @@ jobs:
         with:
           dry: true
           only_changed: true
+          prettier_version: 3.1.1
           prettier_options: --check .
+          clean_node_folder: false
 
   tauri:
     name: Build Tauri app
