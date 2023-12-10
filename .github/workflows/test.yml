@@ -24,7 +24,7 @@ jobs:
       - name: Setup Cargo dependency cache
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: ${{ github.ref }}
+          shared-key: shared
           save-if: false
 
       - name: Run Clippy
