@@ -18,3 +18,5 @@ jobs:
       tagName: __VERSION__
       releaseName: Resolute v__VERSION__
       releaseDraft: true
+      includeUpdaterJson: true
+      updaterJsonPreferNsis: true

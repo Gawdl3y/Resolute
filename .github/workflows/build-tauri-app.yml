@@ -30,6 +30,12 @@ on:
       prerelease:
         type: boolean
         required: false
+      includeUpdaterJson:
+        type: boolean
+        required: false
+      updaterJsonPreferNsis:
+        type: boolean
+        required: false
 
 jobs:
   tauri:
@@ -79,3 +85,5 @@ jobs:
           releaseBody: ${{ inputs.releaseBody }}
           releaseDraft: ${{ inputs.releaseDraft }}
           prerelease: ${{ inputs.prerelease }}
+          includeUpdaterJson: ${{ inputs.includeUpdaterJson }}
+          updaterJsonPreferNsis: ${{ inputs.updaterJsonPreferNsis }}
