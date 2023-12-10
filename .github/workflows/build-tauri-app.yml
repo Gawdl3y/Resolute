@@ -37,6 +37,13 @@ on:
         type: boolean
         required: false
 
+    # Secrets for the updater
+    secrets:
+      updaterKey:
+        required: false
+      updaterKeyPassword:
+        required: false
+
 jobs:
   tauri:
     name: Build Tauri app
@@ -78,6 +85,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.updaterKey }}
+          TAURI_KEY_PASSWORD: ${{ secrets.updaterKeyPassword }}
         with:
           args: ${{ inputs.args }}
           tagName: ${{ inputs.tagName }}
