@@ -9,6 +9,7 @@ jobs:
 
   build:
     name: Build & release Tauri app
+    needs: [test]
     uses: ./.github/workflows/build-tauri-app.yml
     with:
       tagName: __VERSION__
