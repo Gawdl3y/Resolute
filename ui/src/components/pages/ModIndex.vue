@@ -16,4 +16,5 @@ import useModStore from '../../stores/mods';
 import ModTable from '../ModTable.vue';
 
 const modStore = useModStore();
+const test = 42;
 </script>
