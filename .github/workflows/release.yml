@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    branches: ['release']
+    tags: ['release']
 permissions:
   contents: write
 
@@ -23,6 +23,9 @@ jobs:
       - name: Build changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          commitMode: true
+          failOnError: true
 
   release:
     name: Release
