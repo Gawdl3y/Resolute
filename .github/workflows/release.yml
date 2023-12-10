@@ -1,0 +1,16 @@
+name: Publish release
+on:
+  push:
+    branches: ['release']
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+
+  build:
+    name: Build & release Tauri app
+    uses: ./.github/workflows/build-tauri-app.yml
+    with:
+      tagName: __VERSION__
+      releaseName: Resolute v__VERSION__
+      releaseDraft: true
