@@ -7,7 +7,7 @@ on:
 
 jobs:
   clippy:
-    name: Lint Rust with Clippy
+    name: Lint backend with Clippy
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -33,7 +33,7 @@ jobs:
           RUSTFLAGS: -Dwarnings
 
   eslint:
-    name: Lint JavaScript with ESLint
+    name: Lint frontend with ESLint
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
