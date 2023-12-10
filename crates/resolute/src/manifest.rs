@@ -4,7 +4,6 @@ use std::{
 	time::{Duration, SystemTime},
 };
 
-use anyhow::{bail, Result};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::{
@@ -12,6 +11,8 @@ use tokio::{
 	io::{self, AsyncReadExt},
 };
 use url::Url;
+
+use crate::{Error, Result};
 
 /// Default Resonite mod manifest JSON file URL (from the Resonite Modding Group repository)
 pub const MANIFEST_URL: &str =
@@ -24,10 +25,7 @@ pub async fn download(config: &ManifestConfig) -> Result<String> {
 	let response = reqwest::get(config.remote_url.clone()).await?;
 	let status = response.status();
 	if !status.is_success() {
-		bail!(
-			"Failed to download manifest as the HTTP request was unsuccessful: {}",
-			status
-		);
+		return Err(Error::Http(status));
 	}
 	let json = response.text().await?;
 

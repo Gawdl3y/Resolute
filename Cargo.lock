@@ -2900,7 +2900,6 @@ dependencies = [
 name = "resolute"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "futures-util",
  "log",
  "path-clean",
