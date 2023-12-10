@@ -1,7 +1,23 @@
-name: Testing
+name: Tests
 on: [push, pull_request]
 jobs:
-  test-tauri:
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Clippy
+        run: cargo clippy
+        env:
+          RUSTFLAGS: -Dwarnings
+
+  tauri:
+    name: Test Tauri build
     strategy:
       fail-fast: false
       matrix:
