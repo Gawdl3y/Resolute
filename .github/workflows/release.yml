@@ -9,8 +9,8 @@ jobs:
     name: Test
     uses: ./.github/workflows/test.yml
 
-  build:
-    name: Build & release Tauri app
+  release:
+    name: Release
     needs: [test]
     uses: ./.github/workflows/build-tauri-app.yml
     with:
