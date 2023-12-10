@@ -11,13 +11,27 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
 
+  changelog:
+    name: Changelog
+    runs-on: ubuntu-22.04
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+
   release:
     name: Release
-    needs: test
+    needs: [test, changelog]
     uses: ./.github/workflows/build-tauri-app.yml
     with:
-      tagName: __VERSION__
+      tagName: v__VERSION__
       releaseName: Resolute v__VERSION__
+      releaseBody: ${{ needs.changelog.outputs.changelog }}
       releaseDraft: true
       includeUpdaterJson: true
       updaterJsonPreferNsis: true
