@@ -1,0 +1,56 @@
+name: Build Tauri app
+on:
+  workflow_call:
+    inputs:
+      args:
+        type: string
+        required: false
+      tagName:
+        type: string
+        required: false
+      releaseName:
+        type: string
+        required: false
+      releaseBody:
+        type: string
+        required: false
+      releaseDraft:
+        type: boolean
+        required: false
+      prerelease:
+        type: boolean
+        required: false
+jobs:
+  tauri:
+    name: Build Tauri app
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-22.04, windows-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: ${{ inputs }}
