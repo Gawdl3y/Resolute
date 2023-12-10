@@ -62,7 +62,7 @@ jobs:
         if: inputs.cache
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: ${{ github.ref }}
+          shared-key: shared
           save-if: ${{ inputs.writeCache }}
 
       - name: Install frontend dependencies
