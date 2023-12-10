@@ -21,7 +21,7 @@ impl Downloader {
 	}
 
 	/// Downloads all relevant artifacts for a specific mod version to their proper destinations in the given base path
-	pub async fn download_version<P>(&self, version: &ModVersion, base_dest: &Path, progress: P) -> Result<(), Error>
+	pub async fn download_version<P>(&self, version: &ModVersion, base_dest: &Path, progress: P) -> Result<()>
 	where
 		P: Fn(u64, u64),
 	{
@@ -33,7 +33,7 @@ impl Downloader {
 	}
 
 	/// Downloads a specific artifact to its proper destination in the given base path
-	pub async fn download_artifact<P>(&self, artifact: &ModArtifact, base_dest: &Path, progress: P) -> Result<(), Error>
+	pub async fn download_artifact<P>(&self, artifact: &ModArtifact, base_dest: &Path, progress: P) -> Result<()>
 	where
 		P: Fn(u64, u64),
 	{
@@ -81,7 +81,7 @@ impl Downloader {
 	}
 
 	/// Downloads a file to a destination path, emitting progress updates along the way
-	pub(crate) async fn download<P>(&self, url: impl IntoUrl, dest: &Path, progress: P) -> Result<(), Error>
+	pub(crate) async fn download<P>(&self, url: impl IntoUrl, dest: &Path, progress: P) -> Result<()>
 	where
 		P: Fn(u64, u64),
 	{
@@ -129,3 +129,6 @@ pub enum Error {
 	#[error("unable to process path: {0}")]
 	Path(String),
 }
+
+/// Alias for a `Result` with the error type `download::Error`.
+pub type Result<T> = core::result::Result<T, Error>;
