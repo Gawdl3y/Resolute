@@ -1,9 +1,9 @@
 <template>
 	<el-container direction="vertical">
-		<Header>
+		<AppHeader>
 			<template #icon><i-ep-goods /></template>
 			All Mods
-		</Header>
+		</AppHeader>
 
 		<el-main>
 			<ModTable :mods="modStore.mods" />
@@ -13,6 +13,7 @@
 
 <script setup>
 import useModStore from '../../stores/mods';
+import AppHeader from '../AppHeader.vue';
 import ModTable from '../ModTable.vue';
 
 const modStore = useModStore();

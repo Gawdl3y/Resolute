@@ -1,9 +1,9 @@
 <template>
 	<el-container direction="vertical">
-		<Header>
+		<AppHeader>
 			<template #icon><i-ep-setting /></template>
 			Settings
-		</Header>
+		</AppHeader>
 
 		<el-main>
 			<el-form :model="settings.current">
@@ -25,29 +25,29 @@ import { exists as fsExists } from '@tauri-apps/api/fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
 
 import useSettings from '../../settings';
-import Header from '../Header.vue';
+import AppHeader from '../AppHeader.vue';
 
 const settings = useSettings();
 
 async function findResonitePath() {
 	let dir, exists;
 
-	while(!exists) {
+	while (!exists) {
 		// Prompt to choose a folder
 		dir = await open({
 			directory: true,
 			defaultPath: settings.current.resonitePath,
 		});
-		if(!dir) return;
+		if (!dir) return;
 
 		// Verify the existence of the Resonite executable
 		exists = await fsExists(await pathJoin(dir, 'Resonite.exe'));
-		if(!exists) {
+		if (!exists) {
 			const answer = await ask(
-				'Couldn\'t locate the Resonite executable.\nSet this as the game path anyways?',
+				"Couldn't locate the Resonite executable.\nSet this as the game path anyways?",
 				{ title: 'No Resonite Executable', type: 'warning' },
 			);
-			if(answer) break;
+			if (answer) break;
 		}
 	}
 

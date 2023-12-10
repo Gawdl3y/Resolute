@@ -1,5 +1,10 @@
 <template>
-	<el-menu router :default-active="router.currentRoute.value.path" :collapse="isCollapsed" class="sidebar-menu">
+	<el-menu
+		router
+		:default-active="router.currentRoute.value.path"
+		:collapse="isCollapsed"
+		class="sidebar-menu"
+	>
 		<el-menu-item-group>
 			<el-menu-item index="/">
 				<el-icon><i-ep-house /></el-icon>

@@ -1,6 +1,6 @@
 <template>
 	<el-container id="main">
-		<Sidebar />
+		<AppSidebar />
 		<router-view />
 	</el-container>
 </template>
@@ -11,7 +11,7 @@ import { invoke } from '@tauri-apps/api';
 import { info } from 'tauri-plugin-log-api';
 
 import useSettings from './settings';
-import Sidebar from './components/Sidebar.vue';
+import AppSidebar from './components/AppSidebar.vue';
 
 const settings = useSettings();
 settings.init();

@@ -1,6 +1,6 @@
 <template>
 	<el-button @click.prevent="loadManifest">
-		<template #icon v-if="$slots.icon"><slot name="icon" /></template>
+		<template v-if="$slots.icon" #icon><slot name="icon" /></template>
 		<slot />
 	</el-button>
 </template>
@@ -15,11 +15,13 @@ const modStore = useModStore();
 
 async function loadManifest() {
 	try {
-		const mods = await invoke('load_manifest', { bypassCache: props.bypassCache });
+		const mods = await invoke('load_manifest', {
+			bypassCache: props.bypassCache,
+		});
 		console.debug('Mods loaded', mods);
 		modStore.$patch({ mods });
 		emit('load', mods);
-	} catch(err) {
+	} catch (err) {
 		console.error('Error loading mods', err);
 		emit('error', err);
 	}

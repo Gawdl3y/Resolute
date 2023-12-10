@@ -1,9 +1,9 @@
 <template>
 	<el-container direction="vertical">
-		<Header>
+		<AppHeader>
 			<template #icon><i-ep-house /></template>
 			Dashboard
-		</Header>
+		</AppHeader>
 
 		<el-main>
 			<LoadManifestButton type="primary">
@@ -20,6 +20,6 @@
 </template>
 
 <script setup>
-import Header from '../Header.vue';
+import AppHeader from '../AppHeader.vue';
 import LoadManifestButton from '../LoadManifestButton.vue';
 </script>

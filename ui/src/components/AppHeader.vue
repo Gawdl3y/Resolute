@@ -12,11 +12,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+// import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const canGoBack = computed(() => Boolean(window.history.state.back));
+// const canGoBack = computed(() => Boolean(window.history.state.back));
 
 function goBack() {
 	router.go(-1);

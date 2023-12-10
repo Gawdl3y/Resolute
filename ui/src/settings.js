@@ -13,7 +13,7 @@ function useSettings() {
 	 * Initializes the store and propagates changes automatically
 	 */
 	async function init() {
-		if(store) {
+		if (store) {
 			info('Tearing down old settings store');
 			storeUnlisten();
 		}
@@ -21,11 +21,13 @@ function useSettings() {
 		// Set up the store and change listener
 		info('Initializing settings store');
 		store = new Store('.settings.dat');
-		storeUnlisten = await store.onChange((key, val) => { settings[key] = val; });
+		storeUnlisten = await store.onChange((key, val) => {
+			settings[key] = val;
+		});
 
 		// Load all existing settings
 		const entries = await store.entries();
-		for(const [key, val] of entries) settings[key] = val;
+		for (const [key, val] of entries) settings[key] = val;
 	}
 
 	return {

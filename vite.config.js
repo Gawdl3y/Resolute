@@ -12,10 +12,7 @@ export default defineConfig(async () => ({
 	plugins: [
 		vue(),
 		AutoImport({
-			resolvers: [
-				ElementPlusResolver(),
-				IconsResolver({ prefix: 'Icon' }),
-			],
+			resolvers: [ElementPlusResolver(), IconsResolver({ prefix: 'Icon' })],
 		}),
 		Components({
 			resolvers: [

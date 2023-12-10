@@ -20,20 +20,24 @@ import { info, error } from 'tauri-plugin-log-api';
 import { computed } from 'vue';
 import { ElNotification } from 'element-plus';
 
-const props = defineProps({ mods: Object });
-const data = computed(() => props.mods ? Object.values(props.mods) : null);
+const props = defineProps({
+	mods: { type: Object, default: null },
+});
+const data = computed(() => (props.mods ? Object.values(props.mods) : null));
 
 async function handleInstall(mod) {
 	console.log('Triggering download', mod);
 
 	try {
-		await invoke('download_version', { version: Object.values(mod.versions)[0] });
+		await invoke('download_version', {
+			version: Object.values(mod.versions)[0],
+		});
 		info(`Installed ${mod.name}`);
 		ElNotification({
 			type: 'success',
 			title: `Installed ${mod.name}`,
 		});
-	} catch(err) {
+	} catch (err) {
 		error(`Error installing ${mod.name}: ${err}`);
 		ElNotification({
 			type: 'error',
