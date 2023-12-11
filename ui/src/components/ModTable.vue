@@ -1,31 +1,55 @@
 <template>
-	<el-auto-resizer>
-		<template #default="{ width, height }">
-			<el-table :data="data" :width="width" :height="height">
-				<el-table-column prop="name" label="Name" />
-				<el-table-column prop="description" label="Description" />
-				<el-table-column>
-					<template #default="scope">
-						<el-button @click="handleInstall(scope.row)">Install</el-button>
-					</template>
-				</el-table-column>
-			</el-table>
+	<v-data-table
+		:headers="headers"
+		:items="items"
+		item-key="id"
+		:items-per-page="25"
+		:loading="!mods"
+	>
+		<template #item="{ item: mod }">
+			<tr>
+				<td style="max-width: 14em; overflow-wrap: break-word">
+					{{ mod.name }}
+				</td>
+				<td>{{ mod.description }}</td>
+				<td>{{ mod.category }}</td>
+				<td>
+					<v-tooltip text="Install" :open-delay="500">
+						<template #activator="{ props: activator }">
+							<v-btn
+								:icon="mdiDownload"
+								variant="plain"
+								v-bind="activator"
+								@click="installMod(mod)"
+							/>
+						</template>
+					</v-tooltip>
+				</td>
+			</tr>
 		</template>
-	</el-auto-resizer>
+	</v-data-table>
 </template>
 
 <script setup>
-import { invoke } from '@tauri-apps/api';
-import { info, error } from 'tauri-plugin-log-api';
 import { computed } from 'vue';
-import { ElNotification } from 'element-plus';
+import { invoke } from '@tauri-apps/api';
+import { message } from '@tauri-apps/api/dialog';
+import { info, error } from 'tauri-plugin-log-api';
+import { mdiDownload } from '@mdi/js';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
 });
-const data = computed(() => (props.mods ? Object.values(props.mods) : null));
 
-async function handleInstall(mod) {
+const headers = [
+	{ title: 'Name', key: 'name' },
+	{ title: 'Description', key: 'description' },
+	{ title: 'Category', key: 'category' },
+	{ title: '', sortable: false },
+];
+const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+
+async function installMod(mod) {
 	console.log('Triggering download', mod);
 
 	try {
@@ -33,17 +57,15 @@ async function handleInstall(mod) {
 			version: Object.values(mod.versions)[0],
 		});
 		info(`Installed ${mod.name}`);
-		ElNotification({
-			type: 'success',
-			title: `Installed ${mod.name}`,
+		message(`${mod.name} was successfully installed.`, {
+			title: 'Mod installed',
+			type: 'info',
 		});
 	} catch (err) {
 		error(`Error installing ${mod.name}: ${err}`);
-		ElNotification({
+		message(`Error installing ${mod.name}:\n${err}`, {
+			title: 'Error installing mod',
 			type: 'error',
-			title: `Error installing ${mod.name}`,
-			message: err.message,
-			duration: 0,
 		});
 	}
 }

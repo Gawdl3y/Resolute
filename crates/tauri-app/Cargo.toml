@@ -15,6 +15,7 @@ tauri-build = { version = "1.5", features = [] }
 [dependencies]
 resolute = { path = "../resolute" }
 tauri = { version = "1.5", features = [
+	"dialog-message",
 	"updater",
 	"dialog-ask",
 	"path-all",

@@ -1,48 +1,70 @@
 <template>
-	<el-menu
-		router
-		:default-active="router.currentRoute.value.path"
-		:collapse="isCollapsed"
-		class="sidebar-menu"
-	>
-		<el-menu-item-group>
-			<el-menu-item index="/">
-				<el-icon><i-ep-house /></el-icon>
-				<template #title>Dashboard</template>
-			</el-menu-item>
+	<v-navigation-drawer :rail="isCollapsed" permanent width="180">
+		<v-list nav>
+			<v-tooltip text="Dashboard" :open-delay="500" :disabled="!isCollapsed">
+				<template #activator="{ props }">
+					<v-list-item
+						title="Dashboard"
+						:prepend-icon="mdiViewDashboard"
+						to="/"
+						v-bind="props"
+					/>
+				</template>
+			</v-tooltip>
 
-			<el-menu-item index="/mods">
-				<el-icon><i-ep-goods /></el-icon>
-				<template #title>All Mods</template>
-			</el-menu-item>
+			<v-tooltip text="All Mods" :open-delay="500" :disabled="!isCollapsed">
+				<template #activator="{ props }">
+					<v-list-item
+						title="All Mods"
+						:prepend-icon="mdiPackageVariantClosedPlus"
+						to="/mods"
+						v-bind="props"
+					/>
+				</template>
+			</v-tooltip>
 
-			<el-menu-item index="/settings">
-				<el-icon><i-ep-setting /></el-icon>
-				<template #title>Settings</template>
-			</el-menu-item>
-		</el-menu-item-group>
+			<v-tooltip text="Settings" :open-delay="500" :disabled="!isCollapsed">
+				<template #activator="{ props }">
+					<v-list-item
+						title="Settings"
+						:prepend-icon="mdiCog"
+						to="/settings"
+						v-bind="props"
+					/>
+				</template>
+			</v-tooltip>
+		</v-list>
 
-		<el-menu-item @click="isCollapsed = !isCollapsed">
-			<el-icon>
-				<i-ep-expand v-if="isCollapsed" />
-				<i-ep-fold v-else />
-			</el-icon>
-			<template #title>{{ isCollapsed ? 'Expand' : 'Collapse' }}</template>
-		</el-menu-item>
-	</el-menu>
+		<template #append>
+			<v-list nav>
+				<v-tooltip
+					:text="isCollapsed ? 'Expand' : 'Collapse'"
+					:open-delay="500"
+					:disabled="!isCollapsed"
+				>
+					<template #activator="{ props }">
+						<v-list-item
+							:title="isCollapsed ? 'Expand' : 'Collapse'"
+							:prepend-icon="isCollapsed ? mdiMenuClose : mdiMenuOpen"
+							v-bind="props"
+							@click="isCollapsed = !isCollapsed"
+						/>
+					</template>
+				</v-tooltip>
+			</v-list>
+		</template>
+	</v-navigation-drawer>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import {
+	mdiViewDashboard,
+	mdiPackageVariantClosedPlus,
+	mdiCog,
+	mdiMenuClose,
+	mdiMenuOpen,
+} from '@mdi/js';
 
-const router = useRouter();
 const isCollapsed = ref(true);
 </script>
-
-<style>
-.sidebar-menu:not(.el-menu--collapse) {
-	width: 9em;
-	min-height: 400px;
-}
-</style>

@@ -1,8 +1,10 @@
 <template>
-	<el-container id="main">
-		<AppSidebar />
-		<router-view />
-	</el-container>
+	<v-app theme="dark">
+		<v-layout class="rounded rounded-md">
+			<AppSidebar />
+			<router-view />
+		</v-layout>
+	</v-app>
 </template>
 
 <script setup>
@@ -21,9 +23,3 @@ onMounted(() => {
 	setTimeout(() => invoke('show_window'), 50);
 });
 </script>
-
-<style scoped>
-#main {
-	height: 100%;
-}
-</style>
