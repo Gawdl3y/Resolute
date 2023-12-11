@@ -27,6 +27,10 @@ jobs:
           commitMode: true
           toTag: ${{ github.ref_name }}
           failOnError: true
+          configurationJson: |
+            {
+              "pr_template": "- [#{{MERGE_SHA}}](#{{URL}}): #{{TITLE}} (@#{{AUTHOR}})"
+            }
 
   release:
     name: Release
