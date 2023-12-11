@@ -29,7 +29,7 @@ jobs:
           failOnError: true
           configurationJson: |
             {
-              "pr_template": "- [#{{MERGE_SHA}}](#{{URL}}): #{{TITLE}} (@#{{AUTHOR}})"
+              "pr_template": "- #{{MERGE_SHA}}: #{{TITLE}}"
             }
 
   release:
