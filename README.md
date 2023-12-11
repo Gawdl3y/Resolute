@@ -23,12 +23,10 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
   - Updating (automatic and manual checks)
   - Deletion
   - Detection of externally-installed mods
+  - ResoniteModLoader/Harmony alerts (missing or outdated)
 - Dependency resolution
   - Automatic installation
   - Conflict warnings
-- ResoniteModLoader setup
-  - Installation
-  - Updating
 - CLI
 
 ## License
