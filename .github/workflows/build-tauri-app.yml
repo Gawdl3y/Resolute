@@ -79,7 +79,7 @@ jobs:
           save-if: ${{ inputs.writeCache }}
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build app
         uses: tauri-apps/tauri-action@v0
