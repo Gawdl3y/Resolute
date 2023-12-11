@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    tags: ['release']
+    tags: ['v[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9]+)?']
 permissions:
   contents: write
 
@@ -25,6 +25,7 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v4
         with:
           commitMode: true
+          toTag: ${{ github.ref_name }}
           failOnError: true
 
   release:
