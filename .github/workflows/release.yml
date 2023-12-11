@@ -33,7 +33,7 @@ jobs:
     needs: [test, changelog]
     uses: ./.github/workflows/build-tauri-app.yml
     with:
-      tagName: v__VERSION__
+      tagName: ${{ github.ref_name }}
       releaseName: Resolute v__VERSION__
       releaseBody: ${{ needs.changelog.outputs.changelog }}
       releaseDraft: true
