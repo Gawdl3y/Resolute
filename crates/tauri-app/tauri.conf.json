@@ -1,13 +1,13 @@
 {
+	"package": {
+		"productName": "Resolute",
+		"version": "0.1.0"
+	},
 	"build": {
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build",
 		"devPath": "http://localhost:1420",
 		"distDir": "../../ui/dist"
-	},
-	"package": {
-		"productName": "Resolute",
-		"version": "0.0.0"
 	},
 	"tauri": {
 		"allowlist": {
