@@ -12,6 +12,7 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
 - Rudimentary mod management
   - Listing
   - Installation
+- Automatic app updates
 
 ## Planned features / Goals
 
@@ -28,7 +29,6 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
 - ResoniteModLoader setup
   - Installation
   - Updating
-- Automatic app updates
 - CLI
 
 ## License
