@@ -51,6 +51,10 @@ jobs:
                   "labels": ["tooling", "ci/cd"]
                 },
                 {
+                  "title": "## 📝 Documentation",
+                  "labels": ["docs", "documentation"]
+                },
+                {
                   "title": "## 💬 Other",
                   "labels": ["other", "misc"]
                 },
