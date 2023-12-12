@@ -4,31 +4,34 @@
 use std::{io, path::PathBuf};
 
 use anyhow::Context;
-use log::{debug, warn};
+use log::{debug, error, info, warn};
 use resolute::{
 	download::Downloader,
 	manifest,
-	mods::{self, ModVersion, ResoluteModMap},
+	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
 };
-use tauri::{AppHandle, Manager, Window, WindowEvent, Wry};
+use tauri::{AppHandle, Manager, Window, WindowEvent};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
-use tauri_plugin_store::{with_store, StoreCollection};
 use tauri_plugin_window_state::StateFlags;
 use tokio::{fs, join, sync::Mutex};
 
+mod settings;
+
 #[cfg(debug_assertions)]
-const LOG_TARGETS: [LogTarget; 3] = [LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview];
+const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::Webview];
 #[cfg(not(debug_assertions))]
-const LOG_TARGETS: [LogTarget; 2] = [LogTarget::LogDir, LogTarget::Stdout];
+const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::LogDir];
 
 fn main() -> anyhow::Result<()> {
 	tauri::Builder::default()
-		.plugin(
-			tauri_plugin_log::Builder::default()
-				.targets(LOG_TARGETS)
-				.with_colors(ColoredLevelConfig::default())
-				.build(),
-		)
+		.plugin({
+			let mut builder = tauri_plugin_log::Builder::default().targets(LOG_TARGETS);
+			#[cfg(debug_assertions)]
+			{
+				builder = builder.with_colors(ColoredLevelConfig::default());
+			}
+			builder.build()
+		})
 		.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
 			debug!("{}, {argv:?}, {cwd}", app.package_info().name);
 			app.emit_all("single-instance", Payload { args: argv, cwd }).unwrap();
@@ -43,6 +46,15 @@ fn main() -> anyhow::Result<()> {
 		.manage(Downloader::default())
 		.manage(ResoluteState::default())
 		.setup(|app| {
+			info!(
+				"Resolute v{} initializing",
+				app.config()
+					.package
+					.version
+					.clone()
+					.unwrap_or_else(|| "Unknown".to_owned())
+			);
+
 			let window = app.get_window("main").expect("unable to get main window");
 
 			// Workaround for poor resize performance on Windows
@@ -123,6 +135,7 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 	let json = if !bypass_cache {
 		manifest::retrieve(&config).await
 	} else {
+		info!("Forcing download of manifest");
 		manifest::download(&config).await
 	}
 	.map_err(|err| format!("Error downloading manifest: {}", err))?;
@@ -141,25 +154,22 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 }
 
 #[tauri::command]
-async fn download_version(app: AppHandle, version: ModVersion) -> Result<(), String> {
+async fn download_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion) -> Result<(), String> {
 	// Retrieve the Resonite path setting
-	let stores = app.state::<StoreCollection<Wry>>();
-	let resonite_path: String = serde_json::from_value(
-		with_store(app.clone(), stores, ".settings.dat", |store| {
-			Ok(store.get("resonitePath").cloned())
-		})
-		.map_err(|err| format!("Unable to retrieve Resonite path setting: {}", err))?
-		.ok_or("No Resonite path is configured")?,
-	)
-	.map_err(|err| format!("Unable to deserialize Resonite path setting value: {}", err))?;
+	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 
 	// Download the version
 	let downloader = app.state::<Downloader>();
+	info!("Installing mod {} v{}", rmod.name, version.semver);
 	downloader
 		.download_version(&version, PathBuf::from(resonite_path).as_path(), |_, _| {})
 		.await
-		.map_err(|err| format!("Unable to download mod version: {}", err))?;
+		.map_err(|err| {
+			error!("Failed to download mod {} v{}: {}", rmod.name, version.semver, err);
+			format!("Unable to download mod version: {}", err)
+		})?;
 
+	info!("Successfully installed mod {} v{}", rmod.name, version.semver);
 	Ok(())
 }
 
