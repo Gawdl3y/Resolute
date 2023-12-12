@@ -46,7 +46,15 @@ fn main() -> anyhow::Result<()> {
 		.manage(Downloader::default())
 		.manage(ResoluteState::default())
 		.setup(|app| {
-			info!("Resolute starting up");
+			info!(
+				"Resolute v{} initializing",
+				app.config()
+					.package
+					.version
+					.clone()
+					.unwrap_or_else(|| "Unknown".to_owned())
+			);
+
 			let window = app.get_window("main").expect("unable to get main window");
 
 			// Workaround for poor resize performance on Windows
