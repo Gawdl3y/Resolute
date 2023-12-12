@@ -34,7 +34,6 @@
 import { computed } from 'vue';
 import { invoke } from '@tauri-apps/api';
 import { message } from '@tauri-apps/api/dialog';
-import { info, error } from 'tauri-plugin-log-api';
 import { mdiDownload } from '@mdi/js';
 
 const props = defineProps({
@@ -50,20 +49,22 @@ const headers = [
 const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 
 async function installMod(mod) {
-	console.log('Triggering download', mod);
+	const version = Object.values(mod.versions)[0];
 
 	try {
 		await invoke('download_version', {
-			version: Object.values(mod.versions)[0],
+			rmod: mod,
+			version,
 		});
-		info(`Installed ${mod.name}`);
-		message(`${mod.name} was successfully installed.`, {
-			title: 'Mod installed',
-			type: 'info',
-		});
+		await message(
+			`${mod.name} v${version.semver} was successfully installed.`,
+			{
+				title: 'Mod installed',
+				type: 'info',
+			},
+		);
 	} catch (err) {
-		error(`Error installing ${mod.name}: ${err}`);
-		message(`Error installing ${mod.name}:\n${err}`, {
+		await message(`Error installing ${mod.name} v${version.semver}:\n${err}`, {
 			title: 'Error installing mod',
 			type: 'error',
 		});

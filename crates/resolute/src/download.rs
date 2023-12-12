@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use futures_util::TryStreamExt;
+use log::info;
 use path_clean::PathClean;
 use reqwest::{Client, IntoUrl};
 use tokio::{
@@ -78,6 +79,7 @@ impl Downloader {
 			}
 		}
 
+		info!("Downloading artifact {} to {}", artifact.url, final_dest.display());
 		self.download(artifact.url.clone(), dest.as_path(), progress).await
 	}
 

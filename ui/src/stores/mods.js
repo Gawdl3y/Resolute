@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { invoke } from '@tauri-apps/api';
+import { info, error } from 'tauri-plugin-log-api';
 
 export default defineStore('mods', () => {
 	const mods = ref(null);
@@ -14,10 +15,11 @@ export default defineStore('mods', () => {
 		try {
 			const mods = await invoke('load_manifest', { bypassCache });
 			console.debug('Mods loaded', mods);
+			info('Mods loaded');
 			this.$patch({ mods });
 			return mods;
 		} catch (err) {
-			console.error('Error loading mods', err);
+			error(`Error loading mods on the frontend: ${err}`);
 			throw err;
 		}
 	}
