@@ -2,7 +2,6 @@ name: Test
 on:
   push:
     branches-ignore: ['release']
-  pull_request:
   workflow_call:
 
 jobs:
