@@ -124,12 +124,18 @@ fn show_window(window: Window) {
 #[tauri::command]
 async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
 	// Build the config for all manifest operations
-	let config = manifest::ManifestConfig::default().cache(
+	let mut config = manifest::ManifestConfig::default().cache(
 		app.path_resolver()
 			.app_cache_dir()
 			.expect("unable to locate cache directory")
 			.join("resonite-mod-manifest.json"),
 	);
+
+	// Override the manifest URL if the user has customized it
+	let manifest_url: Option<String> = settings::get(&app, "manifestUrl").map_err(|err| err.to_string())?;
+	if let Some(url) = manifest_url {
+		config = config.url(url.as_ref());
+	}
 
 	// Retrieve the manifest JSON
 	let json = if !bypass_cache {
@@ -155,7 +161,6 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 
 #[tauri::command]
 async fn download_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion) -> Result<(), String> {
-	// Retrieve the Resonite path setting
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 
 	// Download the version

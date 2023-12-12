@@ -25,6 +25,15 @@
 								</v-tooltip>
 							</template>
 						</v-text-field>
+
+						<v-text-field
+							v-model="settings.current.manifestUrl"
+							label="Custom manifest URL"
+							variant="solo"
+							:rules="[rules.url]"
+							@blur="saveManifestUrl"
+							@keypress.enter="saveManifestUrl"
+						/>
 					</v-col>
 				</v-row>
 			</v-container>
@@ -42,6 +51,18 @@ import useSettings from '../../settings';
 import AppHeader from '../AppHeader.vue';
 
 const settings = useSettings();
+
+const rules = {
+	url(val) {
+		if (!val) return true;
+
+		try {
+			return Boolean(new URL(val));
+		} catch (_err) {
+			return 'Invalid URL';
+		}
+	},
+};
 
 async function findResonitePath() {
 	let dir, exists;
@@ -67,5 +88,15 @@ async function findResonitePath() {
 
 	await settings.store.set('resonitePath', dir);
 	await settings.store.save();
+}
+
+function saveManifestUrl() {
+	const url = settings.current.manifestUrl;
+	const valid = rules.url(url);
+	if (!valid || typeof valid === 'string') return;
+
+	if (url) settings.store.set('manifestUrl', url);
+	else settings.store.delete('manifestUrl');
+	settings.store.save();
 }
 </script>
