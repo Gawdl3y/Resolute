@@ -24,12 +24,41 @@ jobs:
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
         with:
-          commitMode: true
           toTag: ${{ github.ref_name }}
           failOnError: true
           configurationJson: |
             {
-              "pr_template": "- #{{MERGE_SHA}}: #{{TITLE}}"
+              "pr_template": "- #{{TITLE}}\n   - PR: ##{{NUMBER}}\n   - Author: #{{AUTHOR}}",
+              "categories": [
+                {
+                  "title": "## 🚀 Features",
+                  "labels": ["enhancement", "feature"]
+                },
+                {
+                  "title": "## 🐛 Fixes",
+                  "labels": ["bug", "fix"]
+                },
+                {
+                  "title": "## 🧪 Tests",
+                  "labels": ["test"]
+                },
+                {
+                  "title": "## 📦 Dependencies",
+                  "labels": ["dependency", "dependencies"]
+                },
+                {
+                  "title": "## 🔧 Tooling",
+                  "labels": ["tooling", "ci/cd"]
+                },
+                {
+                  "title": "## 💬 Other",
+                  "labels": ["other", "misc"]
+                },
+                {
+                  "title": "## 🤷 Uncategorized",
+                  "labels": []
+                }
+              ]
             }
 
   release:
