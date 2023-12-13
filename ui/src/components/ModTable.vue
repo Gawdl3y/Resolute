@@ -7,6 +7,7 @@
 		:loading="!mods"
 		:search="filter"
 		:group-by="groupBy"
+		fixed-header
 	>
 		<template #item="{ item: mod }">
 			<tr>
@@ -32,15 +33,32 @@
 			</tr>
 		</template>
 
+		<!-- eslint-disable-next-line vue/valid-v-slot -->
+		<template #header.data-table-group>
+			<div style="width: 2em"></div>
+		</template>
+
 		<template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
 			<tr>
-				<td :colspan="columns.length">
-					<v-btn
-						size="small"
-						variant="text"
-						:icon="isGroupOpen(item) ? '$expand' : '$next'"
-						@click="toggleGroup(item)"
-					/>
+				<td
+					:colspan="columns.length"
+					style="cursor: pointer"
+					@click="toggleGroup(item)"
+				>
+					<v-tooltip
+						:text="isGroupOpen(item) ? 'Collapse' : 'Expand'"
+						:open-delay="500"
+					>
+						<template #activator="{ props: activator }">
+							<v-btn
+								size="small"
+								variant="text"
+								:icon="isGroupOpen(item) ? '$expand' : '$next'"
+								v-bind="activator"
+								@click.stop="toggleGroup(item)"
+							/>
+						</template>
+					</v-tooltip>
 
 					{{ item.value }} ({{ item.items.length }})
 				</td>
