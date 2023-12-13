@@ -11,7 +11,7 @@ const settings = reactive({
 	groupMods: true,
 });
 
-function useSettings() {
+export function useSettings() {
 	/**
 	 * Initializes the store and propagates changes automatically
 	 */
