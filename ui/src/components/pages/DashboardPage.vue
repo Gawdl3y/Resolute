@@ -5,7 +5,11 @@
 		<h1 class="text-h2 font-weight-black text-primary mb-6">WIP</h1>
 
 		<v-sheet rounded elevation="4" class="w-75 pa-4" style="max-width: 32em">
-			<h2 class="text-h5 mb-3">What the HECK is Resolute?</h2>
+			<div class="d-flex justify-space-between mb-3">
+				<h2 class="text-h5">What the HECK is Resolute?</h2>
+				<p v-if="version" class="text-disabled">v{{ version }}</p>
+			</div>
+
 			<p class="mb-3">
 				Resolute is a mod manager for
 				<a href="https://resonite.com/" target="_blank">Resonite</a>. It's still
@@ -37,6 +41,14 @@
 </template>
 
 <script setup>
-import AppHeader from '../AppHeader.vue';
+import { ref, onBeforeMount } from 'vue';
+import { getVersion } from '@tauri-apps/api/app';
 import { mdiSourceBranch } from '@mdi/js';
+import AppHeader from '../AppHeader.vue';
+
+const version = ref(null);
+
+onBeforeMount(async () => {
+	version.value = await getVersion();
+});
 </script>
