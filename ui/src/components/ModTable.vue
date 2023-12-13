@@ -4,7 +4,7 @@
 		:items="items"
 		item-key="id"
 		:items-per-page="25"
-		:loading="!mods"
+		:loading="loading"
 		:search="filter"
 		:group-by="groupBy"
 		fixed-header
@@ -22,10 +22,14 @@
 						<template #activator="{ props: activator }">
 							<v-btn
 								:icon="mdiDownload"
-								:disabled="disabled"
+								:disabled="
+									disabled ||
+									(modStore.isBusy(mod.id) && !modStore.isInstalling(mod.id))
+								"
+								:loading="modStore.isInstalling(mod.id)"
 								variant="plain"
 								v-bind="activator"
-								@click="installMod(mod)"
+								@click="modStore.install(mod.id)"
 							/>
 						</template>
 					</v-tooltip>
@@ -83,18 +87,18 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { compare as semverCompare } from 'semver';
-import { invoke } from '@tauri-apps/api';
-import { message } from '@tauri-apps/api/dialog';
 import { mdiDownload } from '@mdi/js';
 
 import useSettings from '../settings';
+import useModStore from '../stores/mods';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
 	disabled: { type: Boolean, default: false },
+	loading: { type: Boolean, default: false },
 });
 const settings = useSettings();
+const modStore = useModStore();
 
 const headers = computed(() => {
 	const headers = [
@@ -104,6 +108,7 @@ const headers = computed(() => {
 		{ title: null, sortable: false },
 	];
 
+	// If the mods should be grouped, ditch the category header
 	if (settings.current.groupMods) {
 		const categoryIdx = headers.findIndex((head) => head.key === 'category');
 		headers.splice(categoryIdx, 1);
@@ -116,35 +121,4 @@ const groupBy = computed(() =>
 );
 const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 const filter = ref(null);
-
-/**
- * Requests the installation of a mod from the backend and displays an alert when a result is received
- * @param {Object} mod Raw mod data
- */
-async function installMod(mod) {
-	// Determine the latest version
-	const versions = Object.values(mod.versions);
-	versions.sort((ver1, ver2) => semverCompare(ver2.semver, ver1.semver));
-	const version = versions[0];
-
-	// Request the version install from the backend and display an alert for the result
-	try {
-		await invoke('install_version', {
-			rmod: mod,
-			version,
-		});
-		await message(
-			`${mod.name} v${version.semver} was successfully installed.`,
-			{
-				title: 'Mod installed',
-				type: 'info',
-			},
-		);
-	} catch (err) {
-		await message(`Error installing ${mod.name} v${version.semver}:\n${err}`, {
-			title: 'Error installing mod',
-			type: 'error',
-		});
-	}
-}
 </script>
