@@ -32,6 +32,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { compare as semverCompare } from 'semver';
 import { invoke } from '@tauri-apps/api';
 import { message } from '@tauri-apps/api/dialog';
 import { mdiDownload } from '@mdi/js';
@@ -49,10 +50,14 @@ const headers = [
 const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 
 async function installMod(mod) {
-	const version = Object.values(mod.versions)[0];
+	// Determine the latest version
+	const versions = Object.values(mod.versions);
+	versions.sort((ver1, ver2) => semverCompare(ver2.semver, ver1.semver));
+	const version = versions[0];
 
+	// Request the version install from the backend and display an alert for the result
 	try {
-		await invoke('download_version', {
+		await invoke('install_version', {
 			rmod: mod,
 			version,
 		});
