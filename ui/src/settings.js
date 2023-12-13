@@ -7,6 +7,7 @@ let storeUnlisten;
 const settings = reactive({
 	resonitePath: null,
 	manifestUrl: null,
+	theme: null,
 });
 
 function useSettings() {
