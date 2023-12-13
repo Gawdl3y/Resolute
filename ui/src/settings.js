@@ -8,6 +8,7 @@ const settings = reactive({
 	resonitePath: null,
 	manifestUrl: null,
 	theme: null,
+	groupMods: true,
 });
 
 function useSettings() {

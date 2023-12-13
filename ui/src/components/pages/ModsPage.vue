@@ -18,6 +18,7 @@
 			v-if="!resonitePathExists"
 			type="warning"
 			:rounded="false"
+			density="comfortable"
 			class="rounded-0"
 		>
 			{{
@@ -30,7 +31,7 @@
 		<ModTable
 			:mods="modStore.mods"
 			:disabled="resonitePathExists === null"
-			style="height: 100%"
+			:style="`height: ${!resonitePathExists ? 'calc(100% - 52px)' : '100%'}`"
 		/>
 	</v-main>
 </template>
