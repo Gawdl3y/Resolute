@@ -116,14 +116,14 @@ async function findResonitePath() {
 /**
  * Saves the custom manifest URL if valid
  */
-function saveManifestUrl() {
+async function saveManifestUrl() {
 	const url = settings.current.manifestUrl;
 	const valid = rules.url(url);
 	if (!valid || typeof valid === 'string') return;
 
-	if (url) settings.store.set('manifestUrl', url);
-	else settings.store.delete('manifestUrl');
-	settings.store.save();
+	if (url) await settings.store.set('manifestUrl', url);
+	else await settings.store.delete('manifestUrl');
+	await settings.store.save();
 }
 
 /**
@@ -138,8 +138,8 @@ const themes = [
 /**
  * Saves the theme selection
  */
-function saveTheme() {
-	settings.store.set('theme', settings.current.theme);
-	settings.store.save();
+async function saveTheme() {
+	await settings.store.set('theme', settings.current.theme);
+	await settings.store.save();
 }
 </script>
