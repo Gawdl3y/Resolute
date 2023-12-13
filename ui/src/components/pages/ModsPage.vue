@@ -37,9 +37,8 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted } from 'vue';
+import { ref, watch, onBeforeMount, onMounted } from 'vue';
 import { exists as fsExists } from '@tauri-apps/api/fs';
-import { mdiRefresh } from '@mdi/js';
 
 import useSettings from '../../settings';
 import useModStore from '../../stores/mods';
@@ -50,15 +49,23 @@ const settings = useSettings();
 const modStore = useModStore();
 const resonitePathExists = ref(true);
 
-onBeforeMount(async () => {
-	if (!settings.current.resonitePath) {
-		resonitePathExists.value = null;
-	} else {
-		resonitePathExists.value = await fsExists(settings.current.resonitePath);
-	}
-});
-
 onMounted(() => {
 	if (!modStore.mods) modStore.load();
 });
+
+onBeforeMount(checkIfResonitePathExists);
+watch(settings.current, checkIfResonitePathExists);
+
+/**
+ * Checks whether the Resonite path is configured and exists
+ */
+async function checkIfResonitePathExists() {
+	if (!settings.current.resonitePath) {
+		resonitePathExists.value = null;
+	} else {
+		resonitePathExists.value = await fsExists(
+			settings.current.resonitePath,
+		).catch(() => false);
+	}
+}
 </script>
