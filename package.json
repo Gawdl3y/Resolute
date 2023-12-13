@@ -17,6 +17,7 @@
 		"@mdi/js": "^7.3.67",
 		"@tauri-apps/api": "^1.5.1",
 		"pinia": "^2.1.7",
+		"semver": "^7.5.4",
 		"tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
 		"tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
 		"vue": "^3.3.4",

@@ -42,7 +42,7 @@ fn main() -> anyhow::Result<()> {
 				.build(),
 		)
 		.plugin(tauri_plugin_store::Builder::default().build())
-		.invoke_handler(tauri::generate_handler![show_window, load_manifest, download_version])
+		.invoke_handler(tauri::generate_handler![show_window, load_manifest, install_version])
 		.manage(Downloader::default())
 		.manage(ResoluteState::default())
 		.setup(|app| {
@@ -160,7 +160,7 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 }
 
 #[tauri::command]
-async fn download_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion) -> Result<(), String> {
+async fn install_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion) -> Result<(), String> {
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 
 	// Download the version
