@@ -94,8 +94,12 @@ async function findResonitePath() {
 		});
 		if (!dir) return;
 
-		// Verify the existence of the Resonite executable
-		exists = await fsExists(await pathJoin(dir, 'Resonite.exe'));
+		// Verify the existence of the Resonite executable (Windows or Linux)
+		exists =
+			(await fsExists(await pathJoin(dir, 'Resonite.exe'))) ||
+			(await fsExists(await pathJoin(dir, 'Resonite.x86_64')));
+
+		// If the executable doesn't exist, confirm they want to use this directory
 		if (!exists) {
 			const answer = await ask(
 				"Couldn't locate the Resonite executable.\nSet this as the game path anyways?",
