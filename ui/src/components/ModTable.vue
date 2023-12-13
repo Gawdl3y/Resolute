@@ -18,6 +18,7 @@
 						<template #activator="{ props: activator }">
 							<v-btn
 								:icon="mdiDownload"
+								:disabled="disabled"
 								variant="plain"
 								v-bind="activator"
 								@click="installMod(mod)"
@@ -39,6 +40,7 @@ import { mdiDownload } from '@mdi/js';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
+	disabled: { type: Boolean, default: false },
 });
 
 const headers = [
@@ -49,6 +51,10 @@ const headers = [
 ];
 const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 
+/**
+ * Requests the installation of a mod from the backend and displays an alert when a result is received
+ * @param {Object} mod Raw mod data
+ */
 async function installMod(mod) {
 	// Determine the latest version
 	const versions = Object.values(mod.versions);
