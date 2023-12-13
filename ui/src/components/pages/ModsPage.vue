@@ -5,8 +5,9 @@
 				<template #activator="{ props }">
 					<v-btn
 						:icon="mdiRefresh"
+						:loading="loading"
 						v-bind="props"
-						@click="modStore.load(true)"
+						@click="loadMods(true)"
 					/>
 				</template>
 			</v-tooltip>
@@ -32,6 +33,7 @@
 		<ModTable
 			:mods="modStore.mods"
 			:disabled="!resonitePathExists"
+			:loading="loading"
 			:style="`height: ${tableHeight}`"
 		/>
 	</v-main>
@@ -59,6 +61,7 @@ const settings = useSettings();
 const modStore = useModStore();
 const resonitePathExists = ref(true);
 const resonitePathAlert = ref(null);
+const loading = ref(false);
 
 const alertHeight = ref(0);
 const tableHeight = computed(() => {
@@ -67,7 +70,7 @@ const tableHeight = computed(() => {
 });
 
 onMounted(() => {
-	if (!modStore.mods) modStore.load();
+	if (!modStore.mods) loadMods(false);
 	sidebarBus.on('toggle', onSidebarToggle);
 });
 
@@ -93,6 +96,21 @@ async function checkIfResonitePathExists() {
 		resonitePathExists.value = await fsExists(
 			settings.current.resonitePath,
 		).catch(() => false);
+	}
+}
+
+/**
+ * Loads the mod data
+ */
+async function loadMods(bypassCache = false) {
+	loading.value = true;
+
+	try {
+		await modStore.load(bypassCache);
+	} catch (err) {
+		console.error(err);
+	} finally {
+		loading.value = false;
 	}
 }
 
