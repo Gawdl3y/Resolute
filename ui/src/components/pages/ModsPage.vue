@@ -25,13 +25,13 @@
 			{{
 				resonitePathExists === null
 					? 'Please configure the Resonite path in the settings.'
-					: "The configured Resonite path doesn't seem to exist. Mod installation will probably fail."
+					: "The configured Resonite path doesn't seem to exist. Please check the settings."
 			}}
 		</v-alert>
 
 		<ModTable
 			:mods="modStore.mods"
-			:disabled="resonitePathExists === null"
+			:disabled="!resonitePathExists"
 			:style="`height: ${tableHeight}`"
 		/>
 	</v-main>
