@@ -13,9 +13,10 @@
 		</template>
 	</AppHeader>
 
-	<v-main>
+	<v-main v-resize="adjustTableHeight">
 		<v-alert
 			v-if="!resonitePathExists"
+			ref="resonitePathAlert"
 			type="warning"
 			:rounded="false"
 			density="comfortable"
@@ -31,27 +32,52 @@
 		<ModTable
 			:mods="modStore.mods"
 			:disabled="resonitePathExists === null"
-			:style="`height: ${!resonitePathExists ? 'calc(100% - 52px)' : '100%'}`"
+			:style="`height: ${tableHeight}`"
 		/>
 	</v-main>
 </template>
 
 <script setup>
-import { ref, watch, onBeforeMount, onMounted } from 'vue';
+import {
+	ref,
+	computed,
+	watch,
+	onBeforeMount,
+	onMounted,
+	onUnmounted,
+} from 'vue';
 import { exists as fsExists } from '@tauri-apps/api/fs';
 import { mdiRefresh } from '@mdi/js';
 
 import useSettings from '../../settings';
 import useModStore from '../../stores/mods';
+import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
 import ModTable from '../ModTable.vue';
 
 const settings = useSettings();
 const modStore = useModStore();
 const resonitePathExists = ref(true);
+const resonitePathAlert = ref(null);
+
+const alertHeight = ref(0);
+const tableHeight = computed(() => {
+	if (!resonitePathAlert.value) return '100%';
+	return `calc(100% - ${alertHeight.value}px)`;
+});
 
 onMounted(() => {
 	if (!modStore.mods) modStore.load();
+	sidebarBus.on('toggle', onSidebarToggle);
+});
+
+onUnmounted(() => {
+	if (resizeInterval) {
+		clearInterval(resizeInterval);
+		resizeInterval = null;
+	}
+
+	sidebarBus.off('toggle', onSidebarToggle);
 });
 
 onBeforeMount(checkIfResonitePathExists);
@@ -68,5 +94,35 @@ async function checkIfResonitePathExists() {
 			settings.current.resonitePath,
 		).catch(() => false);
 	}
+}
+
+let resizeInterval = null;
+let resizingStartedAt = null;
+
+/**
+ * Begins an interval to resize the table based on the height of any alerts that may be showing.
+ * The interval automatically cancels after 1 second since the most recent call to this function.
+ * This is to work around an issue with table heights not necessarily fitting to parents perfectly.
+ */
+function adjustTableHeight() {
+	if (!resizeInterval) {
+		resizeInterval = setInterval(() => {
+			console.log('wheeeee');
+			alertHeight.value = resonitePathAlert.value?.$el?.clientHeight ?? 0;
+			if (Date.now() - resizingStartedAt > 1000) {
+				clearInterval(resizeInterval);
+				resizeInterval = null;
+			}
+		}, 100);
+	}
+
+	resizingStartedAt = Date.now();
+}
+
+/**
+ * Handles the sidebar toggle event
+ */
+function onSidebarToggle() {
+	adjustTableHeight();
 }
 </script>
