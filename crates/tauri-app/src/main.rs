@@ -42,7 +42,12 @@ fn main() -> anyhow::Result<()> {
 				.build(),
 		)
 		.plugin(tauri_plugin_store::Builder::default().build())
-		.invoke_handler(tauri::generate_handler![show_window, load_manifest, install_version])
+		.invoke_handler(tauri::generate_handler![
+			show_window,
+			load_manifest,
+			install_version,
+			verify_resonite_path
+		])
 		.manage(Downloader::default())
 		.manage(ResoluteState::default())
 		.setup(|app| {
@@ -176,6 +181,14 @@ async fn install_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion)
 
 	info!("Successfully installed mod {} v{}", rmod.name, version.semver);
 	Ok(())
+}
+
+#[tauri::command]
+async fn verify_resonite_path(app: AppHandle) -> Result<bool, String> {
+	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
+	tokio::fs::try_exists(resonite_path)
+		.await
+		.map_err(|err| err.to_string())
 }
 
 #[derive(Default)]

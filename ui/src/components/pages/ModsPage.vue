@@ -48,7 +48,7 @@ import {
 	onMounted,
 	onUnmounted,
 } from 'vue';
-import { exists as fsExists } from '@tauri-apps/api/fs';
+import { invoke } from '@tauri-apps/api';
 import { mdiRefresh } from '@mdi/js';
 
 import useSettings from '../../settings';
@@ -87,15 +87,15 @@ onBeforeMount(checkIfResonitePathExists);
 watch(settings.current, checkIfResonitePathExists);
 
 /**
- * Checks whether the Resonite path is configured and exists
+ * Checks whether the Resonite path is configured and exists via the backend
  */
 async function checkIfResonitePathExists() {
 	if (!settings.current.resonitePath) {
 		resonitePathExists.value = null;
 	} else {
-		resonitePathExists.value = await fsExists(
-			settings.current.resonitePath,
-		).catch(() => false);
+		resonitePathExists.value = await invoke('verify_resonite_path').catch(
+			() => false,
+		);
 	}
 }
 
