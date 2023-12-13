@@ -1,5 +1,5 @@
 <template>
-	<v-app theme="dark">
+	<v-app :theme="theme">
 		<v-layout class="rounded rounded-md">
 			<AppSidebar />
 			<router-view />
@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { invoke } from '@tauri-apps/api';
 import { info } from 'tauri-plugin-log-api';
 
@@ -17,6 +17,12 @@ import AppSidebar from './components/AppSidebar.vue';
 
 const settings = useSettings();
 settings.init();
+
+const theme = computed(
+	() =>
+		settings.current.theme ??
+		(window.matchMedia('(prefers-color-scheme: dark)') ? 'dark' : 'light'),
+);
 
 onMounted(() => {
 	info('App mounted - showing main window');

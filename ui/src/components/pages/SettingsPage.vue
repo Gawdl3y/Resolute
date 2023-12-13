@@ -6,6 +6,7 @@
 			<v-container>
 				<v-row>
 					<v-col>
+						<!-- Resonite path setting -->
 						<v-text-field
 							v-model="settings.current.resonitePath"
 							label="Resonite path"
@@ -26,6 +27,7 @@
 							</template>
 						</v-text-field>
 
+						<!-- Custom manifest URL setting -->
 						<v-text-field
 							v-model="settings.current.manifestUrl"
 							label="Custom manifest URL"
@@ -33,6 +35,17 @@
 							:rules="[rules.url]"
 							@blur="saveManifestUrl"
 							@keypress.enter="saveManifestUrl"
+						/>
+
+						<!-- Theme setting -->
+						<v-select
+							v-model="settings.current.theme"
+							label="Theme"
+							variant="solo"
+							:items="themes"
+							item-title="name"
+							item-value="val"
+							@update:model-value="saveTheme"
 						/>
 					</v-col>
 				</v-row>
@@ -52,6 +65,9 @@ import AppHeader from '../AppHeader.vue';
 
 const settings = useSettings();
 
+/**
+ * Validation rules
+ */
 const rules = {
 	url(val) {
 		if (!val) return true;
@@ -64,6 +80,9 @@ const rules = {
 	},
 };
 
+/**
+ * Opens a dialog to choose a Resonite installation path and validates it, then saves the setting when confirmed
+ */
 async function findResonitePath() {
 	let dir, exists;
 
@@ -90,6 +109,9 @@ async function findResonitePath() {
 	await settings.store.save();
 }
 
+/**
+ * Saves the custom manifest URL if valid
+ */
 function saveManifestUrl() {
 	const url = settings.current.manifestUrl;
 	const valid = rules.url(url);
@@ -97,6 +119,23 @@ function saveManifestUrl() {
 
 	if (url) settings.store.set('manifestUrl', url);
 	else settings.store.delete('manifestUrl');
+	settings.store.save();
+}
+
+/**
+ * Theme choices
+ */
+const themes = [
+	{ name: 'System', val: null },
+	{ name: 'Light', val: 'light' },
+	{ name: 'Dark', val: 'dark' },
+];
+
+/**
+ * Saves the theme selection
+ */
+function saveTheme() {
+	settings.store.set('theme', settings.current.theme);
 	settings.store.save();
 }
 </script>
