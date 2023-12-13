@@ -27,9 +27,9 @@
 					nerd.
 				</p>
 				<p>
-					<a href="https://github.com/Gawdl3y/Resolute" target="_blank"
-						>Source</a
-					>
+					<a href="https://github.com/Gawdl3y/Resolute" title="Source code">
+						<v-icon :icon="mdiSourceBranch" />
+					</a>
 				</p>
 			</div>
 		</v-sheet>
@@ -38,4 +38,5 @@
 
 <script setup>
 import AppHeader from '../AppHeader.vue';
+import { mdiSourceBranch } from '@mdi/js';
 </script>

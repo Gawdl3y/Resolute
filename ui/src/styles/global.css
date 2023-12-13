@@ -10,6 +10,9 @@
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-text-size-adjust: 100%;
 	overflow-y: auto;
+
+	--theme-primary-lighten-1: 68, 167, 245;
+	--theme-primary-lighten-2: 100, 181, 247;
 }
 
 html,
@@ -21,4 +24,13 @@ body,
 
 a {
 	color: rgb(var(--v-theme-primary));
+	transition: color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a:hover:not(.v-list-item) {
+	color: rgb(var(--theme-primary-lighten-1));
+}
+
+a:focus:not(.v-list-item) {
+	color: rgb(var(--theme-primary-lighten-2));
 }
