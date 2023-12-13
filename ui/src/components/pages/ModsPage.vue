@@ -107,7 +107,6 @@ let resizingStartedAt = null;
 function adjustTableHeight() {
 	if (!resizeInterval) {
 		resizeInterval = setInterval(() => {
-			console.log('wheeeee');
 			alertHeight.value = resonitePathAlert.value?.$el?.clientHeight ?? 0;
 			if (Date.now() - resizingStartedAt > 1000) {
 				clearInterval(resizeInterval);
