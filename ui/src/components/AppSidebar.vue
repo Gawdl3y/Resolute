@@ -1,7 +1,7 @@
 <template>
-	<v-navigation-drawer :rail="isCollapsed" permanent width="180">
+	<v-navigation-drawer :rail="!isExpanded" permanent width="180">
 		<v-list nav>
-			<v-tooltip text="Dashboard" :open-delay="500" :disabled="!isCollapsed">
+			<v-tooltip text="Dashboard" :open-delay="500" :disabled="isExpanded">
 				<template #activator="{ props }">
 					<v-list-item
 						title="Dashboard"
@@ -12,7 +12,7 @@
 				</template>
 			</v-tooltip>
 
-			<v-tooltip text="All Mods" :open-delay="500" :disabled="!isCollapsed">
+			<v-tooltip text="All Mods" :open-delay="500" :disabled="isExpanded">
 				<template #activator="{ props }">
 					<v-list-item
 						title="All Mods"
@@ -23,7 +23,7 @@
 				</template>
 			</v-tooltip>
 
-			<v-tooltip text="Settings" :open-delay="500" :disabled="!isCollapsed">
+			<v-tooltip text="Settings" :open-delay="500" :disabled="isExpanded">
 				<template #activator="{ props }">
 					<v-list-item
 						title="Settings"
@@ -38,16 +38,16 @@
 		<template #append>
 			<v-list nav>
 				<v-tooltip
-					:text="isCollapsed ? 'Expand' : 'Collapse'"
+					:text="isExpanded ? 'Collapse' : 'Expand'"
 					:open-delay="500"
-					:disabled="!isCollapsed"
+					:disabled="isExpanded"
 				>
 					<template #activator="{ props }">
 						<v-list-item
-							:title="isCollapsed ? 'Expand' : 'Collapse'"
-							:prepend-icon="isCollapsed ? mdiMenuClose : mdiMenuOpen"
+							:title="isExpanded ? 'Collapse' : 'Expand'"
+							:prepend-icon="isExpanded ? mdiMenuOpen : mdiMenuClose"
 							v-bind="props"
-							@click="isCollapsed = !isCollapsed"
+							@click="toggle"
 						/>
 					</template>
 				</v-tooltip>
@@ -66,5 +66,17 @@ import {
 	mdiMenuOpen,
 } from '@mdi/js';
 
-const isCollapsed = ref(true);
+import sidebarBus from '../sidebar-bus';
+
+const emit = defineEmits(['toggle']);
+const isExpanded = ref(false);
+
+/**
+ * Toggles the collapsed state of the sidebar
+ */
+function toggle() {
+	isExpanded.value = !isExpanded.value;
+	emit('toggle', isExpanded.value);
+	sidebarBus.emit('toggle', isExpanded.value);
+}
 </script>
