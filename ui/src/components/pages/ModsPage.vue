@@ -39,6 +39,7 @@
 <script setup>
 import { ref, watch, onBeforeMount, onMounted } from 'vue';
 import { exists as fsExists } from '@tauri-apps/api/fs';
+import { mdiRefresh } from '@mdi/js';
 
 import useSettings from '../../settings';
 import useModStore from '../../stores/mods';
