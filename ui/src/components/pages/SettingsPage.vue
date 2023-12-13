@@ -47,6 +47,14 @@
 							item-value="val"
 							@update:model-value="saveTheme"
 						/>
+
+						<!-- Group mods setting -->
+						<v-checkbox
+							v-model="settings.current.groupMods"
+							label="Group mods by category"
+							variant="solo"
+							@update:model-value="saveGroupMods"
+						/>
 					</v-col>
 				</v-row>
 			</v-container>
@@ -140,6 +148,14 @@ const themes = [
  */
 async function saveTheme() {
 	await settings.store.set('theme', settings.current.theme);
+	await settings.store.save();
+}
+
+/**
+ * Saves the group mods preference
+ */
+async function saveGroupMods() {
+	await settings.store.set('groupMods', settings.current.groupMods);
 	await settings.store.save();
 }
 </script>
