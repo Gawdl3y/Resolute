@@ -25,6 +25,10 @@
 			"path": {
 				"all": true
 			},
+			"process": {
+				"all": false,
+				"relaunch": true
+			},
 			"shell": {
 				"all": false,
 				"open": true
@@ -55,7 +59,7 @@
 		],
 		"updater": {
 			"active": true,
-			"dialog": true,
+			"dialog": false,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFREFBMzMxM0Q2MjNDNTUKUldSVlBHSTlNYVBhZmlOcjFScm80c2dYSElvS2o0MTlGQ3VRU0tvTXdiY3FDdnp4WWVQelJ3cm0K",
 			"endpoints": [
 				"https://github.com/Gawdl3y/Resolute/releases/latest/download/latest.json"

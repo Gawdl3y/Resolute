@@ -16,6 +16,8 @@
 	"dependencies": {
 		"@mdi/js": "^7.3.67",
 		"@tauri-apps/api": "^1.5.1",
+		"dompurify": "^3.0.6",
+		"marked": "^11.1.0",
 		"mitt": "^3.0.1",
 		"pinia": "^2.1.7",
 		"semver": "^7.5.4",
