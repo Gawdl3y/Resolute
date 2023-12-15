@@ -20,6 +20,9 @@ pub enum Error {
 
 	#[error("checksum error for {2}: calculated hash {1} doesn't match expected hash {0}")]
 	Checksum(String, String, String),
+
+	#[error("unsupported platform for operation: {0}")]
+	UnsupportedPlatform(String),
 }
 
 /// Alias for a `Result` with the error type `download::Error`.
