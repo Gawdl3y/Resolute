@@ -1,5 +1,5 @@
 <template>
-	<v-dialog v-model="show" persistent scrollable style="max-width: 960px">
+	<v-dialog v-model="showDialog" persistent scrollable style="max-width: 960px">
 		<v-card
 			:title="`Resolute v${updateDetails?.version} is available!`"
 			subtitle="Would you like to install the update now?"
@@ -19,7 +19,7 @@
 				<v-btn
 					:disabled="updateDetails?.installing"
 					variant="plain"
-					@click="show = false"
+					@click="showDialog = false"
 				>
 					Not now
 				</v-btn>
@@ -44,11 +44,12 @@ import {
 } from '@tauri-apps/api/updater';
 import { relaunch } from '@tauri-apps/api/process';
 import { info, error } from 'tauri-plugin-log-api';
+import { message } from '@tauri-apps/api/dialog';
 
 import { renderReleaseNotes } from '../util';
 
 const updateDetails = reactive({});
-const show = ref(false);
+const showDialog = ref(false);
 let unlistenToUpdaterEvents = null;
 
 onMounted(async () => {
@@ -86,7 +87,7 @@ async function checkForUpdate() {
 		error(`Error rendering app release notes: ${err}`);
 	}
 
-	show.value = true;
+	showDialog.value = true;
 }
 
 /**
@@ -99,6 +100,12 @@ async function installUpdate() {
 		await relaunch();
 	} catch (err) {
 		error(`Error installing app update: ${err}`);
+		message(`Error installing app update:\n${err}`, {
+			title: 'Error installing update',
+			type: 'error',
+		});
+	} finally {
+		updateDetails.installing = false;
 	}
 }
 
