@@ -28,7 +28,8 @@ jobs:
           failOnError: true
           configurationJson: |
             {
-              "pr_template": "- #{{TITLE}}\n   - PR: ##{{NUMBER}}\n   - Author: #{{AUTHOR}}",
+              "template": "#{{CHANGELOG}}\n\n#{{RELEASE_DIFF}}"
+              "pr_template": "- PR ##{{NUMBER}}: #{{TITLE}} (@#{{AUTHOR}})",
               "categories": [
                 {
                   "title": "## 🚀 Features",
