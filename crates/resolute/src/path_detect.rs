@@ -63,5 +63,5 @@ pub async fn find_steam() -> Result<Option<PathBuf>> {
 
 #[cfg(target_os = "macos")]
 pub async fn find_steam() -> Result<Option<PathBuf>> {
-	Err(Error::UnsupportedPlatform("macos"))
+	Err(Error::UnsupportedPlatform("macos".to_owned()))
 }
