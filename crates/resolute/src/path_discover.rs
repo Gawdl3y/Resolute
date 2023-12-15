@@ -6,8 +6,8 @@ use tokio::fs;
 use crate::{Error, Result};
 
 /// Searches for a potenial Resonite game directory
-pub async fn find_resonite() -> Result<Option<PathBuf>> {
-	let steam_path = find_steam().await?;
+pub async fn discover_resonite() -> Result<Option<PathBuf>> {
+	let steam_path = discover_steam().await?;
 	match steam_path {
 		Some(steam_path) => {
 			// Verify there is a Resonite game directory in the Steam directory
@@ -26,7 +26,7 @@ pub async fn find_resonite() -> Result<Option<PathBuf>> {
 
 /// Searches for a potential Steam installation directory by reading the Windows registry or defaulting to the standard path
 #[cfg(target_os = "windows")]
-pub async fn find_steam() -> Result<Option<PathBuf>> {
+pub async fn discover_steam() -> Result<Option<PathBuf>> {
 	use winreg::{enums::HKEY_CURRENT_USER, RegKey};
 
 	// Locate a Steam installation from the registry or the default installation path
@@ -57,11 +57,11 @@ pub async fn find_steam() -> Result<Option<PathBuf>> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn find_steam() -> Result<Option<PathBuf>> {
+pub async fn discover_steam() -> Result<Option<PathBuf>> {
 	Ok(None)
 }
 
 #[cfg(target_os = "macos")]
-pub async fn find_steam() -> Result<Option<PathBuf>> {
+pub async fn discover_steam() -> Result<Option<PathBuf>> {
 	Err(Error::UnsupportedPlatform("macos".to_owned()))
 }

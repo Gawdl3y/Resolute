@@ -9,7 +9,7 @@ use resolute::{
 	download::Downloader,
 	manifest,
 	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
-	path_detect::find_resonite,
+	path_discover::discover_resonite,
 };
 use tauri::{AppHandle, Manager, Window, WindowEvent};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
@@ -84,11 +84,11 @@ fn main() -> anyhow::Result<()> {
 				}
 			});
 
-			// Detect the Resonite path if it isn't configured already
+			// Discover the Resonite path if it isn't configured already
 			let handle = app.app_handle();
 			tauri::async_runtime::spawn(async move {
-				if let Err(err) = autodetect_resonite_path(handle).await {
-					warn!("Unable to autodetect Resonite path: {}", err);
+				if let Err(err) = autodiscover_resonite_path(handle).await {
+					warn!("Unable to autodiscover Resonite path: {}", err);
 				}
 			});
 
@@ -130,26 +130,26 @@ async fn create_app_dirs(app: AppHandle) -> Result<(), String> {
 	}
 }
 
-/// Auto-detects a Resonite path if the setting isn't configured
-async fn autodetect_resonite_path(app: AppHandle) -> Result<(), anyhow::Error> {
+/// Auto-discovers a Resonite path if the setting isn't configured
+async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error> {
 	let path_configured = settings::get::<String>(&app, "resonitePath")?.is_some();
 
 	// If the path isn't already configured, try to find one automatically
 	if !path_configured {
-		info!("Resonite path not configured, trying to find it automatically");
+		info!("Resonite path not configured, trying autodiscovery");
 
-		let found_path = find_resonite().await?;
+		let found_path = discover_resonite().await?;
 		if let Some(resonite_path) = found_path {
-			info!("Auto-detected Resonite path: {}", resonite_path.display());
+			info!("Discovered Resonite path: {}", resonite_path.display());
 
 			// Strip the UNC prefix from the string if it's there
 			let plain = {
 				let plain = resonite_path.to_str().ok_or_else(|| {
-					resolute::Error::Path("unable to convert auto-detected resonite path to string".to_owned())
+					resolute::Error::Path("unable to convert discovered resonite path to string".to_owned())
 				})?;
 				if plain.starts_with(r#"\\?\"#) {
 					plain.strip_prefix(r#"\\?\"#).ok_or_else(|| {
-						resolute::Error::Path("unable to strip unc prefix from auto-detected resonite path".to_owned())
+						resolute::Error::Path("unable to strip unc prefix from discovered resonite path".to_owned())
 					})?
 				} else {
 					plain
