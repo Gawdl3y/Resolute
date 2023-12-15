@@ -6,6 +6,7 @@
 		</v-layout>
 
 		<UpdateDialog />
+		<SetupGuideDialog v-if="!settings.current.setupGuideDone" />
 	</v-app>
 </template>
 
@@ -17,6 +18,7 @@ import { info } from 'tauri-plugin-log-api';
 import useSettings from './settings';
 import AppSidebar from './components/AppSidebar.vue';
 import UpdateDialog from './components/UpdateDialog.vue';
+import SetupGuideDialog from './components/SetupGuideDialog.vue';
 
 const settings = useSettings();
 settings.init();

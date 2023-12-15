@@ -18,21 +18,20 @@
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
 				<td>
-					<v-tooltip text="Install" :open-delay="500">
-						<template #activator="{ props: activator }">
-							<v-btn
-								:icon="mdiDownload"
-								:disabled="
-									disabled ||
-									(modStore.isBusy(mod.id) && !modStore.isInstalling(mod.id))
-								"
-								:loading="modStore.isInstalling(mod.id)"
-								variant="plain"
-								v-bind="activator"
-								@click="modStore.install(mod.id)"
-							/>
-						</template>
-					</v-tooltip>
+					<ModInstaller v-slot="{ install, installing, busy }" :mod="mod.id">
+						<v-tooltip text="Install" :open-delay="500">
+							<template #activator="{ props: activator }">
+								<v-btn
+									:icon="mdiDownload"
+									:disabled="disabled || (busy && !installing)"
+									:loading="installing"
+									variant="plain"
+									v-bind="activator"
+									@click="install"
+								/>
+							</template>
+						</v-tooltip>
+					</ModInstaller>
 				</td>
 			</tr>
 		</template>
@@ -90,7 +89,7 @@ import { ref, computed } from 'vue';
 import { mdiDownload } from '@mdi/js';
 
 import useSettings from '../settings';
-import useModStore from '../stores/mods';
+import ModInstaller from './ModInstaller.vue';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
@@ -98,7 +97,6 @@ const props = defineProps({
 	loading: { type: Boolean, default: false },
 });
 const settings = useSettings();
-const modStore = useModStore();
 
 const headers = computed(() => {
 	const headers = [
