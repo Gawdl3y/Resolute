@@ -9,6 +9,7 @@ use resolute::{
 	download::Downloader,
 	manifest,
 	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
+	path_discover::discover_resonite,
 };
 use tauri::{AppHandle, Manager, Window, WindowEvent};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
@@ -83,6 +84,14 @@ fn main() -> anyhow::Result<()> {
 				}
 			});
 
+			// Discover the Resonite path if it isn't configured already
+			let handle = app.app_handle();
+			tauri::async_runtime::spawn(async move {
+				if let Err(err) = autodiscover_resonite_path(handle).await {
+					warn!("Unable to autodiscover Resonite path: {}", err);
+				}
+			});
+
 			Ok(())
 		})
 		.run(tauri::generate_context!())
@@ -119,6 +128,49 @@ async fn create_app_dirs(app: AppHandle) -> Result<(), String> {
 			.collect::<Vec<String>>()
 			.join(", "))
 	}
+}
+
+/// Auto-discovers a Resonite path if the setting isn't configured
+async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error> {
+	let path_configured = settings::get::<String>(&app, "resonitePath")?.is_some();
+
+	// If the path isn't already configured, try to find one automatically
+	if !path_configured {
+		info!("Resonite path not configured, running autodiscovery");
+		let found_path = discover_resonite().await?;
+
+		match found_path {
+			Some(resonite_path) => {
+				info!("Discovered Resonite path: {}", resonite_path.display());
+
+				// On Windows, strip the UNC prefix from the string if it's there
+				#[cfg(target_os = "windows")]
+				let plain = {
+					let plain = resonite_path.to_str().ok_or_else(|| {
+						resolute::Error::Path("unable to convert discovered resonite path to string".to_owned())
+					})?;
+					if plain.starts_with(r#"\\?\"#) {
+						plain.strip_prefix(r#"\\?\"#).ok_or_else(|| {
+							resolute::Error::Path("unable to strip unc prefix from discovered resonite path".to_owned())
+						})?
+					} else {
+						plain
+					}
+				};
+
+				#[cfg(not(target_os = "windows"))]
+				let plain = resonite_path;
+
+				settings::set(&app, "resonitePath", plain)?
+			}
+
+			None => {
+				info!("Autodiscovery didn't find a Resonite path");
+			}
+		}
+	}
+
+	Ok::<(), anyhow::Error>(())
 }
 
 #[tauri::command]
