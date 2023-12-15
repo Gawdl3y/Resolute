@@ -9,6 +9,8 @@ const settings = reactive({
 	manifestUrl: null,
 	theme: null,
 	groupMods: true,
+	setupGuideDone: false,
+	allowClosingSetupGuide: false,
 });
 
 export function useSettings() {
