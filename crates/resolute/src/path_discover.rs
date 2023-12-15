@@ -80,7 +80,7 @@ pub async fn discover_steam() -> Result<Option<PathBuf>> {
 			"Steam found at flatpak path {}, canonicalizing path",
 			flatpak_path.display()
 		);
-		return Ok(Some(fs::canonicalize(&flatpak_path).await?));
+		return Ok(Some(fs::canonicalize(flatpak_path).await?));
 	}
 
 	Ok(None)
