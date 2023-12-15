@@ -28,7 +28,7 @@ jobs:
           failOnError: true
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}\n\n#{{RELEASE_DIFF}}"
+              "template": "#{{CHANGELOG}}\n\n#{{RELEASE_DIFF}}",
               "pr_template": "- PR ##{{NUMBER}}: #{{TITLE}} (@#{{AUTHOR}})",
               "categories": [
                 {
