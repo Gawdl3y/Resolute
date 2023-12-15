@@ -58,6 +58,31 @@ pub async fn discover_steam() -> Result<Option<PathBuf>> {
 
 #[cfg(target_os = "linux")]
 pub async fn discover_steam() -> Result<Option<PathBuf>> {
+	// Get the user's home directory from the environment
+	let home = PathBuf::from(
+		std::env::var("HOME").map_err(|err| Error::Path(format!("unable to get home directory: {}", err)))?,
+	);
+
+	// Check for a traditional Steam installation
+	let traditional_path = home.join(".steam");
+	if fs::try_exists(&traditional_path).await? {
+		debug!(
+			"Steam found at traditional path {}, canonicalizing path",
+			traditional_path.display()
+		);
+		return Ok(Some(fs::canonicalize(traditional_path).await?));
+	}
+
+	// Check for a Flatpak Steam installation
+	let flatpak_path = home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam");
+	if fs::try_exists(&flatpak_path).await? {
+		debug!(
+			"Steam found at flatpak path {}, canonicalizing path",
+			flatpak_path.display()
+		);
+		return Ok(Some(fs::canonicalize(&flatpak_path).await?));
+	}
+
 	Ok(None)
 }
 
