@@ -7,19 +7,22 @@ import purify from 'dompurify';
 export const REPO_URL = 'https://github.com/Gawdl3y/Resolute/';
 
 /**
- * Renders release notes from Markdown
- * @param {string} notes
+ * Renders Markdown into sanitized HTMl with auto-linked GitHub issue numbers and commit hashes
+ * @param {string} markdown
  * @returns {string}
  */
-export function renderReleaseNotes(notes) {
+export function renderMarkdown(markdown) {
 	// Replace git hashes with Markdown links
-	notes = notes.replace(
+	markdown = markdown.replace(
 		/\b(([0-9a-f]{7})([0-9a-f]{1,33})?)\b/g,
 		`[$2](${REPO_URL}commit/$1)`,
 	);
 
 	// Replace issue numbers with Markdown links
-	notes = notes.replace(/(\s)(#[0-9]+)\b/g, `$1[$2](${REPO_URL}issues/$1)`);
+	markdown = markdown.replace(
+		/(\s)(#[0-9]+)\b/g,
+		`$1[$2](${REPO_URL}issues/$1)`,
+	);
 
 	// Set up the marked renderer to make links open in a new window
 	const renderer = new marked.Renderer();
@@ -30,7 +33,7 @@ export function renderReleaseNotes(notes) {
 	};
 
 	// Render and sanitize the Markdown
-	const rendered = marked(notes, { renderer });
+	const rendered = marked(markdown, { renderer });
 	return purify.sanitize(rendered, { ADD_ATTR: ['target'] });
 }
 

@@ -46,7 +46,7 @@ import { relaunch } from '@tauri-apps/api/process';
 import { info, error } from 'tauri-plugin-log-api';
 import { message } from '@tauri-apps/api/dialog';
 
-import { renderReleaseNotes } from '../util';
+import { renderMarkdown } from '../util';
 
 const updateDetails = reactive({});
 const showDialog = ref(false);
@@ -82,7 +82,7 @@ async function checkForUpdate() {
 
 	// Render the release notes
 	try {
-		updateDetails.notes = renderReleaseNotes(updateDetails.manifest.body);
+		updateDetails.notes = renderMarkdown(updateDetails.manifest.body);
 	} catch (err) {
 		error(`Error rendering app release notes: ${err}`);
 	}
