@@ -51,7 +51,7 @@ import {
 import { invoke } from '@tauri-apps/api';
 import { mdiRefresh } from '@mdi/js';
 
-import useSettings from '../../settings';
+import useSettings from '../../composables/settings';
 import useModStore from '../../stores/mods';
 import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';

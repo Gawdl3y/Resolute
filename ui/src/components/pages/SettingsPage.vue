@@ -6,43 +6,26 @@
 			<v-container>
 				<v-row>
 					<v-col>
-						<!-- Resonite path setting -->
-						<ResonitePathSelector />
+						<ResonitePathSetting />
 
-						<!-- Custom manifest URL setting -->
-						<v-text-field
-							v-model="settings.current.manifestUrl"
-							label="Custom manifest URL"
-							variant="solo"
+						<TextSetting
+							setting="manifestUrl"
 							:rules="[rules.url]"
-							@blur="saveManifestUrl"
-							@keypress.enter="saveManifestUrl"
+							label="Custom manifest URL"
 						/>
 
-						<!-- Theme setting -->
-						<v-select
-							v-model="settings.current.theme"
-							label="Theme"
-							variant="solo"
-							:items="themes"
-							item-title="name"
-							item-value="val"
-							@update:model-value="saveTheme"
-						/>
+						<DropdownSetting setting="theme" :items="themes" label="Theme" />
 
-						<!-- Group mods setting -->
 						<CheckboxSetting
 							setting="groupMods"
 							label="Group mods by category"
 						/>
 
-						<!-- Show mod authoring tools setting -->
 						<CheckboxSetting
 							setting="modAuthorTools"
 							label="Show mod authoring tools"
 						/>
 
-						<!-- Show setup guide button -->
 						<v-btn @click="settings.current.setupGuideDone = false">
 							Show setup guide
 						</v-btn>
@@ -54,10 +37,12 @@
 </template>
 
 <script setup>
-import useSettings from '../../settings';
+import useSettings from '../../composables/settings';
 import AppHeader from '../AppHeader.vue';
-import ResonitePathSelector from '../ResonitePathSelector.vue';
-import CheckboxSetting from '../CheckboxSetting.vue';
+import ResonitePathSetting from '../settings/ResonitePathSetting.vue';
+import TextSetting from '../settings/TextSetting.vue';
+import CheckboxSetting from '../settings/CheckboxSetting.vue';
+import DropdownSetting from '../settings/DropdownSetting.vue';
 
 const settings = useSettings();
 
@@ -77,32 +62,11 @@ const rules = {
 };
 
 /**
- * Saves the custom manifest URL if valid
- */
-async function saveManifestUrl() {
-	const url = settings.current.manifestUrl;
-	const valid = rules.url(url);
-	if (!valid || typeof valid === 'string') return;
-
-	if (url) await settings.store.set('manifestUrl', url);
-	else await settings.store.delete('manifestUrl');
-	await settings.store.save();
-}
-
-/**
  * Theme choices
  */
 const themes = [
-	{ name: 'System', val: null },
-	{ name: 'Light', val: 'light' },
-	{ name: 'Dark', val: 'dark' },
+	{ label: 'System', value: null },
+	{ label: 'Light', value: 'light' },
+	{ label: 'Dark', value: 'dark' },
 ];
-
-/**
- * Saves the theme selection
- */
-async function saveTheme() {
-	await settings.store.set('theme', settings.current.theme);
-	await settings.store.save();
-}
 </script>
