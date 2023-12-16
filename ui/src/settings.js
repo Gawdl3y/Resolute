@@ -9,6 +9,7 @@ const settings = reactive({
 	manifestUrl: null,
 	theme: null,
 	groupMods: true,
+	modAuthorTools: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
 });

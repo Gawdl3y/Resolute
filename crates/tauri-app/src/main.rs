@@ -11,6 +11,7 @@ use resolute::{
 	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
 	path_discover::discover_resonite,
 };
+use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
 use tauri_plugin_window_state::StateFlags;
@@ -47,7 +48,8 @@ fn main() -> anyhow::Result<()> {
 			show_window,
 			load_manifest,
 			install_version,
-			verify_resonite_path
+			verify_resonite_path,
+			checksum_file
 		])
 		.manage(Downloader::default())
 		.manage(ResoluteState::default())
@@ -241,6 +243,20 @@ async fn verify_resonite_path(app: AppHandle) -> Result<bool, String> {
 	tokio::fs::try_exists(resonite_path)
 		.await
 		.map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+async fn checksum_file(file: String) -> Result<String, String> {
+	let digest = tauri::async_runtime::spawn_blocking(|| {
+		let mut hasher = Sha256::new();
+		let mut file = std::fs::File::open(file).map_err(|err| format!("Error opening file to hash: {}", err))?;
+		io::copy(&mut file, &mut hasher).map_err(|err| format!("Error hashing file: {}", err))?;
+		Ok::<_, String>(hasher.finalize())
+	})
+	.await
+	.map_err(|err| format!("Error with hashing executor: {}", err))??;
+
+	Ok(format!("{:x}", digest))
 }
 
 #[derive(Default)]
