@@ -14,6 +14,8 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
 - Rudimentary mod management
   - Listing
   - Installation
+- Mod authoring tools
+  - SHA-256 checksum calculator
 - Automatic app updates
 
 ### Planned
