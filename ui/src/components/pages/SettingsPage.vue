@@ -31,11 +31,15 @@
 						/>
 
 						<!-- Group mods setting -->
-						<v-checkbox
-							v-model="settings.current.groupMods"
+						<CheckboxSetting
+							setting="groupMods"
 							label="Group mods by category"
-							variant="solo"
-							@update:model-value="saveGroupMods"
+						/>
+
+						<!-- Show mod authoring tools setting -->
+						<CheckboxSetting
+							setting="modAuthorTools"
+							label="Show mod authoring tools"
 						/>
 
 						<!-- Show setup guide button -->
@@ -53,6 +57,7 @@
 import useSettings from '../../settings';
 import AppHeader from '../AppHeader.vue';
 import ResonitePathSelector from '../ResonitePathSelector.vue';
+import CheckboxSetting from '../CheckboxSetting.vue';
 
 const settings = useSettings();
 
@@ -98,14 +103,6 @@ const themes = [
  */
 async function saveTheme() {
 	await settings.store.set('theme', settings.current.theme);
-	await settings.store.save();
-}
-
-/**
- * Saves the group mods preference
- */
-async function saveGroupMods() {
-	await settings.store.set('groupMods', settings.current.groupMods);
 	await settings.store.save();
 }
 </script>
