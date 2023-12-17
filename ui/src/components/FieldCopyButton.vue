@@ -1,9 +1,9 @@
 <template>
-	<v-scroll-x-reverse-transition>
-		<div v-if="copied" class="me-2">Copied!</div>
-	</v-scroll-x-reverse-transition>
-
-	<v-tooltip text="Copy" :open-delay="500" location="top">
+	<v-tooltip
+		v-model="showTooltip"
+		:text="copied ? 'Copied!' : 'Copy'"
+		:open-delay="500"
+	>
 		<template #activator="{ props: activator }">
 			<v-slide-x-reverse-transition>
 				<v-btn
@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { mdiContentCopy } from '@mdi/js';
 
 const props = defineProps({
@@ -27,7 +27,7 @@ const props = defineProps({
 	hidden: { type: Boolean, default: false },
 });
 const copied = ref(false);
-let copiedTimeout = null;
+const showTooltip = ref(false);
 
 /**
  * Writes the text to the clipboard
@@ -35,12 +35,14 @@ let copiedTimeout = null;
 function copyText() {
 	navigator.clipboard.writeText(props.text);
 	copied.value = true;
-
-	if (copiedTimeout) clearTimeout(copiedTimeout);
-
-	copiedTimeout = setTimeout(() => {
-		copied.value = false;
-		copiedTimeout = null;
-	}, 2000);
+	showTooltip.value = true;
 }
+
+watch(showTooltip, (_, show) => {
+	if (show) {
+		setTimeout(() => {
+			copied.value = false;
+		}, 350);
+	}
+});
 </script>
