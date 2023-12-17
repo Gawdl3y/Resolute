@@ -3,6 +3,11 @@
 This is a WIP project to create a friendly GUI for downloading, updating, and setup of Resonite mods.
 The goal is to provide a cross-platform beginning-to-end setup experience for Resonite modding.
 
+> [!IMPORTANT]  
+> Resolute is built with [Tauri](https://tauri.app/), which relies upon your operating system's WebView to function.
+> If you're on Windows and have completely removed WebView2 and Edge from your system, Resolute will not work.
+> If you remove Edge but leave WebView2 intact, it should work fine.
+
 ## Features
 
 ### Implemented
