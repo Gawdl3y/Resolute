@@ -36,7 +36,7 @@ async function save() {
 	}
 
 	if (value) await settings.set(props.setting, value);
-	else await settings.delete(props.setting, value);
+	else await settings.unset(props.setting);
 
 	return true;
 }
