@@ -11,6 +11,10 @@
 		<template v-if="$slots.actions" #append>
 			<slot name="actions" />
 		</template>
+
+		<template v-if="$slots.extension" #extension>
+			<slot name="extension" />
+		</template>
 	</v-app-bar>
 </template>
 

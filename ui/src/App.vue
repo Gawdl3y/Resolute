@@ -15,7 +15,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api';
 import { info } from 'tauri-plugin-log-api';
 
-import useSettings from './settings';
+import useSettings from './composables/settings';
 import AppSidebar from './components/AppSidebar.vue';
 import UpdateDialog from './components/UpdateDialog.vue';
 import SetupGuideDialog from './components/SetupGuideDialog.vue';
@@ -39,7 +39,7 @@ onUnmounted(() => {
 
 /**
  * Handles match media change events
- * @param {*} evt
+ * @param {MediaQueryListEvent} evt
  */
 function onMatchMediaChange(evt) {
 	systemTheme.value = evt.matches ? 'dark' : 'light';

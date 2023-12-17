@@ -83,7 +83,7 @@ import {
 	mdiMenuOpen,
 } from '@mdi/js';
 
-import useSettings from '../settings';
+import useSettings from '../composables/settings';
 import sidebarBus from '../sidebar-bus';
 
 const emit = defineEmits(['toggle']);
