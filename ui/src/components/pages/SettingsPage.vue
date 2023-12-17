@@ -9,18 +9,20 @@
 	</AppHeader>
 
 	<v-main>
-		<v-container>
-			<v-window v-model="tab">
-				<v-window-item value="general">
+		<v-window v-model="tab">
+			<v-window-item value="general">
+				<v-container>
 					<DropdownSetting setting="theme" :items="themes" label="Theme" />
 					<ResonitePathSetting />
 					<CheckboxSetting setting="groupMods" label="Group mods by category" />
 					<v-btn @click="settings.current.setupGuideDone = false">
 						Setup guide
 					</v-btn>
-				</v-window-item>
+				</v-container>
+			</v-window-item>
 
-				<v-window-item value="advanced">
+			<v-window-item value="advanced">
+				<v-container>
 					<TextSetting
 						setting="manifestUrl"
 						:rules="[rules.url]"
@@ -31,9 +33,9 @@
 						setting="modAuthorTools"
 						label="Show mod authoring tools"
 					/>
-				</v-window-item>
-			</v-window>
-		</v-container>
+				</v-container>
+			</v-window-item>
+		</v-window>
 	</v-main>
 </template>
 
