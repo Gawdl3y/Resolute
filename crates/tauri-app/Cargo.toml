@@ -1,6 +1,6 @@
 [package]
 name = "resolute-app"
-version = "0.4.0"
+version = "0.4.1"
 description = "Resolute, a mod manager for Resonite"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
 license = ""
@@ -41,8 +41,3 @@ tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", 
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
-
-[profile.release]
-lto = "thin"
-codegen-units = 1
-panic = "abort"

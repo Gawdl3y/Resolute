@@ -9,6 +9,8 @@
 						v-model="checksum"
 						variant="solo"
 						label="SHA-256 Checksum"
+						:hint="checksumFile"
+						:persistent-hint="Boolean(checksumFile)"
 						:loading="loading"
 						readonly
 					>
@@ -21,7 +23,7 @@
 										variant="text"
 										:icon="mdiFileSearch"
 										:loading="loading"
-										@click="checksumFile"
+										@click="hashFile"
 									/>
 								</template>
 							</v-tooltip>
@@ -43,12 +45,13 @@ import AppHeader from '../AppHeader.vue';
 import FieldCopyButton from '../FieldCopyButton.vue';
 
 const checksum = ref('');
+const checksumFile = ref('');
 const loading = ref(false);
 
 /**
  * Opens a dialog to choose a file, then requests the backend to calculate the checksum for that file
  */
-async function checksumFile() {
+async function hashFile() {
 	// Prompt to choose a file
 	const file = await open();
 	if (!file) return;
@@ -56,9 +59,11 @@ async function checksumFile() {
 	// Request the backend to checksum the selected file
 	try {
 		loading.value = true;
+		checksumFile.value = file;
 		checksum.value = 'Calculating...';
 		checksum.value = await invoke('checksum_file', { file });
 	} catch (err) {
+		checksumFile.value = '';
 		checksum.value = '';
 		message(`Error hashing file:\n${err}`, {
 			title: 'Error hashing file',
