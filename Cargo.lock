@@ -2947,13 +2947,14 @@ dependencies = [
 
 [[package]]
 name = "resolute-app"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "log",
  "resolute",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-log",

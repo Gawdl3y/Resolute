@@ -1,60 +1,54 @@
 <template>
-	<AppHeader title="Settings" />
+	<AppHeader title="Settings">
+		<template #extension>
+			<v-tabs v-model="tab">
+				<v-tab value="general">General</v-tab>
+				<v-tab value="advanced">Advanced</v-tab>
+			</v-tabs>
+		</template>
+	</AppHeader>
 
 	<v-main>
-		<v-form>
-			<v-container>
-				<v-row>
-					<v-col>
-						<!-- Resonite path setting -->
-						<ResonitePathSelector />
+		<v-container>
+			<v-window v-model="tab">
+				<v-window-item value="general">
+					<DropdownSetting setting="theme" :items="themes" label="Theme" />
+					<ResonitePathSetting />
+					<CheckboxSetting setting="groupMods" label="Group mods by category" />
+					<v-btn @click="settings.current.setupGuideDone = false">
+						Setup guide
+					</v-btn>
+				</v-window-item>
 
-						<!-- Custom manifest URL setting -->
-						<v-text-field
-							v-model="settings.current.manifestUrl"
-							label="Custom manifest URL"
-							variant="solo"
-							:rules="[rules.url]"
-							@blur="saveManifestUrl"
-							@keypress.enter="saveManifestUrl"
-						/>
-
-						<!-- Theme setting -->
-						<v-select
-							v-model="settings.current.theme"
-							label="Theme"
-							variant="solo"
-							:items="themes"
-							item-title="name"
-							item-value="val"
-							@update:model-value="saveTheme"
-						/>
-
-						<!-- Group mods setting -->
-						<v-checkbox
-							v-model="settings.current.groupMods"
-							label="Group mods by category"
-							variant="solo"
-							@update:model-value="saveGroupMods"
-						/>
-
-						<!-- Show setup guide button -->
-						<v-btn @click="settings.current.setupGuideDone = false">
-							Show setup guide
-						</v-btn>
-					</v-col>
-				</v-row>
-			</v-container>
-		</v-form>
+				<v-window-item value="advanced">
+					<TextSetting
+						setting="manifestUrl"
+						:rules="[rules.url]"
+						label="Custom manifest URL"
+						hint="This will be used to list mods instead of the main Resonite Modding Group manifest"
+					/>
+					<CheckboxSetting
+						setting="modAuthorTools"
+						label="Show mod authoring tools"
+					/>
+				</v-window-item>
+			</v-window>
+		</v-container>
 	</v-main>
 </template>
 
 <script setup>
-import useSettings from '../../settings';
+import { ref } from 'vue';
+
+import useSettings from '../../composables/settings';
 import AppHeader from '../AppHeader.vue';
-import ResonitePathSelector from '../ResonitePathSelector.vue';
+import ResonitePathSetting from '../settings/ResonitePathSetting.vue';
+import TextSetting from '../settings/TextSetting.vue';
+import CheckboxSetting from '../settings/CheckboxSetting.vue';
+import DropdownSetting from '../settings/DropdownSetting.vue';
 
 const settings = useSettings();
+const tab = ref('general');
 
 /**
  * Validation rules
@@ -72,40 +66,11 @@ const rules = {
 };
 
 /**
- * Saves the custom manifest URL if valid
- */
-async function saveManifestUrl() {
-	const url = settings.current.manifestUrl;
-	const valid = rules.url(url);
-	if (!valid || typeof valid === 'string') return;
-
-	if (url) await settings.store.set('manifestUrl', url);
-	else await settings.store.delete('manifestUrl');
-	await settings.store.save();
-}
-
-/**
  * Theme choices
  */
 const themes = [
-	{ name: 'System', val: null },
-	{ name: 'Light', val: 'light' },
-	{ name: 'Dark', val: 'dark' },
+	{ label: 'System', value: null },
+	{ label: 'Light', value: 'light' },
+	{ label: 'Dark', value: 'dark' },
 ];
-
-/**
- * Saves the theme selection
- */
-async function saveTheme() {
-	await settings.store.set('theme', settings.current.theme);
-	await settings.store.save();
-}
-
-/**
- * Saves the group mods preference
- */
-async function saveGroupMods() {
-	await settings.store.set('groupMods', settings.current.groupMods);
-	await settings.store.save();
-}
 </script>

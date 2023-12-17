@@ -62,7 +62,7 @@
 							Select your Resonite install folder below.
 						</p>
 
-						<ResonitePathSelector variant="solo-filled" />
+						<ResonitePathSetting variant="solo-filled" />
 					</v-stepper-window-item>
 
 					<!-- Prerequisite mod installation page -->
@@ -156,20 +156,9 @@
 							class="mb-5"
 						>
 							<template #append-inner>
-								<v-scroll-x-reverse-transition>
-									<div v-if="copiedLaunchParameter" class="me-2">Copied!</div>
-								</v-scroll-x-reverse-transition>
-
-								<v-tooltip text="Copy" :open-delay="500" location="top">
-									<template #activator="{ props }">
-										<v-btn
-											v-bind="props"
-											variant="plain"
-											:icon="mdiContentCopy"
-											@click="copyLaunchParameter"
-										/>
-									</template>
-								</v-tooltip>
+								<FieldCopyButton
+									text="-LoadAssembly Libraries/ResoniteModLoader.dll"
+								/>
 							</template>
 						</v-text-field>
 
@@ -198,12 +187,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { info } from 'tauri-plugin-log-api';
-import { mdiDownload, mdiContentCopy } from '@mdi/js';
+import { mdiDownload } from '@mdi/js';
 
-import useSettings from '../settings';
+import useSettings from '../composables/settings';
 import useModStore from '../stores/mods';
 import ModInstaller from './ModInstaller.vue';
-import ResonitePathSelector from './ResonitePathSelector.vue';
+import ResonitePathSetting from './settings/ResonitePathSetting.vue';
+import FieldCopyButton from './FieldCopyButton.vue';
 
 const settings = useSettings();
 const modStore = useModStore();
@@ -227,17 +217,20 @@ function advanceStep() {
 		step.value++;
 	} else {
 		showDialog.value = false;
+		onModelChange(showDialog.value);
+
+		// Save the necessary settings after allowing time for the dialog hide animation
 		setTimeout(async () => {
-			await settings.store.set('setupGuideDone', true);
-			await settings.store.set('allowClosingSetupGuide', true);
-			settings.store.save();
+			await settings.set('setupGuideDone', true, false);
+			await settings.set('allowClosingSetupGuide', true, false);
+			await settings.persist();
 		}, 500);
 	}
 }
 
 /**
  * Handles model update events for the dialog
- * @param {bool} shown
+ * @param {boolean} shown
  */
 function onModelChange(shown) {
 	if (!shown) {
@@ -246,25 +239,5 @@ function onModelChange(shown) {
 			settings.current.setupGuideDone = true;
 		}, 500);
 	}
-}
-
-const copiedLaunchParameter = ref(false);
-let copiedLaunchParameterTimeout = null;
-
-/**
- * Writes the necessary Steam launch parameter to the clipboard
- */
-function copyLaunchParameter() {
-	navigator.clipboard.writeText(
-		'-LoadAssembly Libraries/ResoniteModLoader.dll',
-	);
-	copiedLaunchParameter.value = true;
-
-	if (copiedLaunchParameterTimeout) clearTimeout(copiedLaunchParameterTimeout);
-
-	copiedLaunchParameterTimeout = setTimeout(() => {
-		copiedLaunchParameter.value = false;
-		copiedLaunchParameterTimeout = null;
-	}, 2000);
 }
 </script>

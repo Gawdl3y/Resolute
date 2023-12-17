@@ -23,6 +23,22 @@
 				</template>
 			</v-tooltip>
 
+			<v-tooltip
+				v-if="settings.current.modAuthorTools"
+				text="Author Tools"
+				:open-delay="500"
+				:disabled="isExpanded"
+			>
+				<template #activator="{ props }">
+					<v-list-item
+						title="Author Tools"
+						:prepend-icon="mdiToolbox"
+						to="/author-tools"
+						v-bind="props"
+					/>
+				</template>
+			</v-tooltip>
+
 			<v-tooltip text="Settings" :open-delay="500" :disabled="isExpanded">
 				<template #activator="{ props }">
 					<v-list-item
@@ -61,14 +77,17 @@ import { ref } from 'vue';
 import {
 	mdiViewDashboard,
 	mdiPackageVariantClosedPlus,
+	mdiToolbox,
 	mdiCog,
 	mdiMenuClose,
 	mdiMenuOpen,
 } from '@mdi/js';
 
+import useSettings from '../composables/settings';
 import sidebarBus from '../sidebar-bus';
 
 const emit = defineEmits(['toggle']);
+const settings = useSettings();
 const isExpanded = ref(false);
 
 /**

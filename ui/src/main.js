@@ -9,6 +9,7 @@ import { disableContextMenu, disableTextSelection } from './util';
 import App from './App.vue';
 import DashboardPage from './components/pages/DashboardPage.vue';
 import ModsPage from './components/pages/ModsPage.vue';
+import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
 import SettingsPage from './components/pages/SettingsPage.vue';
 
 import 'vuetify/styles';
@@ -20,6 +21,7 @@ attachConsole().then(() => {
 		routes: [
 			{ path: '/', component: DashboardPage },
 			{ path: '/mods', component: ModsPage },
+			{ path: '/author-tools', component: ModAuthorToolsPage },
 			{ path: '/settings', component: SettingsPage },
 		],
 	});

@@ -12,7 +12,7 @@
 						v-bind="activator"
 						:icon="mdiFolderSearch"
 						variant="text"
-						@click="openPathChooser"
+						@click="choosePath"
 					/>
 				</template>
 			</v-tooltip>
@@ -26,7 +26,7 @@ import { exists as fsExists } from '@tauri-apps/api/fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
 import { mdiFolderSearch } from '@mdi/js';
 
-import useSettings from '../settings';
+import useSettings from '../../composables/settings';
 
 defineProps({ variant: { type: String, default: 'solo' } });
 const settings = useSettings();
@@ -34,7 +34,7 @@ const settings = useSettings();
 /**
  * Opens a dialog to choose a Resonite installation path and validates it, then saves the setting when confirmed
  */
-async function openPathChooser() {
+async function choosePath() {
 	let dir, exists;
 
 	while (!exists) {
@@ -60,7 +60,6 @@ async function openPathChooser() {
 		}
 	}
 
-	await settings.store.set('resonitePath', dir);
-	await settings.store.save();
+	await settings.set('resonitePath', dir);
 }
 </script>

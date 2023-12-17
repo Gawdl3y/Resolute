@@ -88,7 +88,7 @@
 import { ref, computed } from 'vue';
 import { mdiDownload } from '@mdi/js';
 
-import useSettings from '../settings';
+import useSettings from '../composables/settings';
 import ModInstaller from './ModInstaller.vue';
 
 const props = defineProps({
