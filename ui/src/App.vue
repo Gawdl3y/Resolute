@@ -21,13 +21,13 @@ import UpdateDialog from './components/UpdateDialog.vue';
 import SetupGuideDialog from './components/SetupGuideDialog.vue';
 
 const settings = useSettings();
-settings.init();
+await settings.init();
 
 const themeMediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 const systemTheme = ref(themeMediaMatcher.matches ? 'dark' : 'light');
 const theme = computed(() => settings.current.theme ?? systemTheme.value);
 
-onMounted(async () => {
+onMounted(() => {
 	info('App mounted - showing main window');
 	setTimeout(() => invoke('show_window'), 50);
 	themeMediaMatcher.addEventListener('change', onMatchMediaChange);
