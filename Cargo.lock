@@ -2964,7 +2964,7 @@ dependencies = [
 
 [[package]]
 name = "resolute"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "futures-util",
  "log",
@@ -2981,7 +2981,7 @@ dependencies = [
 
 [[package]]
 name = "resolute-app"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "anyhow",
  "log",
