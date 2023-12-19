@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, time::Duration};
 
 use anyhow::Context;
 use log::{debug, error, info, warn};
@@ -13,27 +13,42 @@ use resolute::{
 };
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
-use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
+use tauri_plugin_log::LogTarget;
 use tauri_plugin_window_state::StateFlags;
 use tokio::{fs, join, sync::Mutex};
 
 mod settings;
 
-#[cfg(debug_assertions)]
-const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::Webview];
-#[cfg(not(debug_assertions))]
-const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::LogDir];
-
 fn main() -> anyhow::Result<()> {
+	// Set up a shared HTTP client
+	let http_client = reqwest::Client::builder()
+		.connect_timeout(Duration::from_secs(10))
+		.use_rustls_tls()
+		.build()
+		.context("Unable to build HTTP client")?;
+
+	// Set up a shared mod downloader
+	let downloader = Downloader::new(http_client.clone());
+
+	// Set up and run the Tauri app
 	tauri::Builder::default()
-		.plugin({
-			let mut builder = tauri_plugin_log::Builder::default().targets(LOG_TARGETS);
+		.plugin(
 			#[cfg(debug_assertions)]
 			{
-				builder = builder.with_colors(ColoredLevelConfig::default());
-			}
-			builder.build()
-		})
+				use tauri_plugin_log::fern::colors::ColoredLevelConfig;
+
+				tauri_plugin_log::Builder::default()
+					.targets(vec![LogTarget::Stdout, LogTarget::Webview])
+					.with_colors(ColoredLevelConfig::default())
+					.build()
+			},
+			#[cfg(not(debug_assertions))]
+			{
+				tauri_plugin_log::Builder::default()
+					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
+					.build()
+			},
+		)
 		.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
 			debug!("{}, {argv:?}, {cwd}", app.package_info().name);
 			app.emit_all("single-instance", Payload { args: argv, cwd }).unwrap();
@@ -49,9 +64,10 @@ fn main() -> anyhow::Result<()> {
 			load_manifest,
 			install_version,
 			verify_resonite_path,
-			checksum_file
+			hash_file
 		])
-		.manage(Downloader::default())
+		.manage(http_client)
+		.manage(downloader)
 		.manage(ResoluteState::default())
 		.setup(|app| {
 			info!(
@@ -182,8 +198,8 @@ fn show_window(window: Window) {
 
 #[tauri::command]
 async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
-	// Build the config for all manifest operations
-	let mut config = manifest::ManifestConfig::default().cache(
+	// Configure the manifest client
+	let mut builder = manifest::Client::builder().cache(
 		app.path_resolver()
 			.app_cache_dir()
 			.expect("unable to locate cache directory")
@@ -193,21 +209,27 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 	// Override the manifest URL if the user has customized it
 	let manifest_url: Option<String> = settings::get(&app, "manifestUrl").map_err(|err| err.to_string())?;
 	if let Some(url) = manifest_url {
-		config = config.url(url.as_ref());
+		builder = builder.url(url.as_ref());
 	}
+
+	// Build the manifest client using the shared HTTP client
+	let http = app.state::<reqwest::Client>();
+	let client = builder.http_client(http.inner().clone()).build();
 
 	// Retrieve the manifest JSON
 	let json = if !bypass_cache {
-		manifest::retrieve(&config).await
+		client.retrieve().await
 	} else {
 		info!("Forcing download of manifest");
-		manifest::download(&config).await
+		client.download().await
 	}
 	.map_err(|err| format!("Error downloading manifest: {}", err))?;
 
 	// Parse the manifest JSON then build a mod map out of it
 	let mods = tauri::async_runtime::spawn_blocking(move || -> Result<ResoluteModMap, String> {
-		let manifest = manifest::parse(json.as_str()).map_err(|err| format!("Error parsing manifest: {}", err))?;
+		let manifest = client
+			.parse(json.as_str())
+			.map_err(|err| format!("Error parsing manifest: {}", err))?;
 		Ok(mods::load_manifest(manifest))
 	})
 	.await
@@ -246,17 +268,37 @@ async fn verify_resonite_path(app: AppHandle) -> Result<bool, String> {
 }
 
 #[tauri::command]
-async fn checksum_file(file: String) -> Result<String, String> {
-	let digest = tauri::async_runtime::spawn_blocking(|| {
+async fn hash_file(path: String) -> Result<String, String> {
+	// Verify the path given is a file
+	let meta = fs::metadata(&path)
+		.await
+		.map_err(|err| format!("Unable to read metadata of path: {}", err))?;
+	if !meta.is_file() {
+		return Err("The supplied path isn't a file. Hashing of directories isn't supported.".to_owned());
+	}
+
+	// Hash the file
+	info!("Hashing file {}", path);
+	let file = path.clone();
+	let digest = tauri::async_runtime::spawn_blocking(move || {
 		let mut hasher = Sha256::new();
-		let mut file = std::fs::File::open(file).map_err(|err| format!("Error opening file to hash: {}", err))?;
+		let mut file = std::fs::File::open(file).map_err(|err| format!("Error opening file: {}", err))?;
 		io::copy(&mut file, &mut hasher).map_err(|err| format!("Error hashing file: {}", err))?;
 		Ok::<_, String>(hasher.finalize())
 	})
 	.await
-	.map_err(|err| format!("Error with hashing executor: {}", err))??;
+	.map_err(|err| {
+		error!("Error spawning hashing task for file {}: {}", path, err);
+		format!("Error spawning hashing task: {}", err)
+	})?
+	.map_err(|err| {
+		error!("Error hashing file {}: {}", path, err);
+		format!("Error hashing file: {}", err)
+	})?;
 
-	Ok(format!("{:x}", digest))
+	let hash = format!("{:x}", digest);
+	info!("Finished hashing file {}: {}", path, hash);
+	Ok(hash)
 }
 
 #[derive(Default)]

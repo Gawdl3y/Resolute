@@ -1,6 +1,6 @@
 [package]
 name = "resolute-app"
-version = "0.4.1"
+version = "0.4.2"
 description = "Resolute, a mod manager for Resonite"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
 license = ""
@@ -14,22 +14,29 @@ tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
 resolute = { path = "../resolute" }
-tauri = { version = "1.5", features = [
-	"process-relaunch",
-	"dialog-message",
-	"updater",
-	"dialog-ask",
-	"path-all",
-	"fs-exists",
-	"dialog-open",
-	"shell-open",
-] }
 tokio = { version = "1.34", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
 log = "0.4"
 sha2 = "0.10"
+reqwest = { version = "0.11", features = [
+	"rustls-tls",
+	"stream",
+	"gzip",
+	"brotli",
+	"deflate",
+], default-features = false }
+tauri = { version = "1.5", features = [
+	"updater",
+	"dialog-ask",
+	"dialog-message",
+	"dialog-open",
+	"fs-exists",
+	"path-all",
+	"process-relaunch",
+	"shell-open",
+] }
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = [
 	"colored",
 ] }
