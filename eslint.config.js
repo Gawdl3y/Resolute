@@ -16,5 +16,9 @@ export default [
 	...compat.extends('plugin:prettier-vue/recommended'),
 
 	{ ignores: ['ui/dist', 'target'] },
-	{ plugins: { vue } },
+
+	{
+		plugins: { vue },
+		languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+	},
 ];

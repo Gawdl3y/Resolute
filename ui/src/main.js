@@ -6,7 +6,7 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { attachConsole } from 'tauri-plugin-log-api';
 
 import { disableContextMenu, disableTextSelection } from './util';
-import App from './App.vue';
+import AppWrapper from './AppWrapper.vue';
 import DashboardPage from './components/pages/DashboardPage.vue';
 import ModsPage from './components/pages/ModsPage.vue';
 import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
@@ -26,7 +26,7 @@ attachConsole().then(() => {
 		],
 	});
 
-	createApp(App)
+	createApp(AppWrapper)
 		.use(router)
 		.use(createPinia())
 		.use(
