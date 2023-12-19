@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, time::Duration};
 
 use anyhow::Context;
 use log::{debug, error, info, warn};
@@ -20,6 +20,17 @@ use tokio::{fs, join, sync::Mutex};
 mod settings;
 
 fn main() -> anyhow::Result<()> {
+	// Set up a shared HTTP client
+	let http_client = reqwest::Client::builder()
+		.connect_timeout(Duration::from_secs(10))
+		.use_rustls_tls()
+		.build()
+		.context("Unable to build HTTP client")?;
+
+	// Set up a shared mod downloader
+	let downloader = Downloader::new(http_client.clone());
+
+	// Set up and run the Tauri app
 	tauri::Builder::default()
 		.plugin(
 			#[cfg(debug_assertions)]
@@ -55,7 +66,8 @@ fn main() -> anyhow::Result<()> {
 			verify_resonite_path,
 			checksum_file
 		])
-		.manage(Downloader::default())
+		.manage(http_client)
+		.manage(downloader)
 		.manage(ResoluteState::default())
 		.setup(|app| {
 			info!(
@@ -186,8 +198,8 @@ fn show_window(window: Window) {
 
 #[tauri::command]
 async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
-	// Build the config for all manifest operations
-	let mut config = manifest::ManifestConfig::default().cache(
+	// Configure the manifest client
+	let mut builder = manifest::Client::builder().cache(
 		app.path_resolver()
 			.app_cache_dir()
 			.expect("unable to locate cache directory")
@@ -197,21 +209,27 @@ async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteMod
 	// Override the manifest URL if the user has customized it
 	let manifest_url: Option<String> = settings::get(&app, "manifestUrl").map_err(|err| err.to_string())?;
 	if let Some(url) = manifest_url {
-		config = config.url(url.as_ref());
+		builder = builder.url(url.as_ref());
 	}
+
+	// Build the manifest client using the shared HTTP client
+	let http = app.state::<reqwest::Client>();
+	let client = builder.http_client(http.inner().clone()).build();
 
 	// Retrieve the manifest JSON
 	let json = if !bypass_cache {
-		manifest::retrieve(&config).await
+		client.retrieve().await
 	} else {
 		info!("Forcing download of manifest");
-		manifest::download(&config).await
+		client.download().await
 	}
 	.map_err(|err| format!("Error downloading manifest: {}", err))?;
 
 	// Parse the manifest JSON then build a mod map out of it
 	let mods = tauri::async_runtime::spawn_blocking(move || -> Result<ResoluteModMap, String> {
-		let manifest = manifest::parse(json.as_str()).map_err(|err| format!("Error parsing manifest: {}", err))?;
+		let manifest = client
+			.parse(json.as_str())
+			.map_err(|err| format!("Error parsing manifest: {}", err))?;
 		Ok(mods::load_manifest(manifest))
 	})
 	.await
