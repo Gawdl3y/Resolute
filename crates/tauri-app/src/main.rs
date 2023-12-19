@@ -13,27 +13,31 @@ use resolute::{
 };
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
-use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
+use tauri_plugin_log::LogTarget;
 use tauri_plugin_window_state::StateFlags;
 use tokio::{fs, join, sync::Mutex};
 
 mod settings;
 
-#[cfg(debug_assertions)]
-const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::Webview];
-#[cfg(not(debug_assertions))]
-const LOG_TARGETS: [LogTarget; 2] = [LogTarget::Stdout, LogTarget::LogDir];
-
 fn main() -> anyhow::Result<()> {
 	tauri::Builder::default()
-		.plugin({
-			let mut builder = tauri_plugin_log::Builder::default().targets(LOG_TARGETS);
+		.plugin(
 			#[cfg(debug_assertions)]
 			{
-				builder = builder.with_colors(ColoredLevelConfig::default());
-			}
-			builder.build()
-		})
+				use tauri_plugin_log::fern::colors::ColoredLevelConfig;
+
+				tauri_plugin_log::Builder::default()
+					.targets(vec![LogTarget::Stdout, LogTarget::Webview])
+					.with_colors(ColoredLevelConfig::default())
+					.build()
+			},
+			#[cfg(not(debug_assertions))]
+			{
+				tauri_plugin_log::Builder::default()
+					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
+					.build()
+			},
+		)
 		.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
 			debug!("{}, {argv:?}, {cwd}", app.package_info().name);
 			app.emit_all("single-instance", Payload { args: argv, cwd }).unwrap();
