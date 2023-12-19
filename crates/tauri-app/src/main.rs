@@ -64,7 +64,7 @@ fn main() -> anyhow::Result<()> {
 			load_manifest,
 			install_version,
 			verify_resonite_path,
-			checksum_file
+			hash_file
 		])
 		.manage(http_client)
 		.manage(downloader)
@@ -268,17 +268,37 @@ async fn verify_resonite_path(app: AppHandle) -> Result<bool, String> {
 }
 
 #[tauri::command]
-async fn checksum_file(file: String) -> Result<String, String> {
-	let digest = tauri::async_runtime::spawn_blocking(|| {
+async fn hash_file(path: String) -> Result<String, String> {
+	// Verify the path given is a file
+	let meta = fs::metadata(&path)
+		.await
+		.map_err(|err| format!("Unable to read metadata of path: {}", err))?;
+	if !meta.is_file() {
+		return Err("The supplied path isn't a file. Hashing of directories isn't supported.".to_owned());
+	}
+
+	// Hash the file
+	info!("Hashing file {}", path);
+	let file = path.clone();
+	let digest = tauri::async_runtime::spawn_blocking(move || {
 		let mut hasher = Sha256::new();
-		let mut file = std::fs::File::open(file).map_err(|err| format!("Error opening file to hash: {}", err))?;
+		let mut file = std::fs::File::open(file).map_err(|err| format!("Error opening file: {}", err))?;
 		io::copy(&mut file, &mut hasher).map_err(|err| format!("Error hashing file: {}", err))?;
 		Ok::<_, String>(hasher.finalize())
 	})
 	.await
-	.map_err(|err| format!("Error with hashing executor: {}", err))??;
+	.map_err(|err| {
+		error!("Error spawning hashing task for file {}: {}", path, err);
+		format!("Error spawning hashing task: {}", err)
+	})?
+	.map_err(|err| {
+		error!("Error hashing file {}: {}", path, err);
+		format!("Error hashing file: {}", err)
+	})?;
 
-	Ok(format!("{:x}", digest))
+	let hash = format!("{:x}", digest);
+	info!("Finished hashing file {}: {}", path, hash);
+	Ok(hash)
 }
 
 #[derive(Default)]
