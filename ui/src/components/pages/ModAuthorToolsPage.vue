@@ -23,7 +23,7 @@
 										variant="text"
 										:icon="mdiFileSearch"
 										:loading="checksumLoading"
-										@click="hashFile"
+										@click="hashFile()"
 									/>
 								</template>
 							</v-tooltip>
@@ -90,6 +90,7 @@ onUnmounted(() => {
 
 /**
  * Opens a dialog to choose a file, then requests the backend to calculate the checksum for that file
+ * @param {string} [file=null] File path to hash (skips dialog if provided)
  */
 async function hashFile(file = null) {
 	// Prompt to choose a file
