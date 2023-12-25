@@ -6,10 +6,10 @@ use std::{io, path::PathBuf, time::Duration};
 use anyhow::Context;
 use log::{debug, error, info, warn};
 use resolute::{
+	discover::discover_resonite,
 	download::Downloader,
 	manifest,
 	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
-	path_discover::discover_resonite,
 };
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
@@ -155,40 +155,25 @@ async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error>
 	// If the path isn't already configured, try to find one automatically
 	if !path_configured {
 		info!("Resonite path not configured, running autodiscovery");
-		let found_path = discover_resonite().await?;
 
-		match found_path {
-			Some(resonite_path) => {
-				info!("Discovered Resonite path: {}", resonite_path.display());
+		// Run discovery
+		let resonite_dir = tauri::async_runtime::spawn_blocking(|| discover_resonite(None))
+			.await
+			.context("Unable to spawn blocking task for discovery")??;
 
-				// On Windows, strip the UNC prefix from the string if it's there
-				#[cfg(target_os = "windows")]
-				let plain = {
-					let plain = resonite_path.to_str().ok_or_else(|| {
-						resolute::Error::Path("unable to convert discovered resonite path to string".to_owned())
-					})?;
-					if plain.starts_with(r#"\\?\"#) {
-						plain.strip_prefix(r#"\\?\"#).ok_or_else(|| {
-							resolute::Error::Path("unable to strip unc prefix from discovered resonite path".to_owned())
-						})?
-					} else {
-						plain
-					}
-				};
-
-				#[cfg(not(target_os = "windows"))]
-				let plain = resonite_path;
-
-				settings::set(&app, "resonitePath", plain)?
+		// If discovery found a path, save it to the setting
+		match resonite_dir {
+			Some(resonite_dir) => {
+				info!("Discovered Resonite path: {}", resonite_dir.display());
+				settings::set(&app, "resonitePath", resonite_dir)?
 			}
-
 			None => {
 				info!("Autodiscovery didn't find a Resonite path");
 			}
 		}
 	}
 
-	Ok::<(), anyhow::Error>(())
+	Ok(())
 }
 
 #[tauri::command]
