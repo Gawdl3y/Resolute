@@ -1,6 +1,6 @@
 [package]
 name = "resolute"
-version = "0.3.0"
+version = "0.4.0"
 description = "Resonite mod manifest and dependency resolution library"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
 license = ""
@@ -18,6 +18,4 @@ reqwest = { version = "0.11", features = ["stream"] }
 futures-util = "0.3"
 path-clean = "1.0"
 sha2 = "0.10"
-
-[target.'cfg(windows)'.dependencies]
-winreg = "0.52"
+steamlocate = "2.0.0-beta.2"

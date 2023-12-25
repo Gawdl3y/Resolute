@@ -28,7 +28,7 @@ jobs:
           failOnError: true
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}\n\n**Full changelog:** [`#{{FROM_TAG}}...#{{TO_TAG}}`](#{{RELEASE_DIFF}})\n**Previous release:** [#{{FROM_TAG}}](https://github.com/#{{OWNER}}/#{{REPO}}/releases/tag/#{{FROM_TAG}})\n**All releases:** https://github.com/#{{OWNER}}/#{{REPO}}/releases",
+              "template": "#{{CHANGELOG}}\n\n**Full changelog:** [`#{{FROM_TAG}}...#{{TO_TAG}}`](#{{RELEASE_DIFF}})  \n**Previous release:** [#{{FROM_TAG}}](https://github.com/#{{OWNER}}/#{{REPO}}/releases/tag/#{{FROM_TAG}})  \n**All releases:** https://github.com/#{{OWNER}}/#{{REPO}}/releases",
               "pr_template": "- PR ##{{NUMBER}}: #{{TITLE}} (@#{{AUTHOR}})",
               "categories": [
                 {
