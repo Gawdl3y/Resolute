@@ -65,6 +65,7 @@ fn main() -> anyhow::Result<()> {
 			show_window,
 			load_manifest,
 			install_version,
+			discover_resonite_path,
 			verify_resonite_path,
 			hash_file
 		])
@@ -161,7 +162,7 @@ async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error>
 		// Run discovery
 		let resonite_dir = tauri::async_runtime::spawn_blocking(|| discover_resonite(None))
 			.await
-			.context("Unable to spawn blocking task for discovery")??;
+			.context("Unable to spawn blocking task for Resonite path autodiscovery")??;
 
 		// If discovery found a path, save it to the setting
 		match resonite_dir {
@@ -244,6 +245,28 @@ async fn install_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion)
 
 	info!("Successfully installed mod {} v{}", rmod.name, version.semver);
 	Ok(())
+}
+
+#[tauri::command]
+async fn discover_resonite_path() -> Result<Option<String>, String> {
+	let path = tauri::async_runtime::spawn_blocking(|| discover_resonite(None))
+		.await
+		.map_err(|err| {
+			error!("Unable to spawn blocking task for Resonite path discovery: {}", err);
+			format!("Unable to spawn blocking task for Resonite path discovery: {}", err)
+		})?
+		.map_err(|err| {
+			error!("Unable to discover Resonite path: {}", err);
+			format!("Unable to discover Resonite path: {}", err)
+		})?;
+
+	match path {
+		Some(path) => path.to_str().map(|path| Some(path.to_owned())).ok_or_else(|| {
+			error!("Unable to convert discovered Resonite path ({:?}) to a String", path);
+			"Unable to convert discovered Resonite path to a String".to_owned()
+		}),
+		None => Ok(None),
+	}
 }
 
 #[tauri::command]
