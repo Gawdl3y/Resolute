@@ -1,6 +1,6 @@
 [package]
 name = "resolute-app"
-version = "0.4.3"
+version = "0.5.0"
 description = "Resolute, a mod manager for Resonite"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
 license = ""

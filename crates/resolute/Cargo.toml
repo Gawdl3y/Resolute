@@ -1,6 +1,6 @@
 [package]
 name = "resolute"
-version = "0.3.0"
+version = "0.4.0"
 description = "Resonite mod manifest and dependency resolution library"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
 license = ""
