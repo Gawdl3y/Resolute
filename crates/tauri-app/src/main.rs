@@ -40,12 +40,14 @@ fn main() -> anyhow::Result<()> {
 				tauri_plugin_log::Builder::default()
 					.targets(vec![LogTarget::Stdout, LogTarget::Webview])
 					.with_colors(ColoredLevelConfig::default())
+					.level_for("rustls", log::LevelFilter::Debug)
 					.build()
 			},
 			#[cfg(not(debug_assertions))]
 			{
 				tauri_plugin_log::Builder::default()
 					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
+					.level(log::LevelFilter::Debug)
 					.build()
 			},
 		)
