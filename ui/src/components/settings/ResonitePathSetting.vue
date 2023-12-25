@@ -6,7 +6,18 @@
 		readonly
 	>
 		<template #append-inner>
-			<v-tooltip text="Change folder" :open-delay="500">
+			<v-tooltip text="Autodetect" :open-delay="500">
+				<template #activator="{ props: activator }">
+					<v-btn
+						v-bind="activator"
+						:icon="mdiAutoFix"
+						variant="text"
+						@click="discoverPath"
+					/>
+				</template>
+			</v-tooltip>
+
+			<v-tooltip text="Choose folder" :open-delay="500">
 				<template #activator="{ props: activator }">
 					<v-btn
 						v-bind="activator"
@@ -21,10 +32,11 @@
 </template>
 
 <script setup>
-import { open, ask } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api';
+import { open, ask, message } from '@tauri-apps/api/dialog';
 import { exists as fsExists } from '@tauri-apps/api/fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
-import { mdiFolderSearch } from '@mdi/js';
+import { mdiFolderSearch, mdiAutoFix } from '@mdi/js';
 
 import useSettings from '../../composables/settings';
 
@@ -61,5 +73,37 @@ async function choosePath() {
 	}
 
 	await settings.set('resonitePath', dir);
+}
+
+/**
+ * Automatically detects a possible Resonite path, prompts the user to confirm using it if one is found, and saves it
+ */
+async function discoverPath() {
+	try {
+		// Try discovering a path
+		const path = await invoke('discover_resonite_path');
+		if (!path) {
+			message(
+				'No Resonite folder could be automatically located. Please manually choose it instead.',
+				{
+					title: 'No Resonite Folder Found',
+					type: 'info',
+				},
+			);
+			return;
+		}
+
+		// Confirm the user wants to use the discovered path
+		const answer = await ask(
+			`Found a Resonite folder:\n${path}\n\nUse this as the Resonite path?`,
+			{ title: 'Found Resonite folder', type: 'info' },
+		);
+		if (answer) await settings.set('resonitePath', path);
+	} catch (err) {
+		message(`Error auto-discovering Resonite path:\n${err}`, {
+			title: 'Autodiscovery Error',
+			type: 'error',
+		});
+	}
 }
 </script>
