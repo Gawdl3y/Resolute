@@ -1,11 +1,7 @@
-use std::{
-	ffi::OsString,
-	path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use futures_util::TryStreamExt;
 use log::{debug, error, info};
-use path_clean::PathClean;
 use reqwest::{Client, IntoUrl};
 use sha2::{Digest, Sha256};
 use tokio::{
@@ -16,23 +12,24 @@ use tokio::{
 use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
+use super::ArtifactPaths;
+
 /// Handles mod downloads
 pub struct Downloader {
-	client: Client,
+	pub base_dest: PathBuf,
+	http_client: Client,
 }
 
 impl Downloader {
-	pub fn new(client: Client) -> Self {
-		Self { client }
+	pub fn new(base_dest: impl AsRef<Path>, http_client: Client) -> Self {
+		Self {
+			http_client,
+			base_dest: base_dest.as_ref().to_owned(),
+		}
 	}
 
 	/// Downloads all relevant artifacts for a specific mod version to their proper destinations in the given base path
-	pub async fn download_version<P>(
-		&self,
-		version: &ModVersion,
-		base_dest: impl AsRef<Path>,
-		progress: P,
-	) -> Result<()>
+	pub async fn download_version<P>(&self, version: &ModVersion, progress: P) -> Result<()>
 	where
 		P: Fn(u64, u64),
 	{
@@ -41,7 +38,7 @@ impl Downloader {
 		// Download all of the artifacts and track any successful ones - on an error, abort any further ones
 		let mut downloaded = Vec::new();
 		for artifact in version.artifacts.iter() {
-			match self.download_artifact(artifact, &base_dest, &progress).await {
+			match self.download_artifact(artifact, &progress).await {
 				Ok(paths) => downloaded.push(paths),
 				Err(err) => {
 					install_error = Some(err);
@@ -94,21 +91,19 @@ impl Downloader {
 	}
 
 	/// Downloads a specific artifact to a temporary destination (filename.dll.new) within a given base path
-	pub async fn download_artifact<P>(
-		&self,
-		artifact: &ModArtifact,
-		base_dest: impl AsRef<Path>,
-		progress: P,
-	) -> Result<ArtifactPaths>
+	pub async fn download_artifact<P>(&self, artifact: &ModArtifact, progress: P) -> Result<ArtifactPaths>
 	where
 		P: Fn(u64, u64),
 	{
-		let paths = ArtifactPaths::try_new(artifact, base_dest)?;
+		let paths = ArtifactPaths::try_new(artifact, &self.base_dest)?;
 
 		// Create any missing directories up to the destination
-		let result = fs::create_dir_all(paths.final_dest.parent().ok_or(Error::Path(
-			"unable to get parent of artifact's final destination".to_owned(),
-		))?)
+		let result = fs::create_dir_all(
+			paths
+				.final_dest
+				.parent()
+				.ok_or_else(|| Error::Path("unable to get parent of artifact's final destination".to_owned()))?,
+		)
 		.await;
 
 		// If the directory creation failed, ignore the error it if it's just because it already exists
@@ -208,7 +203,7 @@ impl Downloader {
 		let dest = dest.as_ref();
 
 		// Make the request
-		let request = self.client.get(url.clone());
+		let request = self.http_client.get(url.clone());
 		let response = request.send().await?;
 
 		// Ensure the request yielded a successful response
@@ -236,7 +231,11 @@ impl Downloader {
 		let actual = format!("{:x}", digest);
 		if actual != checksum.to_lowercase() {
 			let _ = fs::remove_file(dest).await;
-			return Err(Error::Checksum(checksum.to_owned(), actual, url.into()));
+			return Err(Error::Checksum {
+				expected: checksum.to_owned(),
+				checksum: actual,
+				file: url.into(),
+			});
 		}
 
 		debug!("Downloaded artifact to {}", dest.display());
@@ -244,69 +243,32 @@ impl Downloader {
 	}
 }
 
-impl Default for Downloader {
-	fn default() -> Self {
-		Self::new(reqwest::Client::new())
+#[derive(Default)]
+pub struct DownloaderBuilder {
+	base_dest: PathBuf,
+	http_client: Client,
+}
+
+impl DownloaderBuilder {
+	/// Creates a new builder with defaults set
+	pub fn new() -> Self {
+		Self::default()
 	}
-}
 
-/// Contains full paths that an artifact may live in at various stages of installation
-#[derive(Clone, Debug)]
-pub struct ArtifactPaths {
-	/// Full path for an artifact file that has been installed
-	final_dest: PathBuf,
-	/// Full path for an artifact file that has just been downloaded
-	tmp_dest: PathBuf,
-	/// Full path for an artifact file that already existed and has been renamed
-	old_dest: PathBuf,
-}
+	/// Sets the base destination of mod artifacts
+	pub fn base(mut self, base_dest: impl AsRef<Path>) -> Self {
+		self.base_dest = base_dest.as_ref().to_owned();
+		self
+	}
 
-impl ArtifactPaths {
-	/// Builds a set of artifact destination paths for a given artifact and base destination path.
-	/// Fails if there's any issue building the paths or if the artifact's destination ends up outside of the base path.
-	pub fn try_new(artifact: &ModArtifact, base_dest: impl AsRef<Path>) -> Result<Self> {
-		let base_dest = base_dest.as_ref();
+	/// Sets the HTTP client to use
+	pub fn http_client(mut self, http_client: reqwest::Client) -> Self {
+		self.http_client = http_client;
+		self
+	}
 
-		// Add the artifact's install location to the path
-		let mut dest = base_dest.join(match &artifact.install_location {
-			Some(install_location) => {
-				let path = Path::new(install_location);
-				path.strip_prefix("/").or::<Error>(Ok(path))?
-			}
-			None => Path::new("rml_mods"),
-		});
-
-		// Add the artifact's filename to the path
-		let filename = match &artifact.filename {
-			Some(filename) => OsString::from(filename),
-			None => Path::new(artifact.url.path())
-				.file_name()
-				.ok_or(Error::Path(format!(
-					"unable to extract file name from url: {}",
-					artifact.url
-				)))?
-				.to_owned(),
-		};
-		dest.push(&filename);
-
-		// Ensure the final path is inside the base path
-		let final_dest = dest.clean();
-		if !final_dest.starts_with(base_dest) {
-			return Err(Error::Path(
-				"artifact's final destination is not a subdirectory of the base destination".to_owned(),
-			));
-		}
-
-		// Build the temporary and old filenames
-		let mut tmp_filename = filename.clone();
-		tmp_filename.push(".new");
-		let mut old_filename = filename;
-		old_filename.push(".old");
-
-		Ok(Self {
-			tmp_dest: final_dest.with_file_name(tmp_filename),
-			old_dest: final_dest.with_file_name(old_filename),
-			final_dest,
-		})
+	/// Creates a Client using this builder's configuration and HTTP client
+	pub fn build(self) -> Downloader {
+		Downloader::new(self.base_dest, self.http_client)
 	}
 }

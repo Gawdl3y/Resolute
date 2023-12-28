@@ -3,6 +3,11 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+#[cfg(feature = "db")]
+use native_db::*;
+#[cfg(feature = "db")]
+use native_model::{native_model, Model};
+
 use crate::manifest::{
 	ManifestAuthors, ManifestData, ManifestEntryArtifact, ManifestEntryDependencies, ManifestEntryVersions,
 };
@@ -36,6 +41,7 @@ pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
 					tags: entry.tags,
 					flags: entry.flags,
 					platforms: entry.platforms,
+					installed_version: None,
 				}
 			})
 		})
@@ -96,9 +102,23 @@ pub type ResoluteModMap = HashMap<String, ResoluteMod>;
 
 /// A single Resonite mod with all information relevant to it
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "db", native_model(id = 1, version = 1))]
+#[cfg_attr(feature = "db", native_db)]
 pub struct ResoluteMod {
+	// The primary_key and secondary_key macros don't work with cfg_attr for whatever reason
+	#[cfg(feature = "db")]
+	#[primary_key]
 	pub id: String,
+	#[cfg(not(feature = "db"))]
+	pub id: String,
+
+	// The primary_key and secondary_key macros don't work with cfg_attr for whatever reason
+	#[cfg(feature = "db")]
+	#[secondary_key]
 	pub name: String,
+	#[cfg(not(feature = "db"))]
+	pub name: String,
+
 	pub description: String,
 	pub category: String,
 	pub authors: Vec<ModAuthor>,
@@ -109,6 +129,7 @@ pub struct ResoluteMod {
 	pub flags: Option<Vec<String>>,
 	pub platforms: Option<Vec<String>>,
 	pub versions: HashMap<String, ModVersion>,
+	pub installed_version: Option<String>,
 }
 
 /// Details for an author of a mod

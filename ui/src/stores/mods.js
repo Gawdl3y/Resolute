@@ -57,7 +57,7 @@ export const useModStore = defineStore('mods', () => {
 			await info(
 				`Requesting installation of mod ${mod.name} v${version.semver}`,
 			);
-			await invoke('install_version', {
+			await invoke('install_mod_version', {
 				rmod: mod,
 				version,
 			});

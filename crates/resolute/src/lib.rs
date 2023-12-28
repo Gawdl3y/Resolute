@@ -1,6 +1,8 @@
+#[cfg(feature = "db")]
+pub mod db;
 pub mod discover;
-pub mod download;
 mod error;
+pub mod manager;
 pub mod manifest;
 pub mod mods;
 

@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { invoke } from '@tauri-apps/api';
 import { Store } from 'tauri-plugin-store-api';
 import { info } from 'tauri-plugin-log-api';
 
@@ -46,6 +47,7 @@ export function useSettings() {
 		await store.set(setting, value);
 		info(`Setting ${setting} set to ${value}, persistNow = ${persistNow}`);
 		if (persistNow) await persist();
+		if (setting === 'resonitePath') invoke('resonite_path_changed');
 	}
 
 	/**
