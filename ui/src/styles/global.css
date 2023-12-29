@@ -1,8 +1,4 @@
 :root {
-	font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-	font-size: 16px;
-	line-height: 24px;
-	font-weight: 400;
 	cursor: default;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
@@ -15,7 +11,7 @@
 	--theme-primary-lighten-2: 100, 181, 247;
 }
 
-html,
+:root,
 body,
 #app {
 	width: 100%;
@@ -33,4 +29,18 @@ a:hover:not(.v-list-item) {
 
 a:focus:not(.v-list-item) {
 	color: rgb(var(--theme-primary-lighten-2));
+}
+
+pre {
+	font-family: 'Roboto Mono';
+	font-size: 14px;
+}
+
+.text-mono {
+	font-family: 'Roboto Mono' !important;
+	font-size: 14px !important;
+}
+
+.text-mono .v-field {
+	font-size: 14px !important;
 }

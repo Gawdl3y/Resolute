@@ -17,6 +17,7 @@
 				</td>
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
+				<td><ModVersionStatus :mod="mod" /></td>
 				<td>
 					<ModInstaller v-slot="{ install, installing, busy }" :mod="mod.id">
 						<v-tooltip text="Install" :open-delay="500">
@@ -89,6 +90,7 @@ import { ref, computed } from 'vue';
 import { mdiDownload } from '@mdi/js';
 
 import useSettings from '../composables/settings';
+import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
 
 const props = defineProps({
@@ -103,6 +105,7 @@ const headers = computed(() => {
 		{ title: 'Name', key: 'name' },
 		{ title: 'Description', key: 'description' },
 		{ title: 'Category', key: 'category' },
+		{ title: 'Version', key: 'sortableVersionStatus' },
 		{ title: null, sortable: false },
 	];
 
@@ -114,9 +117,12 @@ const headers = computed(() => {
 
 	return headers;
 });
+
+const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+
 const groupBy = computed(() =>
 	settings.current.groupMods ? [{ key: 'category', order: 'asc' }] : undefined,
 );
-const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+
 const filter = ref(null);
 </script>

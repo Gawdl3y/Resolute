@@ -14,6 +14,7 @@
 		"format:check": "prettier --check ."
 	},
 	"dependencies": {
+		"@fontsource/roboto-mono": "^5.0.16",
 		"@mdi/js": "^7.3.67",
 		"@tauri-apps/api": "^1.5.1",
 		"dompurify": "^3.0.6",

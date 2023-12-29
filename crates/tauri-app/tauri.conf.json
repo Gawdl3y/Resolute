@@ -28,10 +28,6 @@
 			"process": {
 				"all": false,
 				"relaunch": true
-			},
-			"shell": {
-				"all": false,
-				"open": true
 			}
 		},
 		"bundle": {
