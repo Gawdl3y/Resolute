@@ -12,7 +12,7 @@ use resolute::{
 	discover::discover_resonite,
 	manager::ModManager,
 	manifest,
-	mods::{self, ModVersion, ResoluteMod, ResoluteModMap},
+	mods::{ModVersion, ResoluteMod, ResoluteModMap},
 };
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
 		.plugin(tauri_plugin_store::Builder::default().build())
 		.invoke_handler(tauri::generate_handler![
 			show_window,
-			load_manifest,
+			load_all_mods,
 			install_mod_version,
 			discover_resonite_path,
 			verify_resonite_path,
@@ -74,7 +74,6 @@ fn main() -> anyhow::Result<()> {
 			resonite_path_changed,
 		])
 		.manage(http_client)
-		.manage(ResoluteState::default())
 		.setup(|app| {
 			let window = app.get_window("main").ok_or("unable to get main window")?;
 
@@ -247,46 +246,37 @@ fn show_window(window: Window) -> Result<(), String> {
 
 /// Loads the manifest data and parses it into a mod map
 #[tauri::command]
-async fn load_manifest(app: AppHandle, bypass_cache: bool) -> Result<ResoluteModMap, String> {
-	// Configure the manifest client
-	let mut builder = manifest::Client::builder().cache(
-		app.path_resolver()
-			.app_cache_dir()
-			.ok_or_else(|| "Unable to locate cache directory".to_owned())?
-			.join("resonite-mod-manifest.json"),
-	);
+async fn load_all_mods(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	bypass_cache: bool,
+) -> Result<ResoluteModMap, String> {
+	// Build a manifest config to use
+	let mut manifest_config = manifest::Config {
+		cache_file_path: Some(
+			app.path_resolver()
+				.app_cache_dir()
+				.ok_or_else(|| "Unable to locate cache directory".to_owned())?
+				.join("resonite-mod-manifest.json"),
+		),
+		..manifest::Config::default()
+	};
 
-	// Override the manifest URL if the user has customized it
+	// Override the manifest URL if the user has configured a custom one
 	let manifest_url: Option<String> = settings::get(&app, "manifestUrl").map_err(|err| err.to_string())?;
 	if let Some(url) = manifest_url {
-		builder = builder.url(url.as_ref());
+		manifest_config
+			.set_remote_url(url.as_ref())
+			.map_err(|_err| "Unable to parse custom manifest URL".to_owned())?;
 	}
 
-	// Build the manifest client using the shared HTTP client
-	let http = app.state::<reqwest::Client>();
-	let client = builder.http_client(http.inner().clone()).build();
-
-	// Retrieve the manifest JSON
-	let json = if !bypass_cache {
-		client.retrieve().await
-	} else {
-		info!("Forcing download of manifest");
-		client.download().await
-	}
-	.map_err(|err| format!("Error downloading manifest: {}", err))?;
-
-	// Parse the manifest JSON then build a mod map out of it
-	let mods = tauri::async_runtime::spawn_blocking(move || -> Result<ResoluteModMap, String> {
-		let manifest = client
-			.parse(json.as_str())
-			.map_err(|err| format!("Error parsing manifest: {}", err))?;
-		Ok(mods::load_manifest(manifest))
-	})
-	.await
-	.map_err(|err| format!("Error loading manifest: {}", err))??;
-
-	let state = app.state::<ResoluteState>();
-	*state.mods.lock().await = mods.clone();
+	// Retrieve all mods from the manager
+	let mods = manager
+		.lock()
+		.await
+		.get_all_mods(manifest_config, bypass_cache)
+		.await
+		.map_err(|err| format!("Unable to get all mods from manager: {}", err))?;
 	Ok(mods)
 }
 
@@ -399,11 +389,6 @@ async fn resonite_path_changed(app: AppHandle) -> Result<(), String> {
 	manager.lock().await.set_base_dest(&resonite_path);
 	info!("Changed manager's base destination to {}", resonite_path);
 	Ok(())
-}
-
-#[derive(Default)]
-struct ResoluteState {
-	mods: Mutex<ResoluteModMap>,
 }
 
 #[derive(Clone, serde::Serialize)]

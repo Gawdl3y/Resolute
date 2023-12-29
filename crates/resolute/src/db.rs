@@ -26,6 +26,18 @@ impl<'a> ResoluteDatabase<'a> {
 		Ok(mods)
 	}
 
+	/// Retrieves all mods from the database that have an installed version
+	pub fn get_installed_mods(&self) -> Result<Vec<ResoluteMod>> {
+		let read = self.db.r_transaction()?;
+		let mods = read
+			.scan()
+			.primary()?
+			.all()
+			.filter(|rmod: &ResoluteMod| rmod.installed_version.is_some())
+			.collect();
+		Ok(mods)
+	}
+
 	/// Retrieves a single mod from the database by its ID
 	pub fn get_mod(&self, id: String) -> Result<Option<ResoluteMod>> {
 		let read = self.db.r_transaction()?;

@@ -129,6 +129,7 @@ pub struct ResoluteMod {
 	pub flags: Option<Vec<String>>,
 	pub platforms: Option<Vec<String>>,
 	pub versions: HashMap<String, ModVersion>,
+	#[serde(rename = "installedVersion")]
 	pub installed_version: Option<String>,
 }
 

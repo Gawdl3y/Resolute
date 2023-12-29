@@ -17,6 +17,9 @@ pub enum Error {
 	#[error("unable to process path: {0}")]
 	Path(String),
 
+	#[error("unable to parse url: {0}")]
+	Url(String),
+
 	#[error("json error: {0}")]
 	Json(#[from] serde_json::Error),
 
