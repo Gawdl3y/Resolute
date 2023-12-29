@@ -3,11 +3,12 @@
 		:headers="headers"
 		:items="items"
 		item-key="id"
-		:items-per-page="25"
+		:items-per-page="settings.current[modsPerPageSetting]"
 		:loading="loading"
 		:search="filter"
 		:group-by="groupBy"
 		fixed-header
+		@update:items-per-page="onItemsPerPageUpdate"
 	>
 		<template #item="{ item: mod }">
 			<tr>
@@ -100,6 +101,9 @@ const props = defineProps({
 });
 const settings = useSettings();
 
+/**
+ * Headers for the data table - automatically adjusted based on whether mods should be grouped
+ */
 const headers = computed(() => {
 	const headers = [
 		{ title: 'Name', key: 'name' },
@@ -118,11 +122,35 @@ const headers = computed(() => {
 	return headers;
 });
 
+/**
+ * Items for the data table
+ */
 const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 
+/**
+ * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
+ */
 const groupBy = computed(() =>
 	settings.current.groupMods ? [{ key: 'category', order: 'asc' }] : undefined,
 );
 
+/**
+ * Text to filter the table with
+ */
 const filter = ref(null);
+
+/**
+ * Setting key to use for the itemsPerPage parameter on the table
+ */
+const modsPerPageSetting = computed(
+	() => `modsPerPage${groupBy.value ? 'Grouped' : 'Ungrouped'}`,
+);
+
+/**
+ * Handles an update to the itemsPerPage selection on the table
+ * @param {number} itemsPerPage
+ */
+function onItemsPerPageUpdate(itemsPerPage) {
+	settings.set(modsPerPageSetting.value, itemsPerPage);
+}
 </script>
