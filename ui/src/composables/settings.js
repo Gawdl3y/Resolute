@@ -10,6 +10,8 @@ const currentSettings = reactive({
 	manifestUrl: null,
 	theme: null,
 	groupMods: true,
+	modsPerPageGrouped: -1,
+	modsPerPageUngrouped: 25,
 	modAuthorTools: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
