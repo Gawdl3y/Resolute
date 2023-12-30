@@ -1,6 +1,8 @@
 <template>
 	<AppHeader :title="title">
 		<template #actions>
+			<slot name="actions" />
+
 			<v-tooltip text="Refresh mods" :open-delay="500">
 				<template #activator="{ props: tooltipProps }">
 					<v-btn
