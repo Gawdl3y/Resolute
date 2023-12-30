@@ -38,6 +38,7 @@ tauri = { version = "1.5", features = [
 	"fs-exists",
 	"path-all",
 	"process-relaunch",
+	"shell-open",
 ] }
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = [
 	"colored",
