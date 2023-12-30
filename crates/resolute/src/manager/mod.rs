@@ -53,13 +53,15 @@ impl_ModManager_with_without_db! {
 
 		/// Gets all mods that have a version installed
 		#[cfg(feature = "db")]
-		pub fn get_installed_mods(&self) -> Result<ResoluteModMap> {
-			let mods = self
-				.db
-				.get_mods()?
-				.into_iter()
-				.map(|rmod| (rmod.id.clone(), rmod))
-				.collect();
+		pub async fn get_installed_mods(&self) -> Result<ResoluteModMap> {
+			let mods = tokio::task::block_in_place(move || -> Result<ResoluteModMap> {
+				Ok(self
+					.db
+					.get_installed_mods()?
+					.into_iter()
+					.map(|rmod| (rmod.id.clone(), rmod))
+					.collect())
+			})?;
 			Ok(mods)
 		}
 
@@ -75,24 +77,24 @@ impl_ModManager_with_without_db! {
 				manifest.download().await
 			}?;
 
-			// Parse the JSON into raw manifest data, load that into a mod map, and mark any installed mods in it
-			let mods = tokio::task::block_in_place(move || -> Result<ResoluteModMap> {
+			// Parse the JSON into raw manifest data, load that into a mod map
+			let mut mods = tokio::task::spawn_blocking(move || -> Result<ResoluteModMap> {
 				let data = manifest.parse(&json)?;
-				let mut mods = mods::load_manifest(data);
-
-				#[cfg(feature = "db")]
-				self.mark_installed_mods(&mut mods)?;
-
+				let mods = mods::load_manifest(data);
 				Ok(mods)
-			})?;
+			})
+			.await??;
+
+			#[cfg(feature = "db")]
+			self.mark_installed_mods(&mut mods).await?;
 
 			Ok(mods)
 		}
 
 		/// Fills in the installed_version field for all mods in a map that are installed
 		#[cfg(feature = "db")]
-		pub fn mark_installed_mods(&self, mods: &mut ResoluteModMap) -> Result<()> {
-			let installed_mods = self.get_installed_mods()?;
+		pub async fn mark_installed_mods(&self, mods: &mut ResoluteModMap) -> Result<()> {
+			let installed_mods = self.get_installed_mods().await?;
 
 			for (id, rmod) in mods.iter_mut() {
 				if let Some(installed) = installed_mods.get(id) {

@@ -9,14 +9,16 @@ import { ResoluteMod } from '../structs/mod';
 export const useModStore = defineStore('mods', () => {
 	const mods = ref(null);
 	const loading = ref(false);
+	const loadingInstalled = ref(false);
 	const operations = reactive({});
 
 	/**
 	 * Retrieves mod data from the backend
 	 * @param {boolean} [bypassCache=false] Whether to bypass the manifest cache when possible
+	 * @param {boolean} [alert=true] Whether to alert the user for failures
 	 * @returns {Object} Raw mod data
 	 */
-	async function load(bypassCache = false) {
+	async function load(bypassCache = false, alert = true) {
 		if (loading.value) throw new Error('Already loading mods.');
 		loading.value = true;
 
@@ -32,13 +34,49 @@ export const useModStore = defineStore('mods', () => {
 			return mods;
 		} catch (err) {
 			error(`Error loading mods: ${err}`);
-			message(`Error loading mod list:\n${err}`, {
+
+			if (alert) {
+				message(`Error loading mod list:\n${err}`, {
+					title: 'Error loading mods',
+					type: 'error',
+				});
+			}
+
+			throw err;
+		} finally {
+			loading.value = false;
+		}
+	}
+
+	/**
+	 * Retrieves installed mod data from the backend
+	 * @returns {Object} Raw mod data
+	 */
+	async function loadInstalled() {
+		if (loadingInstalled.value) {
+			throw new Error('Already loading installed mods.');
+		}
+		loadingInstalled.value = true;
+
+		try {
+			await info(`Requesting installed mod load`);
+			const mods = await invoke('load_installed_mods');
+			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+
+			console.debug('Installed mods loaded', mods);
+			info(`${Object.keys(mods).length} installed mods loaded`);
+
+			this.$patch({ mods });
+			return mods;
+		} catch (err) {
+			error(`Error loading installed mods: ${err}`);
+			message(`Error loading installed mod list:\n${err}`, {
 				title: 'Error loading mods',
 				type: 'error',
 			});
 			throw err;
 		} finally {
-			loading.value = false;
+			loadingInstalled.value = false;
 		}
 	}
 
@@ -95,7 +133,15 @@ export const useModStore = defineStore('mods', () => {
 		return operations?.[modID] === 'install';
 	}
 
-	return { mods, operations, load, install, isBusy, isInstalling };
+	return {
+		mods,
+		operations,
+		load,
+		loadInstalled,
+		install,
+		isBusy,
+		isInstalling,
+	};
 });
 
 export default useModStore;

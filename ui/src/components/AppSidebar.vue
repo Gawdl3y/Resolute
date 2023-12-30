@@ -1,54 +1,37 @@
 <template>
 	<v-navigation-drawer :rail="!isExpanded" permanent width="180">
 		<v-list nav>
-			<v-tooltip text="Dashboard" :open-delay="500" :disabled="isExpanded">
-				<template #activator="{ props }">
-					<v-list-item
-						title="Dashboard"
-						:prepend-icon="mdiViewDashboard"
-						to="/"
-						v-bind="props"
-					/>
-				</template>
-			</v-tooltip>
-
-			<v-tooltip text="All Mods" :open-delay="500" :disabled="isExpanded">
-				<template #activator="{ props }">
-					<v-list-item
-						title="All Mods"
-						:prepend-icon="mdiPackageVariantClosedPlus"
-						to="/mods"
-						v-bind="props"
-					/>
-				</template>
-			</v-tooltip>
-
-			<v-tooltip
+			<SidebarItem
+				label="Dashboard"
+				path="/"
+				:icon="mdiViewDashboard"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
+				label="Mod Index"
+				path="/mods"
+				:icon="mdiPackageDown"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
+				label="Installed Mods"
+				path="/mods/installed"
+				:icon="mdiPackageCheck"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
 				v-if="settings.current.modAuthorTools"
-				text="Author Tools"
-				:open-delay="500"
-				:disabled="isExpanded"
-			>
-				<template #activator="{ props }">
-					<v-list-item
-						title="Author Tools"
-						:prepend-icon="mdiToolbox"
-						to="/author-tools"
-						v-bind="props"
-					/>
-				</template>
-			</v-tooltip>
-
-			<v-tooltip text="Settings" :open-delay="500" :disabled="isExpanded">
-				<template #activator="{ props }">
-					<v-list-item
-						title="Settings"
-						:prepend-icon="mdiCog"
-						to="/settings"
-						v-bind="props"
-					/>
-				</template>
-			</v-tooltip>
+				label="Author Tools"
+				path="/author-tools"
+				:icon="mdiToolbox"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
+				label="Settings"
+				path="/settings"
+				:icon="mdiCog"
+				:expanded="isExpanded"
+			/>
 		</v-list>
 
 		<template #append>
@@ -76,7 +59,8 @@
 import { ref } from 'vue';
 import {
 	mdiViewDashboard,
-	mdiPackageVariantClosedPlus,
+	mdiPackageDown,
+	mdiPackageCheck,
 	mdiToolbox,
 	mdiCog,
 	mdiMenuClose,
@@ -85,6 +69,7 @@ import {
 
 import useSettings from '../composables/settings';
 import sidebarBus from '../sidebar-bus';
+import SidebarItem from './SidebarItem.vue';
 
 const emit = defineEmits(['toggle']);
 const settings = useSettings();
