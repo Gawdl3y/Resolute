@@ -9,7 +9,7 @@ const currentSettings = reactive({
 	resonitePath: null,
 	manifestUrl: null,
 	theme: null,
-	groupMods: true,
+	groupModIndex: true,
 	modsPerPageGrouped: -1,
 	modsPerPageUngrouped: 25,
 	modAuthorTools: false,

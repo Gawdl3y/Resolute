@@ -14,7 +14,10 @@
 				<v-container>
 					<DropdownSetting setting="theme" :items="themes" label="Theme" />
 					<ResonitePathSetting />
-					<CheckboxSetting setting="groupMods" label="Group mods by category" />
+					<CheckboxSetting
+						setting="groupModIndex"
+						label="Group Mod Index by category"
+					/>
 					<v-btn @click="settings.current.setupGuideDone = false">
 						Setup guide
 					</v-btn>

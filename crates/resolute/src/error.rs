@@ -14,6 +14,9 @@ pub enum Error {
 	#[error("io error: {0}")]
 	Io(#[from] std::io::Error),
 
+	#[error("task error: {0}")]
+	Task(#[from] tokio::task::JoinError),
+
 	#[error("unable to process path: {0}")]
 	Path(String),
 

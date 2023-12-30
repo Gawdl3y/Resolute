@@ -8,7 +8,8 @@ import { attachConsole } from 'tauri-plugin-log-api';
 import { disableContextMenu, disableTextSelection } from './util';
 import AppWrapper from './AppWrapper.vue';
 import DashboardPage from './components/pages/DashboardPage.vue';
-import ModsPage from './components/pages/ModsPage.vue';
+import AllModsPage from './components/pages/AllModsPage.vue';
+import InstalledModsPage from './components/pages/InstalledModsPage.vue';
 import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
 import SettingsPage from './components/pages/SettingsPage.vue';
 
@@ -20,7 +21,8 @@ attachConsole().then(() => {
 		history: createWebHashHistory(),
 		routes: [
 			{ path: '/', component: DashboardPage },
-			{ path: '/mods', component: ModsPage },
+			{ path: '/mods', component: AllModsPage },
+			{ path: '/mods/installed', component: InstalledModsPage },
 			{ path: '/author-tools', component: ModAuthorToolsPage },
 			{ path: '/settings', component: SettingsPage },
 		],

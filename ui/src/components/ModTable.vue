@@ -98,6 +98,7 @@ const props = defineProps({
 	mods: { type: Object, default: null },
 	disabled: { type: Boolean, default: false },
 	loading: { type: Boolean, default: false },
+	allowGrouping: { type: Boolean, default: true },
 });
 const settings = useSettings();
 
@@ -114,7 +115,7 @@ const headers = computed(() => {
 	];
 
 	// If the mods should be grouped, ditch the category header
-	if (settings.current.groupMods) {
+	if (props.allowGrouping && settings.current.groupModIndex) {
 		const categoryIdx = headers.findIndex((head) => head.key === 'category');
 		headers.splice(categoryIdx, 1);
 	}
@@ -130,9 +131,12 @@ const items = computed(() => (props.mods ? Object.values(props.mods) : []));
 /**
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
  */
-const groupBy = computed(() =>
-	settings.current.groupMods ? [{ key: 'category', order: 'asc' }] : undefined,
-);
+const groupBy = computed(() => {
+	if (!props.allowGrouping) return undefined;
+	return settings.current.groupModIndex
+		? [{ key: 'category', order: 'asc' }]
+		: undefined;
+});
 
 /**
  * Text to filter the table with

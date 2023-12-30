@@ -66,6 +66,7 @@ fn main() -> anyhow::Result<()> {
 		.invoke_handler(tauri::generate_handler![
 			show_window,
 			load_all_mods,
+			load_installed_mods,
 			install_mod_version,
 			discover_resonite_path,
 			verify_resonite_path,
@@ -244,7 +245,7 @@ fn show_window(window: Window) -> Result<(), String> {
 	Ok(())
 }
 
-/// Loads the manifest data and parses it into a mod map
+/// Loads all mods from the manager
 #[tauri::command]
 async fn load_all_mods(
 	app: AppHandle,
@@ -277,6 +278,18 @@ async fn load_all_mods(
 		.get_all_mods(manifest_config, bypass_cache)
 		.await
 		.map_err(|err| format!("Unable to get all mods from manager: {}", err))?;
+	Ok(mods)
+}
+
+/// Loads installed mods from the manager
+#[tauri::command]
+async fn load_installed_mods(manager: tauri::State<'_, Mutex<ModManager<'_>>>) -> Result<ResoluteModMap, String> {
+	let mods = manager
+		.lock()
+		.await
+		.get_installed_mods()
+		.await
+		.map_err(|err| format!("Unable to get installed mods from manager: {}", err))?;
 	Ok(mods)
 }
 

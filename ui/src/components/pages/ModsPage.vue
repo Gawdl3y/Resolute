@@ -1,12 +1,12 @@
 <template>
-	<AppHeader title="All Mods">
+	<AppHeader :title="title">
 		<template #actions>
 			<v-tooltip text="Refresh mods" :open-delay="500">
-				<template #activator="{ props }">
+				<template #activator="{ props: tooltipProps }">
 					<v-btn
 						:icon="mdiRefresh"
 						:loading="loading"
-						v-bind="props"
+						v-bind="tooltipProps"
 						@click="loadMods(true)"
 					/>
 				</template>
@@ -15,62 +15,46 @@
 	</AppHeader>
 
 	<v-main v-resize="adjustTableHeight">
-		<v-alert
-			v-if="!resonitePathExists"
-			ref="resonitePathAlert"
-			type="warning"
-			:rounded="false"
-			density="comfortable"
-			class="rounded-0"
-		>
-			{{
-				resonitePathExists === null
-					? 'Please configure the Resonite path in the settings.'
-					: "The configured Resonite path doesn't seem to exist. Please check the settings."
-			}}
-		</v-alert>
+		<div ref="alerts">
+			<slot name="alerts" />
+		</div>
 
 		<ModTable
-			:mods="modStore.mods"
-			:disabled="!resonitePathExists"
+			:mods="mods"
+			:disabled="disabled"
 			:loading="loading"
 			:style="`height: ${tableHeight}`"
+			:allow-grouping="allowGrouping"
 		/>
 	</v-main>
 </template>
 
 <script setup>
-import {
-	ref,
-	computed,
-	watch,
-	onBeforeMount,
-	onMounted,
-	onUnmounted,
-} from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { mdiRefresh } from '@mdi/js';
 
-import useSettings from '../../composables/settings';
-import useModStore from '../../stores/mods';
 import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
 import ModTable from '../ModTable.vue';
 
-const settings = useSettings();
-const modStore = useModStore();
-const resonitePathExists = ref(true);
-const resonitePathAlert = ref(null);
+const props = defineProps({
+	title: { type: String, required: true },
+	mods: { type: Object, default: null },
+	loadMods: { type: Function, required: true },
+	disabled: { type: Boolean, default: false },
+	allowGrouping: { type: Boolean, default: true },
+});
+const alerts = ref(null);
 const loading = ref(false);
 
 const alertHeight = ref(0);
 const tableHeight = computed(() => {
-	if (!resonitePathAlert.value) return '100%';
+	if (!alerts.value) return '100%';
 	return `calc(100% - ${alertHeight.value}px)`;
 });
 
 onMounted(() => {
-	if (!modStore.mods) loadMods(false);
+	if (!props.mods) loadModsFromFn(false);
 	sidebarBus.on('toggle', onSidebarToggle);
 });
 
@@ -83,30 +67,14 @@ onUnmounted(() => {
 	sidebarBus.off('toggle', onSidebarToggle);
 });
 
-onBeforeMount(checkIfResonitePathExists);
-watch(settings.current, checkIfResonitePathExists);
-
-/**
- * Checks whether the Resonite path is configured and exists via the backend
- */
-async function checkIfResonitePathExists() {
-	if (!settings.current.resonitePath) {
-		resonitePathExists.value = null;
-	} else {
-		resonitePathExists.value = await invoke('verify_resonite_path').catch(
-			() => false,
-		);
-	}
-}
-
 /**
  * Loads the mod data
  */
-async function loadMods(bypassCache = false) {
+async function loadModsFromFn(bypassCache = false) {
 	loading.value = true;
 
 	try {
-		await modStore.load(bypassCache);
+		await props.loadMods(bypassCache);
 	} catch (err) {
 		console.error(err);
 	} finally {
@@ -125,7 +93,7 @@ let resizingStartedAt = null;
 function adjustTableHeight() {
 	if (!resizeInterval) {
 		resizeInterval = setInterval(() => {
-			alertHeight.value = resonitePathAlert.value?.$el?.clientHeight ?? 0;
+			alertHeight.value = alerts.value?.clientHeight ?? 0;
 			if (Date.now() - resizingStartedAt > 1000) {
 				clearInterval(resizeInterval);
 				resizeInterval = null;
