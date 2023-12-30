@@ -31,7 +31,11 @@
 					nerd.
 				</p>
 				<p>
-					<a href="https://github.com/Gawdl3y/Resolute" title="Source code">
+					<a
+						href="https://github.com/Gawdl3y/Resolute"
+						target="_blank"
+						title="Source code"
+					>
 						<v-icon :icon="mdiSourceBranch" />
 					</a>
 				</p>
