@@ -111,6 +111,7 @@ export const useModStore = defineStore('mods', () => {
 				title: 'Error installing mod',
 				type: 'error',
 			});
+			throw err;
 		} finally {
 			// Clear the operation for the mod
 			operations[modID] = null;
