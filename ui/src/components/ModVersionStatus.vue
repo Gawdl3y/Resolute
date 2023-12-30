@@ -3,7 +3,7 @@
 		<template #activator="{ props: activator }">
 			<div
 				v-bind="activator"
-				class="d-flex gc-2 align-center"
+				class="d-flex gc-2 align-center justify-space-between"
 				:class="mod.versionTextClass"
 			>
 				{{ mod.installedVersion?.semver ?? mod.latestVersion.semver }}

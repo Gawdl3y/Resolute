@@ -18,7 +18,7 @@
 				</td>
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
-				<td><ModVersionStatus :mod="mod" /></td>
+				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
 				<td>
 					<ModInstaller v-slot="{ install, installing, busy }" :mod="mod.id">
 						<v-tooltip text="Install" :open-delay="500">
