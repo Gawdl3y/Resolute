@@ -7,7 +7,7 @@
 						:icon="mdiRefresh"
 						:loading="loading"
 						v-bind="tooltipProps"
-						@click="loadMods(true)"
+						@click="loadModsFromFn(true)"
 					/>
 				</template>
 			</v-tooltip>

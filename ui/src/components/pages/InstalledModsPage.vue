@@ -28,9 +28,10 @@ const mods = computed(() => {
 
 /**
  * Loads installed mods first, then loads all mods from the manifest to fill in any updated data
+ * @param {boolean} [bypassCache=false] Whether to bypass the manifest cache
  */
-async function loadMods() {
+async function loadMods(bypassCache = false) {
 	await modStore.loadInstalled();
-	await modStore.load(false, false).catch(() => {});
+	await modStore.load(bypassCache, false).catch(() => {});
 }
 </script>
