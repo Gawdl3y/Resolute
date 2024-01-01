@@ -41,6 +41,7 @@
 			:loading="loading"
 			:style="`height: ${tableHeight}`"
 			:allow-grouping="allowGrouping"
+			:no-data-text="noDataText"
 			@show-mod-details="showModDetails"
 		/>
 	</v-main>
@@ -77,6 +78,7 @@ const props = defineProps({
 	loadMods: { type: Function, required: true },
 	disabled: { type: Boolean, default: false },
 	allowGrouping: { type: Boolean, default: true },
+	noDataText: { type: String, default: undefined },
 });
 const settings = useSettings();
 const modStore = useModStore();

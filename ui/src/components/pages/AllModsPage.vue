@@ -1,5 +1,10 @@
 <template>
-	<ModsPage title="Mod Index" :mods="modStore.mods" :load-mods="loadMods" />
+	<ModsPage
+		title="Mod Index"
+		no-data-text="No mod data is available."
+		:mods="modStore.mods"
+		:load-mods="loadMods"
+	/>
 </template>
 
 <script setup>
