@@ -5,7 +5,19 @@
 		:load-mods="loadMods"
 		:allow-grouping="false"
 	>
-		<template #actions>
+		<template #actions="{ resonitePathExists }">
+			<v-tooltip text="Discover installed" :open-delay="500">
+				<template #activator="{ props: tooltipProps }">
+					<v-btn
+						:icon="mdiToyBrickSearch"
+						:loading="modStore.discovering"
+						:disabled="!resonitePathExists"
+						v-bind="tooltipProps"
+						@click="discoverInstalledMods"
+					/>
+				</template>
+			</v-tooltip>
+
 			<v-tooltip text="Update all" :open-delay="500">
 				<template #activator="{ props: tooltipProps }">
 					<v-btn
@@ -13,7 +25,7 @@
 						:loading="modStore.operations.updateAll"
 						:disabled="outdatedMods.length === 0"
 						v-bind="tooltipProps"
-						@click="updateAllMods()"
+						@click="updateAllMods"
 					/>
 				</template>
 			</v-tooltip>
@@ -23,9 +35,9 @@
 
 <script setup>
 import { computed } from 'vue';
-import { message } from '@tauri-apps/api/dialog';
+import { message, ask } from '@tauri-apps/api/dialog';
 import { info, error } from 'tauri-plugin-log-api';
-import { mdiUpdate } from '@mdi/js';
+import { mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
 
 import useModStore from '../../stores/mods';
 import ModsPage from './ModsPage.vue';
@@ -51,22 +63,26 @@ const outdatedMods = computed(() =>
  * @param {boolean} [bypassCache=false] Whether to bypass the manifest cache
  */
 async function loadMods(bypassCache = false) {
-	try {
-		await modStore.loadInstalled();
-	} catch (err) {
-		message(`Error loading installed mods:\n${err}`, {
-			title: 'Error loading mods',
-			type: 'error',
-		});
+	if (!modStore.loadingInstalled) {
+		try {
+			await modStore.loadInstalled();
+		} catch (err) {
+			message(`Error loading installed mods:\n${err}`, {
+				title: 'Error loading mods',
+				type: 'error',
+			});
+		}
 	}
 
-	try {
-		await modStore.load(bypassCache, false);
-	} catch (err) {
-		message(`Error checking for updates:\n${err}`, {
-			title: 'Error loading mods',
-			type: 'error',
-		});
+	if (!modStore.loading) {
+		try {
+			await modStore.load(bypassCache, false);
+		} catch (err) {
+			message(`Error checking for updates:\n${err}`, {
+				title: 'Error loading mods',
+				type: 'error',
+			});
+		}
 	}
 }
 
@@ -127,6 +143,33 @@ async function updateAllMods() {
 		error(`Error batch-updating mods: ${err}`);
 	} finally {
 		modStore.operations.updateAll = false;
+	}
+}
+
+/**
+ * Discovers installed mods
+ */
+async function discoverInstalledMods() {
+	const answer = await ask(
+		`Are you sure you want to discover installed mods?\nThis should only be necessary when mods are manually installed outside of Resolute.`,
+		{ title: 'Discovering installed mods', type: 'info' },
+	);
+	if (!answer) return;
+
+	try {
+		const mods = Object.values(await modStore.discover());
+		const modList = mods
+			.map((mod) => `- ${mod.name} v${mod.installedVersion.semver}`)
+			.join('\n');
+		message(`Discovered ${mods.length} installed mods:\n${modList}`, {
+			title: 'Discovered mods',
+			type: 'info',
+		});
+	} catch (err) {
+		message(`Error discovering installed mods:\n${err}`, {
+			title: 'Error discovering mods',
+			type: 'error',
+		});
 	}
 }
 </script>

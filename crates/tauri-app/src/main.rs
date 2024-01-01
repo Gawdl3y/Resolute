@@ -9,7 +9,7 @@ use native_db::DatabaseBuilder;
 use once_cell::sync::Lazy;
 use resolute::{
 	db::ResoluteDatabase,
-	discover::discover_resonite,
+	discover,
 	manager::ModManager,
 	manifest,
 	mods::{ModVersion, ResoluteMod, ResoluteModMap},
@@ -71,6 +71,7 @@ fn main() -> anyhow::Result<()> {
 			replace_mod_version,
 			uninstall_mod,
 			discover_resonite_path,
+			discover_installed_mods,
 			verify_resonite_path,
 			hash_file,
 			open_log_dir,
@@ -203,7 +204,7 @@ async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error>
 		info!("Resonite path not configured, running autodiscovery");
 
 		// Run discovery
-		let resonite_dir = tauri::async_runtime::spawn_blocking(|| discover_resonite(None))
+		let resonite_dir = tauri::async_runtime::spawn_blocking(|| discover::discover_resonite(None))
 			.await
 			.context("Unable to spawn blocking task for Resonite path autodiscovery")??;
 
@@ -224,6 +225,30 @@ async fn autodiscover_resonite_path(app: AppHandle) -> Result<(), anyhow::Error>
 	}
 
 	Ok(())
+}
+
+/// Builds a manifest config that takes the user-configured settings into account
+fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config, String> {
+	// Build the base config
+	let mut config = manifest::Config {
+		cache_file_path: Some(
+			app.path_resolver()
+				.app_cache_dir()
+				.ok_or_else(|| "Unable to locate cache directory".to_owned())?
+				.join("resonite-mod-manifest.json"),
+		),
+		..manifest::Config::default()
+	};
+
+	// Override the manifest URL if the user has configured a custom one
+	let manifest_url: Option<String> = settings::get(app, "manifestUrl").map_err(|err| err.to_string())?;
+	if let Some(url) = manifest_url {
+		config
+			.set_remote_url(url.as_ref())
+			.map_err(|_err| "Unable to parse custom manifest URL".to_owned())?;
+	}
+
+	Ok(config)
 }
 
 /// Builds the error window for a given error, then closes the main window
@@ -254,30 +279,10 @@ async fn load_all_mods(
 	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
 	bypass_cache: bool,
 ) -> Result<ResoluteModMap, String> {
-	// Build a manifest config to use
-	let mut manifest_config = manifest::Config {
-		cache_file_path: Some(
-			app.path_resolver()
-				.app_cache_dir()
-				.ok_or_else(|| "Unable to locate cache directory".to_owned())?
-				.join("resonite-mod-manifest.json"),
-		),
-		..manifest::Config::default()
-	};
-
-	// Override the manifest URL if the user has configured a custom one
-	let manifest_url: Option<String> = settings::get(&app, "manifestUrl").map_err(|err| err.to_string())?;
-	if let Some(url) = manifest_url {
-		manifest_config
-			.set_remote_url(url.as_ref())
-			.map_err(|_err| "Unable to parse custom manifest URL".to_owned())?;
-	}
-
-	// Retrieve all mods from the manager
 	let mods = manager
 		.lock()
 		.await
-		.get_all_mods(manifest_config, bypass_cache)
+		.get_all_mods(build_manifest_config(&app)?, bypass_cache)
 		.await
 		.map_err(|err| format!("Unable to get all mods from manager: {}", err))?;
 	Ok(mods)
@@ -406,7 +411,7 @@ async fn uninstall_mod(
 /// Looks for a possible Resonite path
 #[tauri::command]
 async fn discover_resonite_path() -> Result<Option<String>, String> {
-	let path = tauri::async_runtime::spawn_blocking(|| discover_resonite(None))
+	let path = tauri::async_runtime::spawn_blocking(|| discover::discover_resonite(None))
 		.await
 		.map_err(|err| {
 			error!("Unable to spawn blocking task for Resonite path discovery: {}", err);
@@ -424,6 +429,31 @@ async fn discover_resonite_path() -> Result<Option<String>, String> {
 		}),
 		None => Ok(None),
 	}
+}
+
+/// Discovers installed mods
+#[tauri::command]
+async fn discover_installed_mods(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+) -> Result<ResoluteModMap, String> {
+	let mut manager = manager.lock().await;
+
+	// Update the Resonite path in case the setting has changed
+	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
+	manager.set_base_dest(resonite_path);
+
+	// Run the discovery
+	info!("Discovering installed mods");
+	let mods = manager
+		.discover_installed_mods(build_manifest_config(&app)?)
+		.await
+		.map_err(|err| {
+			error!("Unable to discover installed mods: {}", err);
+			format!("Unable to discover installed mods: {}", err)
+		})?;
+
+	Ok(mods)
 }
 
 /// Verifies the Resonite path specified in the settings store exists

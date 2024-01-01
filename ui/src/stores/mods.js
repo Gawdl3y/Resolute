@@ -10,6 +10,7 @@ export const useModStore = defineStore('mods', () => {
 	const mods = ref(null);
 	const loading = ref(false);
 	const loadingInstalled = ref(false);
+	const discovering = ref(false);
 	const operations = reactive({});
 
 	/**
@@ -59,7 +60,7 @@ export const useModStore = defineStore('mods', () => {
 		loadingInstalled.value = true;
 
 		try {
-			await info(`Requesting installed mod load`);
+			await info('Requesting installed mod load');
 			const mods = await invoke('load_installed_mods');
 			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
 
@@ -204,6 +205,38 @@ export const useModStore = defineStore('mods', () => {
 	}
 
 	/**
+	 * Requests discovery of installed mods from the backend and alerts the user to the result
+	 * @returns {Object} Raw mod data
+	 */
+	async function discover() {
+		if (discovering.value) {
+			throw new Error('Already discovering installed mods.');
+		}
+		discovering.value = true;
+
+		try {
+			await info('Requesting installed mod discovery');
+			const mods = await invoke('discover_installed_mods');
+			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+
+			console.debug('Installed mods discovered', mods);
+			info(`${Object.keys(mods).length} mods discovered`);
+
+			this.$patch({ mods });
+			return mods;
+		} catch (err) {
+			error(`Error discovering installed mods: ${err}`);
+			message(`Error discovering installed mods:\n${err}`, {
+				title: 'Error discovering mods',
+				type: 'error',
+			});
+			throw err;
+		} finally {
+			discovering.value = false;
+		}
+	}
+
+	/**
 	 * Check whether a mod is being operated on, and thus actions for it should be disabled
 	 * @param {Object} modID
 	 */
@@ -240,6 +273,10 @@ export const useModStore = defineStore('mods', () => {
 		operations,
 		load,
 		loadInstalled,
+		discover,
+		loading,
+		loadingInstalled,
+		discovering,
 		install,
 		uninstall,
 		update,

@@ -2,14 +2,14 @@ mod delete;
 mod download;
 mod paths;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use log::info;
+use log::debug;
 
 #[cfg(feature = "db")]
 use crate::db::ResoluteDatabase;
 use crate::mods::{self, ResoluteMod, ResoluteModMap};
-use crate::{manifest, Error, Result};
+use crate::{discover, manifest, Error, Result};
 
 pub use self::delete::Deleter;
 pub use self::download::Downloader;
@@ -22,6 +22,7 @@ pub struct ModManager<#[cfg(feature = "db")] 'a> {
 	pub db: ResoluteDatabase<'a>,
 	pub downloader: Downloader,
 	pub deleter: Deleter,
+	base_dest: PathBuf,
 	http_client: reqwest::Client,
 }
 
@@ -52,6 +53,7 @@ impl_ModManager_with_without_db! {
 					.build(),
 				deleter: Deleter::new(&base_dest),
 				http_client: http_client.clone(),
+				base_dest: base_dest.as_ref().to_path_buf(),
 			}
 		}
 
@@ -77,7 +79,7 @@ impl_ModManager_with_without_db! {
 			let json = if !bypass_cache {
 				manifest.retrieve().await
 			} else {
-				info!("Forcing download of manifest");
+				debug!("Forcing download of manifest");
 				manifest.download().await
 			}?;
 
@@ -126,7 +128,7 @@ impl_ModManager_with_without_db! {
 			{
 				let mut rmod = rmod.clone();
 				rmod.installed_version = Some(version.semver.clone());
-				self.db.store_mod(rmod)?;
+				tokio::task::block_in_place(|| self.db.store_mod(rmod))?;
 			}
 
 			Ok(())
@@ -177,14 +179,34 @@ impl_ModManager_with_without_db! {
 			// Delete the version artifacts and remove the mod from the database
 			self.deleter.delete_version(installed_version).await?;
 			#[cfg(feature = "db")]
-			self.db.remove_mod(&rmod.id)?;
+			tokio::task::block_in_place(|| self.db.remove_mod(&rmod.id))?;
 
 			Ok(())
+		}
+
+		/// Discovers any installed mods in the base path, and if the "db" feature is active, stores them in the database
+		pub async fn discover_installed_mods(&self, manifest_config: manifest::Config) -> Result<ResoluteModMap> {
+			let all_mods = self.get_all_mods(manifest_config, false).await?;
+
+			let resonite_path = self.base_dest.clone();
+			let discovered = tokio::task::block_in_place(|| discover::discover_mods(resonite_path, all_mods))?;
+
+			#[cfg(feature = "db")]
+			tokio::task::block_in_place(|| {
+				for rmod in discovered.values() {
+					debug!("Storing discovered mod {}", rmod);
+					self.db.store_mod(rmod.clone())?;
+				}
+				Ok::<_, Error>(())
+			})?;
+
+			Ok(discovered)
 		}
 
 		/// Changes the base destination of mods for the manager
 		pub fn set_base_dest(&mut self, path: impl AsRef<Path>) {
 			let path = path.as_ref();
+			self.base_dest = path.to_owned();
 			self.downloader.base_dest = path.to_owned();
 			self.deleter.base_dest = path.to_owned();
 		}

@@ -206,7 +206,7 @@ const prereqsInstalled = ref(0);
 
 onMounted(() => {
 	info('Setup guide showing');
-	if (!modStore.mods) modStore.load();
+	if (!modStore.mods && !modStore.loading) modStore.load();
 });
 
 /**
@@ -225,6 +225,16 @@ function advanceStep() {
 			await settings.set('allowClosingSetupGuide', true, false);
 			await settings.persist();
 		}, 500);
+
+		// Kick off mod autodiscovery
+		if (!settings.current.modsAutodiscovered && !modStore.discovering) {
+			modStore
+				.discover()
+				.then(() => {
+					settings.set('modsAutodiscovered', true);
+				})
+				.catch(() => {});
+		}
 	}
 }
 

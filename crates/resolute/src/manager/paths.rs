@@ -8,7 +8,7 @@ use path_clean::PathClean;
 use crate::{mods::ModArtifact, Error, Result};
 
 /// Contains full paths that an artifact may live in at various stages of installation
-#[derive(Clone, Debug, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ArtifactPaths {
 	/// Full path for an artifact file that has been installed
 	pub final_dest: PathBuf,
@@ -64,5 +64,3 @@ impl ArtifactPaths {
 		})
 	}
 }
-
-impl Eq for ArtifactPaths {}

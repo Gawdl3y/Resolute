@@ -13,12 +13,22 @@ import { ref, computed } from 'vue';
 
 import useModStore from '../../stores/mods';
 
-const props = defineProps({ mod: { type: Object, required: true } });
+const props = defineProps({
+	mod: {
+		required: true,
+		validator(val) {
+			if (!val) return false;
+			return typeof val === 'object' || typeof val === 'string';
+		},
+	},
+});
 const emit = defineEmits(['install', 'error']);
 
 const modStore = useModStore();
-const busy = computed(() => modStore.isBusy(props.mod.id));
-const installing = computed(() => modStore.isInstalling(props.mod.id));
+const busy = computed(() => modStore.isBusy(props.mod?.id ?? props.mod));
+const installing = computed(() =>
+	modStore.isInstalling(props.mod?.id ?? props.mod),
+);
 const installed = ref(false);
 const error = ref(null);
 
@@ -27,7 +37,7 @@ const error = ref(null);
  */
 async function install() {
 	try {
-		await modStore.install(props.mod.id);
+		await modStore.install(props.mod?.id ?? props.mod);
 		installed.value = true;
 		emit('install');
 	} catch (err) {
