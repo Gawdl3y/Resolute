@@ -7,6 +7,7 @@
 		:loading="loading"
 		:search="filter"
 		:group-by="groupBy"
+		:no-data-text="noDataText"
 		fixed-header
 		hover
 		@update:items-per-page="onItemsPerPageUpdate"
@@ -152,6 +153,7 @@ const props = defineProps({
 	disabled: { type: Boolean, default: false },
 	loading: { type: Boolean, default: false },
 	allowGrouping: { type: Boolean, default: true },
+	noDataText: { type: String, default: undefined },
 });
 const emit = defineEmits(['showModDetails']);
 const settings = useSettings();
