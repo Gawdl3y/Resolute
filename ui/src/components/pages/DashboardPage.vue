@@ -18,10 +18,8 @@
 				mods.
 			</p>
 			<p class="mb-6 text-body-1">
-				At the moment, Resolute is capable of installing mods and not much else
-				- although that's already much nicer than doing it by hand! In the
-				future, it will be able to keep track of the installed mods, auto-update
-				them, auto-install required mods, and more!
+				Perhaps this dashboard page will have a bigger purpose in the
+				future&hellip; Only time will tell!
 			</p>
 
 			<div class="d-flex justify-space-between text-body-1 text-disabled">
