@@ -41,7 +41,7 @@
 										variant="plain"
 										density="comfortable"
 										v-bind="activator"
-										@click="uninstall"
+										@click.stop="uninstall"
 									/>
 								</template>
 							</v-tooltip>
@@ -64,7 +64,7 @@
 										variant="plain"
 										density="comfortable"
 										v-bind="activator"
-										@click="install"
+										@click.stop="install"
 									/>
 								</template>
 							</v-tooltip>
@@ -80,7 +80,7 @@
 										variant="plain"
 										density="comfortable"
 										v-bind="activator"
-										@click="update"
+										@click.stop="update"
 									/>
 								</template>
 							</v-tooltip>
