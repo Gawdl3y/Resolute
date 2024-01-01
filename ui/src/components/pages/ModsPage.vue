@@ -41,8 +41,15 @@
 			:loading="loading"
 			:style="`height: ${tableHeight}`"
 			:allow-grouping="allowGrouping"
+			@show-mod-details="showModDetails"
 		/>
 	</v-main>
+
+	<ModDetailsDialog
+		v-if="modDetails"
+		:mod="modDetails"
+		:disabled="disabled || !resonitePathExists"
+	/>
 </template>
 
 <script setup>
@@ -62,6 +69,7 @@ import useModStore from '../../stores/mods';
 import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
 import ModTable from '../mods/ModTable.vue';
+import ModDetailsDialog from '../mods/ModDetailsDialog.vue';
 
 const props = defineProps({
 	title: { type: String, required: true },
@@ -75,6 +83,7 @@ const modStore = useModStore();
 const alerts = ref(null);
 const loading = ref(false);
 const resonitePathExists = ref(true);
+const modDetails = ref(null);
 
 const alertHeight = ref(0);
 const tableHeight = computed(() => {
@@ -125,6 +134,21 @@ async function loadModsFromFn(bypassCache = false) {
 		console.error(err);
 	} finally {
 		loading.value = false;
+	}
+}
+
+/**
+ * Shows the details dialog for a mod
+ * @param {Object} mod Raw mod data
+ */
+function showModDetails(mod) {
+	if (mod === modDetails.value) {
+		modDetails.value = null;
+		setTimeout(() => {
+			modDetails.value = mod;
+		}, 0);
+	} else {
+		modDetails.value = mod;
 	}
 }
 
