@@ -65,10 +65,10 @@ export class ResoluteMod {
 		this.platforms = data.platforms;
 
 		/**
-		 * Available versions
-		 * @type {Map<string, ModVersion>}
+		 * Available versions mapped by semver string -> {@link ModVersion}
+		 * @type {Object}
 		 */
-		this.versions = new Map(
+		this.versions = Object.fromEntries(
 			Object.entries(data.versions)
 				.map(([semver, version]) => [semver, new ModVersion(version)])
 				.sort((a, b) => -semverCompare(a[0], b[0])),
@@ -79,7 +79,7 @@ export class ResoluteMod {
 		 * @type {?ModVersion}
 		 */
 		this.installedVersion = data.installedVersion
-			? this.versions.get(data.installedVersion)
+			? this.versions[data.installedVersion]
 			: null;
 	}
 
@@ -88,7 +88,7 @@ export class ResoluteMod {
 	 * @type {ModVersion}
 	 */
 	get latestVersion() {
-		return this.versions.values().next().value;
+		return Object.values(this.versions)[0];
 	}
 
 	/**
@@ -178,15 +178,15 @@ export class ModVersion {
 
 		/**
 		 * Required mods, in the form of a map of mod IDs -> required semver range
-		 * @type {Map<string, string>}
+		 * @type {Object}
 		 */
-		this.dependencies = new Map(Object.entries(data.dependencies));
+		this.dependencies = data.dependencies;
 
 		/**
 		 * Mod conflicts, in the form of a map of mod IDs -> conflicting semver range
-		 * @type {Map<string, string>}
+		 * @type {Object}
 		 */
-		this.conflicts = new Map(Object.entries(data.conflicts));
+		this.conflicts = data.conflicts;
 
 		/**
 		 * URL to a release page

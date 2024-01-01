@@ -9,7 +9,7 @@
 			<v-tooltip text="Update all" :open-delay="500">
 				<template #activator="{ props: tooltipProps }">
 					<v-btn
-						:icon="mdiDownloadMultiple"
+						:icon="mdiUpdate"
 						:loading="modStore.operations.updateAll"
 						:disabled="outdatedMods.length === 0"
 						v-bind="tooltipProps"
@@ -25,7 +25,7 @@
 import { computed } from 'vue';
 import { message } from '@tauri-apps/api/dialog';
 import { info, error } from 'tauri-plugin-log-api';
-import { mdiDownloadMultiple } from '@mdi/js';
+import { mdiUpdate } from '@mdi/js';
 
 import useModStore from '../../stores/mods';
 import ModsPage from './ModsPage.vue';
@@ -51,8 +51,23 @@ const outdatedMods = computed(() =>
  * @param {boolean} [bypassCache=false] Whether to bypass the manifest cache
  */
 async function loadMods(bypassCache = false) {
-	await modStore.loadInstalled();
-	await modStore.load(bypassCache, false).catch(() => {});
+	try {
+		await modStore.loadInstalled();
+	} catch (err) {
+		message(`Error loading installed mods:\n${err}`, {
+			title: 'Error loading mods',
+			type: 'error',
+		});
+	}
+
+	try {
+		await modStore.load(bypassCache, false);
+	} catch (err) {
+		message(`Error checking for updates:\n${err}`, {
+			title: 'Error loading mods',
+			type: 'error',
+		});
+	}
 }
 
 /**
@@ -64,8 +79,8 @@ async function updateAllMods() {
 	const outdated = [...outdatedMods.value];
 
 	try {
-		// Request the install of every outdated mod's latest version
-		const promises = outdated.map((mod) => modStore.install(mod.id));
+		// Request the update of every outdated mod
+		const promises = outdated.map((mod) => modStore.update(mod.id, false));
 		const results = await Promise.allSettled(promises);
 		const updated = results.map((result, i) => ({
 			mod: outdated[i],
@@ -87,7 +102,7 @@ async function updateAllMods() {
 		// Notify the user of any successes
 		if (succeeded.length > 0) {
 			const succeededList = succeeded
-				.map(({ mod }) => `- ${mod.name}`)
+				.map(({ mod }) => `- ${mod.name} v${mod.installedVersion.semver}`)
 				.join('\n');
 			await message(
 				`The following mods were successfully updated:\n${succeededList}`,

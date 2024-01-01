@@ -20,20 +20,66 @@
 				<td v-if="!groupBy">{{ mod.category }}</td>
 				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
 				<td>
-					<ModInstaller v-slot="{ install, installing, busy }" :mod="mod.id">
-						<v-tooltip text="Install" :open-delay="500">
-							<template #activator="{ props: activator }">
-								<v-btn
-									:icon="mdiDownload"
-									:disabled="disabled || (busy && !installing)"
-									:loading="installing"
-									variant="plain"
-									v-bind="activator"
-									@click="install"
-								/>
-							</template>
-						</v-tooltip>
-					</ModInstaller>
+					<div class="d-flex flex-nowrap justify-end">
+						<ModUninstaller
+							v-if="mod.installedVersion"
+							v-slot="{ uninstall, uninstalling, busy }"
+							:mod="mod"
+						>
+							<v-tooltip text="Uninstall" :open-delay="500">
+								<template #activator="{ props: activator }">
+									<v-btn
+										:icon="mdiDelete"
+										:disabled="disabled || (busy && !uninstalling)"
+										:loading="uninstalling"
+										variant="plain"
+										density="comfortable"
+										v-bind="activator"
+										@click="uninstall"
+									/>
+								</template>
+							</v-tooltip>
+						</ModUninstaller>
+
+						<ModInstaller
+							v-if="!mod.hasUpdate"
+							v-slot="{ install, installing, busy }"
+							:mod="mod"
+						>
+							<v-tooltip
+								:text="mod.installedVersion ? 'Reinstall' : 'Install'"
+								:open-delay="500"
+							>
+								<template #activator="{ props: activator }">
+									<v-btn
+										:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
+										:disabled="disabled || (busy && !installing)"
+										:loading="installing"
+										variant="plain"
+										density="comfortable"
+										v-bind="activator"
+										@click="install"
+									/>
+								</template>
+							</v-tooltip>
+						</ModInstaller>
+
+						<ModUpdater v-else v-slot="{ update, updating, busy }" :mod="mod">
+							<v-tooltip text="Update" :open-delay="500">
+								<template #activator="{ props: activator }">
+									<v-btn
+										:icon="mdiUpdate"
+										:disabled="disabled || (busy && !updating)"
+										:loading="updating"
+										variant="plain"
+										density="comfortable"
+										v-bind="activator"
+										@click="update"
+									/>
+								</template>
+							</v-tooltip>
+						</ModUpdater>
+					</div>
 				</td>
 			</tr>
 		</template>
@@ -88,11 +134,13 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { mdiDownload } from '@mdi/js';
+import { mdiDownload, mdiDelete, mdiUpdate, mdiRefresh } from '@mdi/js';
 
-import useSettings from '../composables/settings';
+import useSettings from '../../composables/settings';
 import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
+import ModUninstaller from './ModUninstaller.vue';
+import ModUpdater from './ModUpdater.vue';
 
 const props = defineProps({
 	mods: { type: Object, default: null },

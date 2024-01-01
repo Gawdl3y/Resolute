@@ -37,7 +37,7 @@ import { mdiRefresh } from '@mdi/js';
 
 import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
-import ModTable from '../ModTable.vue';
+import ModTable from '../mods/ModTable.vue';
 
 const props = defineProps({
 	title: { type: String, required: true },

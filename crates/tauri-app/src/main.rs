@@ -68,6 +68,8 @@ fn main() -> anyhow::Result<()> {
 			load_all_mods,
 			load_installed_mods,
 			install_mod_version,
+			replace_mod_version,
+			uninstall_mod,
 			discover_resonite_path,
 			verify_resonite_path,
 			hash_file,
@@ -295,16 +297,21 @@ async fn load_installed_mods(manager: tauri::State<'_, Mutex<ModManager<'_>>>) -
 
 /// Installs a mod version
 #[tauri::command]
-async fn install_mod_version(app: AppHandle, rmod: ResoluteMod, version: ModVersion) -> Result<(), String> {
-	let manager = app.state::<Mutex<ModManager>>();
+async fn install_mod_version(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	rmod: ResoluteMod,
+	version: ModVersion,
+) -> Result<(), String> {
+	let mut manager = manager.lock().await;
+
+	// Update the Resonite path in case the setting has changed
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
-	manager.lock().await.set_base_dest(resonite_path);
+	manager.set_base_dest(resonite_path);
 
 	// Download the version
 	info!("Installing mod {} v{}", rmod.name, version.semver);
 	manager
-		.lock()
-		.await
 		.install_mod(&rmod, &version.semver, |_, _| {})
 		.await
 		.map_err(|err| {
@@ -313,6 +320,86 @@ async fn install_mod_version(app: AppHandle, rmod: ResoluteMod, version: ModVers
 		})?;
 
 	info!("Successfully installed mod {} v{}", rmod.name, version.semver);
+	Ok(())
+}
+
+/// Updates a mod to a new version
+#[tauri::command]
+async fn replace_mod_version(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	rmod: ResoluteMod,
+	version: ModVersion,
+) -> Result<(), String> {
+	let mut manager = manager.lock().await;
+
+	// Update the Resonite path in case the setting has changed
+	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
+	manager.set_base_dest(resonite_path);
+
+	// Ensure the mod is installed
+	let old_version = match &rmod.installed_version {
+		Some(version) => version,
+		None => {
+			return Err(format!(
+				"Mod {} doesn't have an installed version to replace",
+				rmod.name
+			))
+		}
+	};
+
+	// Update the mod to the given version
+	info!("Replacing mod {} v{} with v{}", rmod.name, old_version, version.semver);
+	manager
+		.update_mod(&rmod, &version.semver, |_, _| {})
+		.await
+		.map_err(|err| {
+			error!(
+				"Failed to replace mod {} v{} with v{}: {}",
+				rmod.name, old_version, version.semver, err
+			);
+			format!("Unable to replace mod version: {}", err)
+		})?;
+
+	info!(
+		"Successfully replaced mod {} v{} with v{}",
+		rmod.name, old_version, version.semver
+	);
+	Ok(())
+}
+
+/// Uninstalls a mod
+#[tauri::command]
+async fn uninstall_mod(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	rmod: ResoluteMod,
+) -> Result<(), String> {
+	let mut manager = manager.lock().await;
+
+	// Update the Resonite path in case the setting has changed
+	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
+	manager.set_base_dest(resonite_path);
+
+	// Ensure the mod is installed
+	let old_version = match &rmod.installed_version {
+		Some(version) => version,
+		None => {
+			return Err(format!(
+				"Mod {} doesn't have an installed version to uninstall",
+				rmod.name
+			))
+		}
+	};
+
+	// Uninstall the mod
+	info!("Uninstalling mod {} v{}", rmod.name, old_version);
+	manager.uninstall_mod(&rmod).await.map_err(|err| {
+		error!("Failed to uninstall mod {} v{}: {}", rmod.name, old_version, err);
+		format!("Unable to uninstall mod: {}", err)
+	})?;
+
+	info!("Successfully uninstalled mod {} v{}", rmod.name, old_version);
 	Ok(())
 }
 
@@ -396,8 +483,7 @@ async fn open_log_dir(app: AppHandle) -> Result<(), String> {
 
 /// Ensures a change to the Resonite path setting is propagated to the manager
 #[tauri::command]
-async fn resonite_path_changed(app: AppHandle) -> Result<(), String> {
-	let manager = app.state::<Mutex<ModManager>>();
+async fn resonite_path_changed(app: AppHandle, manager: tauri::State<'_, Mutex<ModManager<'_>>>) -> Result<(), String> {
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 	manager.lock().await.set_base_dest(&resonite_path);
 	info!("Changed manager's base destination to {}", resonite_path);
