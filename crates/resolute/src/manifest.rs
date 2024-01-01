@@ -186,6 +186,18 @@ impl Config {
 			cache_stale_after: Some(Duration::from_secs(60 * 60 * 6)),
 		}
 	}
+
+	/// Attempts to parse a URL and assign it to the remote_url field
+	pub fn set_remote_url<U>(&mut self, url: U) -> Result<()>
+	where
+		U: TryInto<Url>,
+		<U as TryInto<Url>>::Error: std::fmt::Debug,
+	{
+		self.remote_url = url
+			.try_into()
+			.map_err(|_err| Error::Url("manifest remote url".to_owned()))?;
+		Ok(())
+	}
 }
 
 impl Default for Config {

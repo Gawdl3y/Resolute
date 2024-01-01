@@ -19,19 +19,19 @@ export const REPO_URL = `${GITHUB_URL}/Gawdl3y/Resolute`;
 export function renderMarkdown(markdown) {
 	// Replace git hashes with Markdown links
 	markdown = markdown.replace(
-		/\b(([0-9a-f]{7})([0-9a-f]{1,33})?)\b/g,
-		`[$2](${REPO_URL}/commit/$1)`,
+		/(\b|\(|\[\{)(([0-9a-f]{7})([0-9a-f]{1,33})?)\b/g,
+		`$1[$3](${REPO_URL}/commit/$2)`,
 	);
 
 	// Replace issue numbers with Markdown links
 	markdown = markdown.replace(
-		/(\s)(#[0-9]+)\b/g,
-		`$1[$2](${REPO_URL}/issues/$1)`,
+		/(\s|\(|\[\{)#([0-9]+)\b/g,
+		`$1[#$2](${REPO_URL}/issues/$2)`,
 	);
 
 	// Replace GitHub username mentions with Markdown links
 	markdown = markdown.replace(
-		/(\s)@([a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,38})\b/gi,
+		/(\s|\(|\[\{)@([a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,38})\b/gi,
 		`$1[@$2](${GITHUB_URL}/$2)`,
 	);
 

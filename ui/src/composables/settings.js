@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { invoke } from '@tauri-apps/api';
 import { Store } from 'tauri-plugin-store-api';
 import { info } from 'tauri-plugin-log-api';
 
@@ -8,10 +9,13 @@ const currentSettings = reactive({
 	resonitePath: null,
 	manifestUrl: null,
 	theme: null,
-	groupMods: true,
+	groupModIndex: true,
+	modsPerPageGrouped: -1,
+	modsPerPageUngrouped: 25,
 	modAuthorTools: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
+	modsAutodiscovered: false,
 });
 
 export function useSettings() {
@@ -46,6 +50,7 @@ export function useSettings() {
 		await store.set(setting, value);
 		info(`Setting ${setting} set to ${value}, persistNow = ${persistNow}`);
 		if (persistNow) await persist();
+		if (setting === 'resonitePath') invoke('resonite_path_changed');
 	}
 
 	/**

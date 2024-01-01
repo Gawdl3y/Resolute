@@ -19,23 +19,21 @@ Resolute loads its mod index and metadata from the
   - Downloading
   - Caching
   - Parsing
-- Rudimentary mod management
-  - Listing
+- Mod management
+  - Listing (installed and all available)
   - Installation
+  - Updating
+  - Deletion
+  - Detection of externally-installed mods
 - Mod authoring tools
   - SHA-256 checksum calculator
 - Automatic app updates
 
 ### Planned
 
-- Proper mod management
-  - Listing (installed and all available)
-  - Installation
-  - Tracking installed mods
-  - Updating (automatic and manual checks)
-  - Deletion
-  - Detection of externally-installed mods
-  - ResoniteModLoader/Harmony alerts (missing or outdated)
+- Mod disabling/reenabling
+- Platform-specific artifacts support
+- ResoniteModLoader/Harmony alerts (missing or outdated)
 - Dependency resolution
   - Automatic installation
   - Conflict warnings

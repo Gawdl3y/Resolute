@@ -1,7 +1,12 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display, path::Path};
 
 use serde::{Deserialize, Serialize};
 use url::Url;
+
+#[cfg(feature = "db")]
+use native_db::*;
+#[cfg(feature = "db")]
+use native_model::{native_model, Model};
 
 use crate::manifest::{
 	ManifestAuthors, ManifestData, ManifestEntryArtifact, ManifestEntryDependencies, ManifestEntryVersions,
@@ -36,6 +41,7 @@ pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
 					tags: entry.tags,
 					flags: entry.flags,
 					platforms: entry.platforms,
+					installed_version: None,
 				}
 			})
 		})
@@ -96,9 +102,23 @@ pub type ResoluteModMap = HashMap<String, ResoluteMod>;
 
 /// A single Resonite mod with all information relevant to it
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "db", native_model(id = 1, version = 1))]
+#[cfg_attr(feature = "db", native_db)]
 pub struct ResoluteMod {
+	// The primary_key and secondary_key macros don't work with cfg_attr for whatever reason
+	#[cfg(feature = "db")]
+	#[primary_key]
 	pub id: String,
+	#[cfg(not(feature = "db"))]
+	pub id: String,
+
+	// The primary_key and secondary_key macros don't work with cfg_attr for whatever reason
+	#[cfg(feature = "db")]
+	#[secondary_key]
 	pub name: String,
+	#[cfg(not(feature = "db"))]
+	pub name: String,
+
 	pub description: String,
 	pub category: String,
 	pub authors: Vec<ModAuthor>,
@@ -109,6 +129,14 @@ pub struct ResoluteMod {
 	pub flags: Option<Vec<String>>,
 	pub platforms: Option<Vec<String>>,
 	pub versions: HashMap<String, ModVersion>,
+	#[serde(rename = "installedVersion")]
+	pub installed_version: Option<String>,
+}
+
+impl Display for ResoluteMod {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} ({})", self.name, self.id)
+	}
 }
 
 /// Details for an author of a mod
@@ -118,6 +146,12 @@ pub struct ModAuthor {
 	pub url: Option<Url>,
 	pub icon: Option<Url>,
 	pub support: Option<Url>,
+}
+
+impl Display for ModAuthor {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.name)
+	}
 }
 
 /// Details for a released version of a mod
@@ -131,6 +165,12 @@ pub struct ModVersion {
 	pub release_url: Option<Url>,
 }
 
+impl Display for ModVersion {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.semver)
+	}
+}
+
 /// Details for a release artifact
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModArtifact {
@@ -139,6 +179,24 @@ pub struct ModArtifact {
 	pub filename: Option<String>,
 	#[serde(rename = "installLocation")]
 	pub install_location: Option<String>,
+}
+
+impl Display for ModArtifact {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let name = self
+			.filename
+			.clone()
+			.or_else(|| {
+				Path::new(self.url.path())
+					.file_name()
+					.and_then(|name| name.to_str())
+					.map(|name| name.to_owned())
+			})
+			.or_else(|| Some(self.url.to_string()))
+			.unwrap();
+
+		write!(f, "{}", name)
+	}
 }
 
 impl ModArtifact {

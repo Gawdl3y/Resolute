@@ -33,12 +33,12 @@
 					<!-- Welcome page -->
 					<v-stepper-window-item value="1">
 						<h2 class="text-h4 mb-3">Welcome!</h2>
-						<p class="mb-3">
+						<p class="mb-3 text-body-1">
 							Thanks for giving Resolute a try!<br />Remember that it's very
 							much a work in progress, although the goal is definitely to make
 							your life easier.
 						</p>
-						<p>
+						<p class="text-body-1">
 							Modding Resonite is easy and can really enhance your experience!
 							There are just a few simple steps to complete before getting
 							started. If you already know what you're doing and have everything
@@ -49,17 +49,17 @@
 					<!-- Resonite path selection page -->
 					<v-stepper-window-item value="2">
 						<h2 class="text-h4 mb-3">Resonite path</h2>
-						<p class="mb-3">
+						<p class="mb-3 text-body-1">
 							In order to install mods for you, Resolute needs to know where
 							Resonite is installed on your computer.
 						</p>
-						<p class="mb-3">
+						<p class="mb-3 text-body-1">
 							Resolute attempts to find this automatically, but it may not be
 							able to if you've put Resonite in a secondary Steam library, such
 							as on a different drive.
 						</p>
-						<p class="mb-5 font-weight-bold">
-							Select your Resonite install folder below.
+						<p class="mb-5 text-body-1">
+							<strong>Select your Resonite install folder below.</strong>
 						</p>
 
 						<ResonitePathSetting variant="solo-filled" />
@@ -68,13 +68,13 @@
 					<!-- Prerequisite mod installation page -->
 					<v-stepper-window-item value="3">
 						<h2 class="text-h4 mb-3">Prerequisites</h2>
-						<p class="mb-4">
-							The first thing we need to set up for is the mod loader. There are
-							two main components for it.<br />
+						<p class="mb-4 text-body-1">
+							The first thing we need to set up is the mod loader. There are two
+							main components for it.<br />
 							<strong>Click the below buttons to install them.</strong>
 						</p>
 
-						<p class="mb-1">
+						<p class="mb-1 text-body-1">
 							<a
 								href="https://github.com/resonite-modding-group/ResoniteModLoader"
 								target="_blank"
@@ -104,7 +104,7 @@
 							</v-btn>
 						</ModInstaller>
 
-						<p class="mt-6 mb-1">
+						<p class="mt-6 mb-1 text-body-1">
 							<a href="https://harmony.pardeike.net/" target="_blank"
 								>Harmony</a
 							>
@@ -137,11 +137,11 @@
 					<!-- Steam launch option page -->
 					<v-stepper-window-item value="4">
 						<h2 class="text-h4 mb-3">Steam launch option</h2>
-						<p class="mb-3">
+						<p class="mb-3 text-body-1">
 							In order for RML to actually load mods, you need to tell Resonite
 							to load RML itself!
 						</p>
-						<p class="mb-5">
+						<p class="mb-5 text-body-1">
 							In Steam, right-click Resonite in your library and choose
 							<strong>Properties</strong>.<br />In that menu, under the
 							<strong>General</strong> tab, enter the following into the text
@@ -162,7 +162,7 @@
 							</template>
 						</v-text-field>
 
-						<p>
+						<p class="text-body-1">
 							For additional guidance, see the
 							<a
 								href="https://github.com/resonite-modding-group/ResoniteModLoader/wiki/Launch-Options"
@@ -191,7 +191,7 @@ import { mdiDownload } from '@mdi/js';
 
 import useSettings from '../composables/settings';
 import useModStore from '../stores/mods';
-import ModInstaller from './ModInstaller.vue';
+import ModInstaller from './mods/ModInstaller.vue';
 import ResonitePathSetting from './settings/ResonitePathSetting.vue';
 import FieldCopyButton from './FieldCopyButton.vue';
 
@@ -206,7 +206,7 @@ const prereqsInstalled = ref(0);
 
 onMounted(() => {
 	info('Setup guide showing');
-	if (!modStore.mods) modStore.load();
+	if (!modStore.mods && !modStore.loading) modStore.load();
 });
 
 /**
@@ -225,6 +225,16 @@ function advanceStep() {
 			await settings.set('allowClosingSetupGuide', true, false);
 			await settings.persist();
 		}, 500);
+
+		// Kick off mod autodiscovery
+		if (!settings.current.modsAutodiscovered && !modStore.discovering) {
+			modStore
+				.discover()
+				.then(() => {
+					settings.set('modsAutodiscovered', true);
+				})
+				.catch(() => {});
+		}
 	}
 }
 

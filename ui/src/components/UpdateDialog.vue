@@ -7,9 +7,13 @@
 			<v-card-text>
 				<div v-if="updateDetails?.notes">
 					<h3 class="text-h5">Release Notes</h3>
-					<v-divider class="mt-2" />
-					<!-- eslint-disable-next-line vue/no-v-html -->
-					<div class="release-notes pa-2" v-html="updateDetails.notes"></div>
+					<v-divider class="my-2" />
+					<!-- eslint-disable vue/no-v-html -->
+					<div
+						class="pa-2 text-body-1 release-notes"
+						v-html="updateDetails.notes"
+					></div>
+					<!-- eslint-enable vue/no-v-html -->
 				</div>
 			</v-card-text>
 
@@ -121,14 +125,13 @@ function onUpdaterEvent({ error, status }) {
 
 <style>
 .release-notes h2 {
-	margin-top: 1em;
 	margin-bottom: 0.6em;
-	font-size: 1.25em;
+	font-size: 1.25rem;
 	font-weight: normal;
 }
 
 .release-notes ul {
-	margin-bottom: 0.5em;
+	margin-bottom: 1.5rem;
 	padding-inline-start: 2em;
 }
 </style>
