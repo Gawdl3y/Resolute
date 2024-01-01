@@ -50,6 +50,10 @@ fn main() -> anyhow::Result<()> {
 				tauri_plugin_log::Builder::default()
 					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
 					.level(log::LevelFilter::Debug)
+					.level_for(
+						"tao::platform_impl::platform::event_loop::runner",
+						log::LevelFilter::Error,
+					)
 					.build()
 			},
 		)
