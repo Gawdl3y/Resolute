@@ -8,10 +8,15 @@
 		:search="filter"
 		:group-by="groupBy"
 		fixed-header
+		hover
 		@update:items-per-page="onItemsPerPageUpdate"
 	>
 		<template #item="{ item: mod }">
-			<tr>
+			<tr
+				tabindex="0"
+				style="cursor: pointer"
+				@click="emit('showModDetails', mod)"
+			>
 				<td v-if="groupBy"></td>
 				<td style="max-width: 14em; overflow-wrap: break-word">
 					{{ mod.name }}
@@ -148,6 +153,7 @@ const props = defineProps({
 	loading: { type: Boolean, default: false },
 	allowGrouping: { type: Boolean, default: true },
 });
+const emit = defineEmits(['showModDetails']);
 const settings = useSettings();
 
 /**
