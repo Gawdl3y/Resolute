@@ -191,7 +191,7 @@ import { mdiDownload } from '@mdi/js';
 
 import useSettings from '../composables/settings';
 import useModStore from '../stores/mods';
-import ModInstaller from './ModInstaller.vue';
+import ModInstaller from './mods/ModInstaller.vue';
 import ResonitePathSetting from './settings/ResonitePathSetting.vue';
 import FieldCopyButton from './FieldCopyButton.vue';
 

@@ -1,3 +1,4 @@
+mod delete;
 mod download;
 mod paths;
 
@@ -10,6 +11,7 @@ use crate::db::ResoluteDatabase;
 use crate::mods::{self, ResoluteMod, ResoluteModMap};
 use crate::{manifest, Error, Result};
 
+pub use self::delete::Deleter;
 pub use self::download::Downloader;
 pub use self::download::DownloaderBuilder;
 pub use self::paths::ArtifactPaths;
@@ -19,6 +21,7 @@ pub struct ModManager<#[cfg(feature = "db")] 'a> {
 	#[cfg(feature = "db")]
 	pub db: ResoluteDatabase<'a>,
 	pub downloader: Downloader,
+	pub deleter: Deleter,
 	http_client: reqwest::Client,
 }
 
@@ -47,6 +50,7 @@ impl_ModManager_with_without_db! {
 					.base(&base_dest)
 					.http_client(http_client.clone())
 					.build(),
+				deleter: Deleter::new(&base_dest),
 				http_client: http_client.clone(),
 			}
 		}
@@ -110,13 +114,14 @@ impl_ModManager_with_without_db! {
 		where
 			P: Fn(u64, u64),
 		{
+			// Determine the version to install
 			let version = rmod
 				.versions
 				.get(version.as_ref())
 				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.as_ref().to_owned()))?;
 
+			// Download the version and add the mod to the database
 			self.downloader.download_version(version, progress).await?;
-
 			#[cfg(feature = "db")]
 			{
 				let mut rmod = rmod.clone();
@@ -127,10 +132,61 @@ impl_ModManager_with_without_db! {
 			Ok(())
 		}
 
+		/// Installs a new version of a mod and removes any remaining artifacts from the previous version
+		pub async fn update_mod<P>(&self, rmod: &ResoluteMod, version: impl AsRef<str>, progress: P) -> Result<()>
+		where
+			P: Fn(u64, u64),
+		{
+			// Ensure the mod is actually installed and determine which version
+			let old_version = {
+				let version = match &rmod.installed_version {
+					Some(version) => version,
+					None => return Err(Error::ModNotInstalled(Box::new(rmod.clone()))),
+				};
+				rmod.versions
+					.get(version)
+					.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.to_owned()))?
+			};
+
+			// Determine the new version to install
+			let new_version = rmod
+				.versions
+				.get(version.as_ref())
+				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.as_ref().to_owned()))?;
+
+			// Install the new version and remove any left over artifacts
+			self.install_mod(rmod, &new_version.semver, progress).await?;
+			self.deleter
+				.delete_artifacts_diff(&old_version.artifacts, &new_version.artifacts)
+				.await?;
+
+			Ok(())
+		}
+
+		/// Uninstalls a mod's installed version
+		pub async fn uninstall_mod(&self, rmod: &ResoluteMod) -> Result<()> {
+			// Ensure the mod is actually installed and determine which version
+			let installed_version = match &rmod.installed_version {
+				Some(version) => rmod
+					.versions
+					.get(version)
+					.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.clone()))?,
+				None => return Err(Error::ModNotInstalled(Box::new(rmod.clone()))),
+			};
+
+			// Delete the version artifacts and remove the mod from the database
+			self.deleter.delete_version(installed_version).await?;
+			#[cfg(feature = "db")]
+			self.db.remove_mod(&rmod.id)?;
+
+			Ok(())
+		}
+
 		/// Changes the base destination of mods for the manager
 		pub fn set_base_dest(&mut self, path: impl AsRef<Path>) {
 			let path = path.as_ref();
 			self.downloader.base_dest = path.to_owned();
+			self.deleter.base_dest = path.to_owned();
 		}
 	}
 }

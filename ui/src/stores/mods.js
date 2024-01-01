@@ -119,6 +119,91 @@ export const useModStore = defineStore('mods', () => {
 	}
 
 	/**
+	 * Requests the uninstallation of a mod from the backend and displays an alert when a result is received
+	 * @param {string} modID
+	 */
+	async function uninstall(modID) {
+		const mod = mods.value[modID];
+		const version = mod.latestVersion;
+
+		try {
+			// Add an operation for the mod being installed and request the installation from the backend
+			operations[modID] = 'uninstall';
+			await info(
+				`Requesting uninstallation of mod ${mod.name} v${version.semver}`,
+			);
+			await invoke('uninstall_mod', { rmod: mod });
+
+			// Update the mod's installed version and notify the user of the success
+			mod.installedVersion = null;
+			message(`${mod.name} v${version.semver} was successfully uninstalled.`, {
+				title: 'Mod uninstalled',
+				type: 'info',
+			});
+		} catch (err) {
+			// Notify the user of the failure
+			message(`Error uninstalling ${mod.name} v${version.semver}:\n${err}`, {
+				title: 'Error uninstalling mod',
+				type: 'error',
+			});
+			throw err;
+		} finally {
+			// Clear the operation for the mod
+			operations[modID] = null;
+		}
+	}
+
+	/**
+	 * Requests the replacement of a mod version from the backend and displays an alert when a result is received
+	 * @param {string} modID
+	 * @param {boolean} [alert=true] Whether to alert the user for a result
+	 */
+	async function update(modID, alert = true) {
+		const mod = mods.value[modID];
+		const version = mod.latestVersion;
+		const oldVersion = mod.installedVersion;
+
+		try {
+			// Add an operation for the mod being installed and request the installation from the backend
+			operations[modID] = 'update';
+			await info(
+				`Requesting replacement of mod ${mod.name} v${version.semver} with v${oldVersion.semver}`,
+			);
+			await invoke('replace_mod_version', {
+				rmod: mod,
+				version,
+			});
+
+			// Update the mod's installed version and notify the user of the success
+			mod.installedVersion = version;
+			if (alert) {
+				message(
+					`${mod.name} v${oldVersion.semver} was successfully updated to ${version.semver}.`,
+					{
+						title: 'Mod updated',
+						type: 'info',
+					},
+				);
+			}
+		} catch (err) {
+			// Notify the user of the failure
+			if (alert) {
+				message(
+					`Error updating ${mod.name} v${oldVersion.semver} to v${version.semver}:\n${err}`,
+					{
+						title: 'Error updating mod',
+						type: 'error',
+					},
+				);
+			}
+			throw err;
+		} finally {
+			// Clear the operation for the mod
+			operations[modID] = null;
+		}
+	}
+
+	/**
 	 * Check whether a mod is being operated on, and thus actions for it should be disabled
 	 * @param {Object} modID
 	 */
@@ -134,14 +219,34 @@ export const useModStore = defineStore('mods', () => {
 		return operations?.[modID] === 'install';
 	}
 
+	/**
+	 * Check whether a mod is being uninstalled
+	 * @param {Object} modID
+	 */
+	function isUninstalling(modID) {
+		return operations?.[modID] === 'uninstall';
+	}
+
+	/**
+	 * Check whether a mod is being updated
+	 * @param {Object} modID
+	 */
+	function isUpdating(modID) {
+		return operations?.[modID] === 'update';
+	}
+
 	return {
 		mods,
 		operations,
 		load,
 		loadInstalled,
 		install,
+		uninstall,
+		update,
 		isBusy,
 		isInstalling,
+		isUninstalling,
+		isUpdating,
 	};
 });
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display, path::Path};
 
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -133,6 +133,12 @@ pub struct ResoluteMod {
 	pub installed_version: Option<String>,
 }
 
+impl Display for ResoluteMod {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} ({})", self.name, self.id)
+	}
+}
+
 /// Details for an author of a mod
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModAuthor {
@@ -140,6 +146,12 @@ pub struct ModAuthor {
 	pub url: Option<Url>,
 	pub icon: Option<Url>,
 	pub support: Option<Url>,
+}
+
+impl Display for ModAuthor {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.name)
+	}
 }
 
 /// Details for a released version of a mod
@@ -153,6 +165,12 @@ pub struct ModVersion {
 	pub release_url: Option<Url>,
 }
 
+impl Display for ModVersion {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.semver)
+	}
+}
+
 /// Details for a release artifact
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModArtifact {
@@ -161,6 +179,24 @@ pub struct ModArtifact {
 	pub filename: Option<String>,
 	#[serde(rename = "installLocation")]
 	pub install_location: Option<String>,
+}
+
+impl Display for ModArtifact {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let name = self
+			.filename
+			.clone()
+			.or_else(|| {
+				Path::new(self.url.path())
+					.file_name()
+					.and_then(|name| name.to_str())
+					.map(|name| name.to_owned())
+			})
+			.or_else(|| Some(self.url.to_string()))
+			.unwrap();
+
+		write!(f, "{}", name)
+	}
 }
 
 impl ModArtifact {
