@@ -8,11 +8,12 @@
 				<div v-if="updateDetails?.notes">
 					<h3 class="text-h5">Release Notes</h3>
 					<v-divider class="my-2" />
-					<!-- eslint-disable-next-line vue/no-v-html -->
+					<!-- eslint-disable vue/no-v-html -->
 					<div
 						class="pa-2 text-body-1 release-notes"
 						v-html="updateDetails.notes"
 					></div>
+					<!-- eslint-enable vue/no-v-html -->
 				</div>
 			</v-card-text>
 
