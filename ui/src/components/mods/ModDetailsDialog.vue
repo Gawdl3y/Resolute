@@ -1,123 +1,16 @@
 <template>
 	<v-dialog v-model="showDialog" scrollable style="max-width: 960px">
-		<v-card
-			:title="mod.name"
-			:subtitle="`v${(mod.installedVersion ?? mod.latestVersion).semver}`"
-		>
+		<v-card :title="mod.name" :subtitle="mod.id">
 			<v-card-text>
-				<p class="text-body-1 mb-6">
-					{{ mod.description }}
-				</p>
+				<p class="text-body-1 mt-2 mb-6">{{ mod.description }}</p>
 
-				<div class="d-flex flex-wrap ga-2 mb-6">
-					<v-chip color="primary">{{ mod.category }}</v-chip>
-					<v-chip
-						v-for="flag of mod.flags"
-						:key="flag"
-						:color="
-							flag === 'deprecated'
-								? 'error'
-								: flag === 'final'
-									? 'warning'
-									: 'secondary'
-						"
-					>
-						{{ flag[0].toUpperCase() }}{{ flag.substring(1) }}
-					</v-chip>
-					<v-chip v-for="tag of mod.tags" :key="tag">{{ tag }}</v-chip>
-				</div>
+				<ModTags :mod="mod" class="mb-6" />
 
 				<h2 class="text-h5 mb-2">Authors</h2>
+				<ModAuthors :authors="mod.authors" class="mb-6" />
 
-				<div class="d-flex flex-wrap ga-4 mb-8">
-					<v-card
-						v-for="author of mod.authors"
-						:key="author.name"
-						:title="author.name"
-						:href="author.url"
-						target="_blank"
-						variant="tonal"
-						density="comfortable"
-					>
-						<template #prepend>
-							<v-avatar v-if="author.icon" :image="author.icon" size="large" />
-							<v-avatar
-								v-else
-								:icon="mdiAccount"
-								size="large"
-								color="surface-variant"
-							/>
-						</template>
-
-						<template #append>
-							<v-tooltip
-								v-if="author.support"
-								:text="`Support ${author.name}`"
-								:open-delay="500"
-							>
-								<template #activator="{ props: tooltipProps }">
-									<v-btn
-										v-bind="tooltipProps"
-										:icon="mdiGift"
-										:href="author.support"
-										target="_blank"
-										variant="text"
-									/>
-								</template>
-							</v-tooltip>
-						</template>
-					</v-card>
-				</div>
-
-				<v-expansion-panels class="mod-details-expansion">
-					<v-expansion-panel bg-color="rgba(var(--v-theme-on-surface), 0.12)">
-						<v-expansion-panel-title>
-							<h2 class="text-h6">Artifacts</h2>
-						</v-expansion-panel-title>
-
-						<v-expansion-panel-text>
-							<v-table>
-								<thead>
-									<th scope="col">Filename</th>
-									<th scope="col">Destination</th>
-									<th scope="col">URL</th>
-									<th scope="col">Checksum</th>
-								</thead>
-								<tbody>
-									<tr
-										v-for="artifact of (
-											mod.installedVersion ?? mod.latestVersion
-										).artifacts"
-										:key="artifact.sha256"
-									>
-										<td>
-											<span v-if="artifact.filename">{{
-												artifact.filename
-											}}</span>
-											<span v-else class="text-disabled"
-												>&lt;unspecified&gt;</span
-											>
-										</td>
-										<td>
-											<span v-if="artifact.installLocation">{{
-												artifact.installLocation
-											}}</span>
-											<span v-else class="text-disabled"
-												>&lt;unspecified&gt;</span
-											>
-										</td>
-										<td>
-											<a :href="artifact.url" target="_blank">{{
-												artifact.url
-											}}</a>
-										</td>
-										<td>{{ artifact.sha256.toLowerCase() }}</td>
-									</tr>
-								</tbody>
-							</v-table>
-						</v-expansion-panel-text>
-					</v-expansion-panel>
-				</v-expansion-panels>
+				<h2 class="text-h5 mb-2">Version v{{ semver }}</h2>
+				<ModVersionInfoPanels :version="version" />
 			</v-card-text>
 
 			<v-card-actions>
@@ -166,54 +59,66 @@
 			</v-card-actions>
 
 			<template #append>
-				<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
-					<template #activator="{ props: tooltipProps }">
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiWeb"
-							:href="mod.website"
-							target="_blank"
-							variant="text"
-						/>
-					</template>
-				</v-tooltip>
+				<div class="d-flex">
+					<v-select
+						v-model="semver"
+						label="Version"
+						:items="versions"
+						item-title="semver"
+						item-value="semver"
+						variant="solo-filled"
+						density="comfortable"
+						hide-details
+						class="me-4"
+					/>
 
-				<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
-					<template #activator="{ props: tooltipProps }">
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiSourceBranch"
-							:href="mod.sourceLocation"
-							target="_blank"
-							variant="text"
-						/>
-					</template>
-				</v-tooltip>
+					<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiWeb"
+								:href="mod.website"
+								target="_blank"
+								variant="text"
+							/>
+						</template>
+					</v-tooltip>
 
-				<v-tooltip text="Close" :open-delay="500">
-					<template #activator="{ props: tooltipProps }">
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiClose"
-							variant="text"
-							@click="close"
-						/>
-					</template>
-				</v-tooltip>
+					<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiSourceBranch"
+								:href="mod.sourceLocation"
+								target="_blank"
+								variant="text"
+							/>
+						</template>
+					</v-tooltip>
+
+					<v-tooltip text="Close" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiClose"
+								variant="text"
+								@click="close"
+							/>
+						</template>
+					</v-tooltip>
+				</div>
 			</template>
 		</v-card>
 	</v-dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
 	mdiDownload,
 	mdiDelete,
 	mdiUpdate,
 	mdiRefresh,
-	mdiAccount,
-	mdiGift,
 	mdiClose,
 	mdiWeb,
 	mdiSourceBranch,
@@ -222,6 +127,9 @@ import {
 import ModInstaller from './ModInstaller.vue';
 import ModUninstaller from './ModUninstaller.vue';
 import ModUpdater from './ModUpdater.vue';
+import ModTags from './ModTags.vue';
+import ModAuthors from './ModAuthors.vue';
+import ModVersionInfoPanels from './ModVersionInfoPanels.vue';
 
 const props = defineProps({
 	mod: { type: Object, required: true },
@@ -230,6 +138,11 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const showDialog = ref(true);
+const versions = computed(() => Object.values(props.mod.versions));
+const version = computed(() => props.mod.versions[semver.value]);
+const semver = ref(
+	(props.mod.installedVersion ?? props.mod.latestVersion).semver,
+);
 
 watch(showDialog, (_, show) => {
 	if (!show) emit('close');
@@ -238,6 +151,9 @@ watch(showDialog, (_, show) => {
 watch(
 	() => props.mod,
 	() => {
+		semver.value = (
+			props.mod.installedVersion ?? props.mod.latestVersion
+		).semver;
 		showDialog.value = true;
 	},
 );
@@ -249,14 +165,3 @@ function close() {
 	showDialog.value = false;
 }
 </script>
-
-<style>
-.mod-details-expansion .v-expansion-panel-text__wrapper {
-	padding: 0 !important;
-}
-
-.mod-details-expansion .v-table {
-	padding: 1em 0 0 0;
-	background: rgba(var(--v-theme-surface), var(--v-medium-emphasis-opacity));
-}
-</style>
