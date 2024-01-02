@@ -84,6 +84,7 @@ export function disableTextSelection(node = document) {
 		(evt) => {
 			if (isInput || !(evt.target instanceof HTMLInputElement)) {
 				evt.preventDefault();
+				window.getSelection().removeAllRanges();
 				return false;
 			}
 		},
