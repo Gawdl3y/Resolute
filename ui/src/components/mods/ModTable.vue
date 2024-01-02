@@ -19,9 +19,12 @@
 				@click="emit('showModDetails', mod)"
 			>
 				<td v-if="groupBy"></td>
-				<td style="max-width: 14em; overflow-wrap: break-word">
-					{{ mod.name }}
-				</td>
+				<!-- eslint-disable vue/no-v-html -->
+				<td
+					style="min-width: 12em; max-width: 16em; overflow-wrap: break-word"
+					v-html="wrappableCamelCase(mod.name)"
+				></td>
+				<!-- eslint-enable vue/no-v-html -->
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
 				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
@@ -142,6 +145,7 @@
 import { ref, computed } from 'vue';
 import { mdiDownload, mdiDelete, mdiUpdate, mdiRefresh } from '@mdi/js';
 
+import { wrappableCamelCase } from '../../util';
 import useSettings from '../../composables/settings';
 import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';

@@ -49,6 +49,16 @@ export function renderMarkdown(markdown) {
 }
 
 /**
+ * Inserts HTML <wbr> tags in between CamelCase word sections (and sanitizes the input)
+ * @param {*} text
+ * @returns
+ */
+export function wrappableCamelCase(text) {
+	const pure = purify.sanitize(text, { ALLOWED_TAGS: ['#text'] });
+	return pure.replace(/([a-z])([A-Z])/g, '$1<wbr />$2');
+}
+
+/**
  * Disables the context menu for a node
  * @param {Node} [node=document]
  */
