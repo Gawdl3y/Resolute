@@ -141,7 +141,7 @@ async function loadModsFromFn(bypassCache = false) {
 
 /**
  * Shows the details dialog for a mod
- * @param {Object} mod Raw mod data
+ * @param {ResoluteMod} mod
  */
 function showModDetails(mod) {
 	if (mod === modDetails.value) {

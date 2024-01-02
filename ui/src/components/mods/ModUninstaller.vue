@@ -21,8 +21,8 @@ const props = defineProps({
 const emit = defineEmits(['uninstall', 'error']);
 
 const modStore = useModStore();
-const busy = computed(() => modStore.isBusy(props.mod.id));
-const uninstalling = computed(() => modStore.isUninstalling(props.mod.id));
+const busy = computed(() => modStore.isBusy(props.mod));
+const uninstalling = computed(() => modStore.isUninstalling(props.mod));
 const uninstalled = ref(false);
 const error = ref(null);
 
@@ -39,7 +39,7 @@ async function uninstall() {
 	}
 
 	try {
-		await modStore.uninstall(props.mod.id);
+		await modStore.uninstall(props.mod);
 		uninstalled.value = true;
 		emit('uninstall');
 	} catch (err) {

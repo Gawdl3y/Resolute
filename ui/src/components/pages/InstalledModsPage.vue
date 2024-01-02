@@ -97,7 +97,9 @@ async function updateAllMods() {
 
 	try {
 		// Request the update of every outdated mod
-		const promises = outdated.map((mod) => modStore.update(mod.id, false));
+		const promises = outdated.map((mod) =>
+			modStore.update(mod.id, null, false),
+		);
 		const results = await Promise.allSettled(promises);
 		const updated = results.map((result, i) => ({
 			mod: outdated[i],
