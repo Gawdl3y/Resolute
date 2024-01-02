@@ -2,7 +2,7 @@
 	<AppHeader title="Settings">
 		<template #extension>
 			<v-tabs v-model="tab">
-				<v-tab value="general">General</v-tab>
+				<v-tab value="general" tabindex="0">General</v-tab>
 				<v-tab value="advanced">Advanced</v-tab>
 			</v-tabs>
 		</template>
