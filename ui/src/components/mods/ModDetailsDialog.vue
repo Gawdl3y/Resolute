@@ -9,7 +9,17 @@
 				<h2 class="text-h5 mb-2">Authors</h2>
 				<ModAuthors :authors="mod.authors" class="mb-6" />
 
-				<h2 class="text-h5 mb-2">Version v{{ semver }}</h2>
+				<h2 class="d-flex align-center ga-2 text-h5 mb-2">
+					Version v{{ semver }}
+					<v-btn
+						v-if="version.releaseUrl"
+						:icon="mdiLinkVariant"
+						:href="version.releaseUrl"
+						target="_blank"
+						variant="text"
+						density="comfortable"
+					/>
+				</h2>
 				<ModVersionInfoPanels :version="version" />
 			</v-card-text>
 
@@ -122,6 +132,7 @@ import {
 	mdiClose,
 	mdiWeb,
 	mdiSourceBranch,
+	mdiLinkVariant,
 } from '@mdi/js';
 
 import ModInstaller from './ModInstaller.vue';
