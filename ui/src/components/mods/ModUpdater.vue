@@ -13,12 +13,21 @@ import { ref, computed } from 'vue';
 
 import useModStore from '../../stores/mods';
 
-const props = defineProps({ mod: { type: Object, required: true } });
+const props = defineProps({
+	mod: {
+		required: true,
+		validator(val) {
+			if (!val) return false;
+			return typeof val === 'object' || typeof val === 'string';
+		},
+	},
+	version: { type: String, default: undefined },
+});
 const emit = defineEmits(['update', 'error']);
 
 const modStore = useModStore();
-const busy = computed(() => modStore.isBusy(props.mod.id));
-const updating = computed(() => modStore.isUpdating(props.mod.id));
+const busy = computed(() => modStore.isBusy(props.mod));
+const updating = computed(() => modStore.isUpdating(props.mod));
 const updated = ref(false);
 const error = ref(null);
 
@@ -27,7 +36,7 @@ const error = ref(null);
  */
 async function update() {
 	try {
-		await modStore.update(props.mod.id);
+		await modStore.update(props.mod, props.version);
 		updated.value = true;
 		emit('update');
 	} catch (err) {

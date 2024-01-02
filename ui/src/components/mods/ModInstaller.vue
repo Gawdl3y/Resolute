@@ -21,14 +21,13 @@ const props = defineProps({
 			return typeof val === 'object' || typeof val === 'string';
 		},
 	},
+	version: { type: String, default: undefined },
 });
 const emit = defineEmits(['install', 'error']);
 
 const modStore = useModStore();
-const busy = computed(() => modStore.isBusy(props.mod?.id ?? props.mod));
-const installing = computed(() =>
-	modStore.isInstalling(props.mod?.id ?? props.mod),
-);
+const busy = computed(() => modStore.isBusy(props.mod));
+const installing = computed(() => modStore.isInstalling(props.mod));
 const installed = ref(false);
 const error = ref(null);
 
@@ -37,7 +36,7 @@ const error = ref(null);
  */
 async function install() {
 	try {
-		await modStore.install(props.mod?.id ?? props.mod);
+		await modStore.install(props.mod, props.version);
 		installed.value = true;
 		emit('install');
 	} catch (err) {

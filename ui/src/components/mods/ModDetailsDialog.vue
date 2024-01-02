@@ -41,10 +41,27 @@
 					</v-btn>
 				</ModUninstaller>
 
+				<ModUpdater
+					v-if="updateAvailable"
+					v-slot="{ update, updating, busy }"
+					:mod="mod"
+					:version="semver"
+				>
+					<v-btn
+						:prepend-icon="mdiUpdate"
+						:disabled="disabled || (busy && !updating)"
+						:loading="updating"
+						@click="update"
+					>
+						{{ updateText }}
+					</v-btn>
+				</ModUpdater>
+
 				<ModInstaller
-					v-if="!mod.hasUpdate"
+					v-else
 					v-slot="{ install, installing, busy }"
 					:mod="mod"
+					:version="semver"
 				>
 					<v-btn
 						:prepend-icon="mod.installedVersion ? mdiRefresh : mdiDownload"
@@ -55,17 +72,6 @@
 						{{ mod.installedVersion ? 'Reinstall' : 'Install' }}
 					</v-btn>
 				</ModInstaller>
-
-				<ModUpdater v-else v-slot="{ update, updating, busy }" :mod="mod">
-					<v-btn
-						:prepend-icon="mdiUpdate"
-						:disabled="disabled || (busy && !updating)"
-						:loading="updating"
-						@click="update"
-					>
-						Update
-					</v-btn>
-				</ModUpdater>
 			</v-card-actions>
 
 			<template #append>
@@ -74,8 +80,6 @@
 						v-model="semver"
 						label="Version"
 						:items="versions"
-						item-title="semver"
-						item-value="semver"
 						variant="solo-filled"
 						density="comfortable"
 						hide-details
@@ -124,6 +128,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { lte as semverLt } from 'semver';
 import {
 	mdiDownload,
 	mdiDelete,
@@ -133,6 +138,7 @@ import {
 	mdiWeb,
 	mdiSourceBranch,
 	mdiLinkVariant,
+	mdiCheck,
 } from '@mdi/js';
 
 import ModInstaller from './ModInstaller.vue';
@@ -149,11 +155,30 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const showDialog = ref(true);
-const versions = computed(() => Object.values(props.mod.versions));
-const version = computed(() => props.mod.versions[semver.value]);
-const semver = ref(
-	(props.mod.installedVersion ?? props.mod.latestVersion).semver,
+const versions = computed(() =>
+	Object.keys(props.mod.versions).map((ver) => ({
+		title: ver,
+		value: ver,
+		props:
+			ver === props.mod.installedVersion?.semver
+				? { appendIcon: mdiCheck }
+				: undefined,
+	})),
 );
+const version = computed(() => props.mod.versions[semver.value]);
+const semver = ref(props.mod.latestVersion.semver);
+const updateAvailable = computed(() => {
+	if (!props.mod.installedVersion) return false;
+	if (props.mod.installedVersion.semver === semver.value) return false;
+	return true;
+});
+const updateText = computed(() => {
+	if (!props.mod.installedVersion) return null;
+	if (semverLt(semver.value, props.mod.installedVersion.semver)) {
+		return `Downgrade to ${semver.value}`;
+	}
+	return `Update to ${semver.value}`;
+});
 
 watch(showDialog, (_, show) => {
 	if (!show) emit('close');
@@ -162,9 +187,7 @@ watch(showDialog, (_, show) => {
 watch(
 	() => props.mod,
 	() => {
-		semver.value = (
-			props.mod.installedVersion ?? props.mod.latestVersion
-		).semver;
+		semver.value = props.mod.latestVersion.semver;
 		showDialog.value = true;
 	},
 );
