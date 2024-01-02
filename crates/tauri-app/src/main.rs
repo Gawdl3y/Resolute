@@ -47,8 +47,12 @@ fn main() -> anyhow::Result<()> {
 			},
 			#[cfg(not(debug_assertions))]
 			{
+				use tauri_plugin_log::RotationStrategy;
+
 				tauri_plugin_log::Builder::default()
 					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
+					.rotation_strategy(RotationStrategy::KeepAll)
+					.max_file_size(1024 * 256)
 					.level(log::LevelFilter::Debug)
 					.level_for(
 						"tao::platform_impl::platform::event_loop::runner",
