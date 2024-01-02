@@ -78,11 +78,14 @@ export function disableContextMenu(node = document) {
  * @param {Node} [node=document]
  */
 export function disableTextSelection(node = document) {
+	const isInput = node instanceof HTMLInputElement;
 	node.addEventListener(
 		'selectstart',
 		(evt) => {
-			evt.preventDefault();
-			return false;
+			if (isInput || !(evt.target instanceof HTMLInputElement)) {
+				evt.preventDefault();
+				return false;
+			}
 		},
 		{ capture: true },
 	);
