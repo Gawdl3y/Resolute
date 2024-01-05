@@ -4,7 +4,7 @@
 		no-data-text="No mods have been installed yet."
 		:mods="mods"
 		:load-mods="loadMods"
-		:allow-grouping="false"
+		:grouped="false"
 	>
 		<template #actions="{ resonitePathExists }">
 			<v-tooltip text="Discover installed" :open-delay="500">
