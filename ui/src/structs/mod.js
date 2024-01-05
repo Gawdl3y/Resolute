@@ -225,4 +225,24 @@ export class ModArtifact {
 		 */
 		this.installLocation = data.installLocation;
 	}
+
+	/**
+	 * The inferred filename of the artifact (obtained from the end of the URL)
+	 * @returns {string}
+	 */
+	get inferredFilename() {
+		const url = new URL(this.url);
+		const lastSlashIdx = url.pathname.lastIndexOf('/');
+		return url.pathname.substring(lastSlashIdx + 1);
+	}
+
+	/**
+	 * Gets the inferred install location of the artifact
+	 * (always "/rml_mods" unless the given category is "Plugins", in which case it's "/Libraries")
+	 * @returns {string}
+	 */
+	inferredInstallLocation(category) {
+		if (category === 'Plugins') return '/Libraries';
+		return '/rml_mods';
+	}
 }
