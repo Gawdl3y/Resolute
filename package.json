@@ -15,29 +15,29 @@
 	},
 	"dependencies": {
 		"@fontsource/roboto-mono": "^5.0.16",
-		"@mdi/js": "^7.3.67",
-		"@tauri-apps/api": "^1.5.1",
-		"dompurify": "^3.0.6",
-		"marked": "^11.1.0",
+		"@mdi/js": "^7.4.47",
+		"@tauri-apps/api": "^1.5.3",
+		"dompurify": "^3.0.8",
+		"marked": "^11.1.1",
 		"mitt": "^3.0.1",
 		"pinia": "^2.1.7",
 		"semver": "^7.5.4",
 		"tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
 		"tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
-		"vue": "^3.3.4",
+		"vue": "^3.4.5",
 		"vue-router": "^4.2.5",
-		"vuetify": "^3.4.6"
+		"vuetify": "^3.4.9"
 	},
 	"devDependencies": {
-		"@eslint/eslintrc": "^2.1.4",
-		"@tauri-apps/cli": "^1.5.6",
-		"@vitejs/plugin-vue": "^4.2.3",
-		"eslint": "^8.55.0",
+		"@eslint/eslintrc": "^3.0.0",
+		"@tauri-apps/cli": "^1.5.9",
+		"@vitejs/plugin-vue": "^5.0.2",
+		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier-vue": "^5.0.0",
 		"eslint-plugin-vue": "^9.19.2",
 		"prettier": "3.1.1",
-		"vite": "^4.4.4",
-		"vite-plugin-vuetify": "^1.0.2"
+		"vite": "^5.0.11",
+		"vite-plugin-vuetify": "^2.0.1"
 	}
 }
