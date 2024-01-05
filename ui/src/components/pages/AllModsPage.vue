@@ -4,13 +4,16 @@
 		no-data-text="No mod data is available."
 		:mods="modStore.mods"
 		:load-mods="loadMods"
+		:grouped="settings.current.groupModIndex"
 	/>
 </template>
 
 <script setup>
+import useSettings from '../../composables/settings';
 import useModStore from '../../stores/mods';
 import ModsPage from './ModsPage.vue';
 
+const settings = useSettings();
 const modStore = useModStore();
 
 /**

@@ -1,5 +1,6 @@
 <template>
 	<v-data-table
+		ref="dataTable"
 		:headers="headers"
 		:items="items"
 		item-key="id"
@@ -101,7 +102,10 @@
 		<template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
 			<tr>
 				<td
+					:ref="addGroupHeader"
 					:colspan="columns.length"
+					:data-open="isGroupOpen(item)"
+					:data-group="item.value"
 					style="cursor: pointer"
 					@click="toggleGroup(item)"
 				>
@@ -142,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUpdate } from 'vue';
 import { mdiDownload, mdiDelete, mdiUpdate, mdiRefresh } from '@mdi/js';
 
 import { wrappableCamelCase } from '../../util';
@@ -156,10 +160,12 @@ const props = defineProps({
 	mods: { type: Object, default: null },
 	disabled: { type: Boolean, default: false },
 	loading: { type: Boolean, default: false },
-	allowGrouping: { type: Boolean, default: true },
+	grouped: { type: Boolean, default: true },
 	noDataText: { type: String, default: undefined },
 });
 const emit = defineEmits(['showModDetails']);
+defineExpose({ expandAllGroups, collapseAllGroups });
+
 const settings = useSettings();
 
 /**
@@ -175,7 +181,7 @@ const headers = computed(() => {
 	];
 
 	// If the mods should be grouped, ditch the category header
-	if (props.allowGrouping && settings.current.groupModIndex) {
+	if (props.grouped) {
 		const categoryIdx = headers.findIndex((head) => head.key === 'category');
 		headers.splice(categoryIdx, 1);
 	}
@@ -192,10 +198,7 @@ const items = computed(() => (props.mods ? Object.values(props.mods) : []));
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
  */
 const groupBy = computed(() => {
-	if (!props.allowGrouping) return undefined;
-	return settings.current.groupModIndex
-		? [{ key: 'category', order: 'asc' }]
-		: undefined;
+	return props.grouped ? [{ key: 'category', order: 'asc' }] : undefined;
 });
 
 /**
@@ -216,5 +219,49 @@ const modsPerPageSetting = computed(
  */
 function onItemsPerPageUpdate(itemsPerPage) {
 	settings.set(modsPerPageSetting.value, itemsPerPage);
+}
+
+/**
+ * Group header cells that have been added by the ref function {@link addGroupHeader}
+ */
+let groupHeaders = [];
+
+// Need to clear the group header cells whenever the component is doing an update
+onBeforeUpdate(() => {
+	groupHeaders = [];
+});
+
+/**
+ * Adds a group header cell to the list of cells if there isn't already one for that group
+ * @param {HTMLTableCellElement} header
+ */
+function addGroupHeader(header) {
+	if (!header) return;
+
+	const group = header.getAttribute('data-group');
+	const alreadyExists = groupHeaders.some(
+		(header) => header.getAttribute('data-group') === group,
+	);
+	if (alreadyExists) return;
+
+	groupHeaders.push(header);
+}
+
+/**
+ * Expands any collapsed group headers
+ */
+function expandAllGroups() {
+	for (const header of groupHeaders) {
+		if (header.getAttribute('data-open') === 'false') header.click();
+	}
+}
+
+/**
+ * Collapses any expanded group headers
+ */
+function collapseAllGroups() {
+	for (const header of groupHeaders) {
+		if (header.getAttribute('data-open') === 'true') header.click();
+	}
 }
 </script>
