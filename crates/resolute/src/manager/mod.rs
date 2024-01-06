@@ -5,6 +5,7 @@ mod paths;
 use std::path::{Path, PathBuf};
 
 use log::debug;
+use semver::Version;
 
 #[cfg(feature = "db")]
 use crate::db::ResoluteDatabase;
@@ -117,10 +118,11 @@ impl_ModManager_with_without_db! {
 			P: Fn(u64, u64),
 		{
 			// Determine the version to install
+			let semver = Version::parse(version.as_ref())?;
 			let version = rmod
 				.versions
-				.get(version.as_ref())
-				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.as_ref().to_owned()))?;
+				.get(&semver)
+				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), semver))?;
 
 			// Download the version and add the mod to the database
 			self.downloader.download_version(version, progress).await?;
@@ -151,13 +153,14 @@ impl_ModManager_with_without_db! {
 			};
 
 			// Determine the new version to install
+			let semver = Version::parse(version.as_ref())?;
 			let new_version = rmod
 				.versions
-				.get(version.as_ref())
-				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), version.as_ref().to_owned()))?;
+				.get(&semver)
+				.ok_or_else(|| Error::UnknownVersion(rmod.id.clone(), semver))?;
 
 			// Install the new version and remove any left over artifacts
-			self.install_mod(rmod, &new_version.semver, progress).await?;
+			self.install_mod(rmod, new_version.semver.to_string(), progress).await?;
 			self.deleter
 				.delete_artifacts_diff(&old_version.artifacts, &new_version.artifacts)
 				.await?;

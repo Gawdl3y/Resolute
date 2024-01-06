@@ -3305,6 +3305,7 @@ dependencies = [
  "native_model",
  "path-clean",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "sha2",

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Display, path::Path};
 
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -63,7 +64,7 @@ fn build_mod_authors(authors: ManifestAuthors) -> Vec<ModAuthor> {
 }
 
 /// Build a versions map from manifest data
-fn build_mod_versions_map(versions: ManifestEntryVersions, category: &str) -> HashMap<String, ModVersion> {
+fn build_mod_versions_map(versions: ManifestEntryVersions, category: &str) -> HashMap<Version, ModVersion> {
 	versions
 		.into_iter()
 		.map(|(semver, version)| ModVersion {
@@ -78,7 +79,7 @@ fn build_mod_versions_map(versions: ManifestEntryVersions, category: &str) -> Ha
 }
 
 /// Build a dependencies map from manifest data for a mod version
-fn build_mod_version_dependencies(dependencies: Option<ManifestEntryDependencies>) -> HashMap<String, String> {
+fn build_mod_version_dependencies(dependencies: Option<ManifestEntryDependencies>) -> HashMap<String, VersionReq> {
 	if let Some(depends) = dependencies {
 		depends
 			.into_iter()
@@ -128,9 +129,9 @@ pub struct ResoluteMod {
 	pub tags: Option<Vec<String>>,
 	pub flags: Option<Vec<String>>,
 	pub platforms: Option<Vec<String>>,
-	pub versions: HashMap<String, ModVersion>,
+	pub versions: HashMap<Version, ModVersion>,
 	#[serde(rename = "installedVersion")]
-	pub installed_version: Option<String>,
+	pub installed_version: Option<Version>,
 }
 
 impl Display for ResoluteMod {
@@ -157,7 +158,7 @@ impl Display for ModAuthor {
 /// Details for a released version of a mod
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ModVersion {
-	pub semver: String,
+	pub semver: Version,
 	pub artifacts: Vec<ModArtifact>,
 	pub dependencies: ModDependencyMap,
 	pub conflicts: ModDependencyMap,
@@ -225,4 +226,4 @@ impl From<ManifestEntryArtifact> for ModArtifact {
 }
 
 /// Map of mod IDs to semver ranges
-pub type ModDependencyMap = HashMap<String, String>;
+pub type ModDependencyMap = HashMap<String, VersionReq>;

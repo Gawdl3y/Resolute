@@ -325,7 +325,7 @@ async fn install_mod_version(
 	// Download the version
 	info!("Installing mod {} v{}", rmod.name, version.semver);
 	manager
-		.install_mod(&rmod, &version.semver, |_, _| {})
+		.install_mod(&rmod, version.semver.to_string(), |_, _| {})
 		.await
 		.map_err(|err| {
 			error!("Failed to download mod {} v{}: {}", rmod.name, version.semver, err);
@@ -364,7 +364,7 @@ async fn replace_mod_version(
 	// Update the mod to the given version
 	info!("Replacing mod {} v{} with v{}", rmod.name, old_version, version.semver);
 	manager
-		.update_mod(&rmod, &version.semver, |_, _| {})
+		.update_mod(&rmod, version.semver.to_string(), |_, _| {})
 		.await
 		.map_err(|err| {
 			error!(
