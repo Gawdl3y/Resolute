@@ -7,6 +7,7 @@
 		:items-per-page="settings.current[modsPerPageSetting]"
 		:loading="loading"
 		:search="filter"
+		filter-mode="some"
 		:group-by="groupBy"
 		:no-data-text="noDataText"
 		fixed-header
@@ -176,8 +177,8 @@ const headers = computed(() => {
 		{ title: 'Name', key: 'name' },
 		{ title: 'Description', key: 'description' },
 		{ title: 'Category', key: 'category' },
-		{ title: 'Version', key: 'sortableVersionStatus' },
-		{ title: null, sortable: false },
+		{ title: 'Version', key: 'sortableVersionStatus', filterable: false },
+		{ title: null, key: 'tags', sortable: false, filter: filterItem },
 	];
 
 	// If the mods should be grouped, ditch the category header
@@ -205,6 +206,22 @@ const groupBy = computed(() => {
  * Text to filter the table with
  */
 const filter = ref(null);
+
+/**
+ * Custom filter function used for the fake tags column - searches tags, authors, and category
+ * @param {?string[]} value Categories of of the item
+ * @param {?string} query Search string
+ * @param {Object} item Data table item object
+ */
+function filterItem(value, query, item) {
+	if (!query) return false;
+	query = query.toLowerCase();
+	return (
+		value?.join?.(' ')?.toLowerCase?.()?.includes?.(query) ||
+		item.raw.category.toLowerCase().includes(query) ||
+		item.raw.authors.some((author) => author.name.toLowerCase().includes(query))
+	);
+}
 
 /**
  * Setting key to use for the itemsPerPage parameter on the table
