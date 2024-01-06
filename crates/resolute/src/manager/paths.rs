@@ -36,9 +36,9 @@ impl ArtifactPaths {
 		// Add the artifact's filename to the path
 		let filename = match &artifact.filename {
 			Some(filename) => OsString::from(filename),
-			None => Path::new(artifact.url.path())
-				.file_name()
-				.ok_or_else(|| Error::Path(format!("unable to extract file name from url: {}", artifact.url)))?
+			None => artifact
+				.infer_filename()
+				.ok_or_else(|| Error::Path(format!("unable to infer filename from url: {}", artifact.url)))?
 				.to_owned(),
 		};
 		dest.push(&filename);
