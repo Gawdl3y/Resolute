@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fmt::Display, path::Path};
+use std::{
+	collections::HashMap,
+	ffi::OsString,
+	fmt::Display,
+	path::{Path, PathBuf},
+};
 
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
@@ -134,6 +139,22 @@ pub struct ResoluteMod {
 	pub installed_version: Option<Version>,
 }
 
+impl ResoluteMod {
+	/// Gets the latest version available for the mod
+	pub fn latest_version(&self) -> Option<&ModVersion> {
+		self.versions.values().max_by(|a, b| a.semver.cmp(&b.semver))
+	}
+
+	/// Checks whether there is a newer version of the mod available than the installed version.
+	/// If the mod isn't installed, None is returned.
+	pub fn has_update(&self) -> Option<bool> {
+		match &self.installed_version {
+			Some(installed_version) => Some(self.latest_version()?.semver.gt(installed_version)),
+			None => None,
+		}
+	}
+}
+
 impl Display for ResoluteMod {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{} ({})", self.name, self.id)
@@ -180,6 +201,25 @@ pub struct ModArtifact {
 	pub filename: Option<String>,
 	#[serde(rename = "installLocation")]
 	pub install_location: Option<String>,
+}
+
+impl ModArtifact {
+	/// Gets the filename from the end of the artifact's URL
+	pub fn infer_filename(&self) -> Option<OsString> {
+		let path = Path::new(self.url.path());
+		path.file_name().map(|filename| filename.to_owned())
+	}
+
+	/// Gets the default install location for the artifact, influenced by the category of the mod if available
+	pub fn infer_install_location(&self, category: Option<impl AsRef<str>>) -> PathBuf {
+		match category {
+			Some(category) => match category.as_ref() {
+				"Plugins" => PathBuf::from("Libraries"),
+				_ => PathBuf::from("rml_mods"),
+			},
+			None => PathBuf::from("rml_mods"),
+		}
+	}
 }
 
 impl Display for ModArtifact {
