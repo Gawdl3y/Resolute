@@ -343,11 +343,19 @@ impl ModArtifact {
 			.push(install_location)
 			.push(filename);
 
+		let install_location = if !install_location.starts_with('/') {
+			let mut install_location = install_location.to_owned();
+			install_location.insert(0, '/');
+			install_location
+		} else {
+			install_location.to_owned()
+		};
+
 		ModArtifact {
 			url,
 			sha256: sha256.to_owned(),
 			filename: Some(filename.to_owned()),
-			install_location: Some(install_location.to_owned()),
+			install_location: Some(install_location),
 		}
 	}
 }
