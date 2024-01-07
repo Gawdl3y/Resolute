@@ -98,14 +98,31 @@ impl_ModManager_with_without_db! {
 			Ok(mods)
 		}
 
-		/// Fills in the installed_version field for all mods in a map that are installed
+		/// Fills in the installed_version field for all mods in a map that are installed and
+		/// adds any necessary missing versions to the mods' versions maps
 		#[cfg(feature = "db")]
 		pub async fn mark_installed_mods(&self, mods: &mut ResoluteModMap) -> Result<()> {
 			let installed_mods = self.get_installed_mods().await?;
 
 			for (id, rmod) in mods.iter_mut() {
 				if let Some(installed) = installed_mods.get(id) {
-					rmod.installed_version = installed.installed_version.clone();
+					// Set the installed version from the stored mod
+					let semver = installed.installed_version.clone();
+					rmod.installed_version = semver.clone();
+
+					// Add the version to the mod's version map if it doesn't have it
+					if let Some(semver) = semver {
+						if !rmod.versions.contains_key(&semver) {
+							rmod.versions.insert(
+								semver.clone(),
+								installed
+									.versions
+									.get(&semver)
+									.ok_or_else(|| Error::UnknownVersion(installed.name.clone(), semver))?
+									.clone(),
+							);
+						}
+					}
 				}
 			}
 
