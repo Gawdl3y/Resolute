@@ -23,12 +23,17 @@ use crate::manifest::{
 pub const UNRECOGNIZED_GROUP: &str = "dev.gawdl3y.resolute.unrecognized";
 
 /// Semver representing an unknown version
-pub static UNKNOWN_SEMVER: Lazy<Version> = Lazy::new(|| Version {
+pub static UNRECOGNIZED_SEMVER: Lazy<Version> = Lazy::new(|| Version {
 	major: 0,
 	minor: 0,
 	patch: 0,
-	pre: Prerelease::new("unknown").expect("unable to create prerelease struct for unknown semver"),
+	pre: Prerelease::new("unknown").expect("unable to create prerelease struct for unrecognized semver"),
 	build: BuildMetadata::default(),
+});
+
+/// Base URL for an unrecognized artifact
+pub static UNRECOGNIZED_ARTIFACT_BASE_URL: Lazy<Url> = Lazy::new(|| {
+	Url::parse("resolute://unrecognized/artifact").expect("unable to parse unrecognized artifact base url")
 });
 
 /// Builds a mod map from the given raw manifest data
@@ -255,9 +260,9 @@ pub struct ModVersion {
 }
 
 impl ModVersion {
-	/// Checks whether this version is unrecognized (semver equals [UNKNOWN_SEMVER])
+	/// Checks whether this version is unrecognized (semver equals [UNRECOGNIZED_SEMVER])
 	pub fn is_unrecognized(&self) -> bool {
-		self.semver.eq(&UNKNOWN_SEMVER)
+		self.semver.eq(&UNRECOGNIZED_SEMVER)
 	}
 
 	/// Creates a new unrecognized version from details about an encountered artifact file
@@ -266,7 +271,7 @@ impl ModVersion {
 		artifact_install_location: impl AsRef<str>,
 		artifact_sha256: impl AsRef<str>,
 	) -> Self {
-		let semver = UNKNOWN_SEMVER.clone();
+		let semver = UNRECOGNIZED_SEMVER.clone();
 		let artifacts = vec![ModArtifact::new_unrecognized(
 			artifact_filename,
 			artifact_install_location,
@@ -317,6 +322,11 @@ impl ModArtifact {
 		}
 	}
 
+	/// Checks whether this artifact is unrecognized (URL begins with [UNRECOGNIZED_ARTIFACT_BASE_URL])
+	pub fn is_unrecognized(&self) -> bool {
+		self.url.as_str().starts_with(UNRECOGNIZED_ARTIFACT_BASE_URL.as_str())
+	}
+
 	/// Creates a new unrecognized artifact from details about an encountered artifact file
 	pub fn new_unrecognized(
 		filename: impl AsRef<str>,
@@ -327,8 +337,7 @@ impl ModArtifact {
 		let install_location = install_location.as_ref();
 		let sha256 = sha256.as_ref();
 
-		let mut url =
-			Url::parse("resolute://unrecognized/artifact").expect("unable to parse unrecognized artifact base url");
+		let mut url = UNRECOGNIZED_ARTIFACT_BASE_URL.clone();
 		url.path_segments_mut()
 			.expect("unable to get mutable path segments of unrecognized artifact base url")
 			.push(install_location)
