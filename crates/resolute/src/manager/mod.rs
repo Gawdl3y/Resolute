@@ -42,7 +42,7 @@ impl_ModManager_with_without_db! {
 		pub fn new(
 			#[cfg(feature = "db")] db: ResoluteDatabase<'a>,
 			base_dest: impl AsRef<Path>,
-			http_client: &reqwest::Client,
+			http_client: reqwest::Client,
 		) -> Self {
 			Self {
 				#[cfg(feature = "db")]
@@ -52,7 +52,7 @@ impl_ModManager_with_without_db! {
 					.http_client(http_client.clone())
 					.build(),
 				deleter: Deleter::new(&base_dest),
-				http_client: http_client.clone(),
+				http_client,
 				base_dest: base_dest.as_ref().to_path_buf(),
 			}
 		}
@@ -209,6 +209,12 @@ impl_ModManager_with_without_db! {
 			self.base_dest = path.to_owned();
 			self.downloader.base_dest = path.to_owned();
 			self.deleter.base_dest = path.to_owned();
+		}
+
+		/// Changes the HTTP client to use for downloads
+		pub fn set_http_client(&mut self, http_client: reqwest::Client) {
+			self.downloader.http_client = http_client.clone();
+			self.http_client = http_client;
 		}
 	}
 }

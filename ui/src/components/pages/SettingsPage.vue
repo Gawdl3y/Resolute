@@ -32,6 +32,15 @@
 						label="Custom manifest URL"
 						hint="This will be used to list mods instead of the main Resonite Modding Group manifest"
 					/>
+					<NumberSetting
+						setting="connectTimeout"
+						:rules="[rules.required]"
+						:min="5"
+						:max="120"
+						label="Connection timeout"
+						suffix="seconds"
+						hint="How long to wait before an attempted HTTP connection is considered failed"
+					/>
 					<CheckboxSetting
 						setting="modAuthorTools"
 						label="Show mod authoring tools"
@@ -49,6 +58,7 @@ import useSettings from '../../composables/settings';
 import AppHeader from '../AppHeader.vue';
 import ResonitePathSetting from '../settings/ResonitePathSetting.vue';
 import TextSetting from '../settings/TextSetting.vue';
+import NumberSetting from '../settings/NumberSetting.vue';
 import CheckboxSetting from '../settings/CheckboxSetting.vue';
 import DropdownSetting from '../settings/DropdownSetting.vue';
 
@@ -59,6 +69,11 @@ const tab = ref('general');
  * Validation rules
  */
 const rules = {
+	required(val) {
+		if (val === null || val === '') return 'Required';
+		return true;
+	},
+
 	url(val) {
 		if (!val) return true;
 

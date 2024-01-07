@@ -25,13 +25,6 @@ mod settings;
 static mut DB_BUILDER: Lazy<DatabaseBuilder> = Lazy::new(DatabaseBuilder::new);
 
 fn main() -> anyhow::Result<()> {
-	// Set up a shared HTTP client
-	let http_client = reqwest::Client::builder()
-		.connect_timeout(Duration::from_secs(10))
-		.use_rustls_tls()
-		.build()
-		.context("Unable to build HTTP client")?;
-
 	// Set up and run the Tauri app
 	tauri::Builder::default()
 		.plugin(
@@ -84,8 +77,8 @@ fn main() -> anyhow::Result<()> {
 			hash_file,
 			open_log_dir,
 			resonite_path_changed,
+			connect_timeout_changed,
 		])
-		.manage(http_client)
 		.setup(|app| {
 			let window = app.get_window("main").ok_or("unable to get main window")?;
 
@@ -160,8 +153,8 @@ async fn init(app: AppHandle) -> Result<(), anyhow::Error> {
 
 		// Set up the shared mod manager
 		info!("Setting up mod manager");
-		let http_client = app.state::<reqwest::Client>();
-		let manager = ModManager::new(db, resonite_path, &http_client);
+		let http_client = build_http_client(&app)?;
+		let manager = ModManager::new(db, resonite_path, http_client);
 		app.manage(Mutex::new(manager));
 
 		Ok::<(), anyhow::Error>(())
@@ -257,6 +250,19 @@ fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config, String> {
 	}
 
 	Ok(config)
+}
+
+/// Builds an HTTP client that takes the user-configured settings into account
+fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyhow::Error> {
+	let connect_timeout: f32 =
+		settings::require(app, "connectTimeout").context("Unable to retrieve connectTimeout setting")?;
+	debug!("Building HTTP client, connectTimeout = {}s", connect_timeout);
+
+	reqwest::Client::builder()
+		.connect_timeout(Duration::from_secs_f32(connect_timeout))
+		.use_rustls_tls()
+		.build()
+		.context("Unable to build HTTP client")
 }
 
 /// Builds the error window for a given error, then closes the main window
@@ -525,6 +531,18 @@ async fn resonite_path_changed(app: AppHandle, manager: tauri::State<'_, Mutex<M
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 	manager.lock().await.set_base_dest(&resonite_path);
 	info!("Changed manager's base destination to {}", resonite_path);
+	Ok(())
+}
+
+/// Ensures a change to the connection timeout setting is propagated to the manager
+#[tauri::command]
+async fn connect_timeout_changed(
+	app: AppHandle,
+	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+) -> Result<(), String> {
+	let http_client = build_http_client(&app).map_err(|err| err.to_string())?;
+	manager.lock().await.set_http_client(http_client);
+	info!("Changed manager's HTTP client for connectTimeout setting change");
 	Ok(())
 }
 
