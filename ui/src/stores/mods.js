@@ -14,6 +14,7 @@ export const useModStore = defineStore('mods', () => {
 	const loadingInstalled = ref(false);
 	const discovering = ref(false);
 	const hasLoaded = ref(false);
+	const hasLoadedInstalled = ref(false);
 	const operations = reactive({});
 
 	/**
@@ -68,6 +69,7 @@ export const useModStore = defineStore('mods', () => {
 			const mods = await invoke('load_installed_mods');
 			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
 
+			hasLoadedInstalled.value = true;
 			console.debug('Installed mods loaded', mods);
 			info(`${Object.keys(mods).length} installed mods loaded`);
 
@@ -300,6 +302,7 @@ export const useModStore = defineStore('mods', () => {
 		loadingInstalled,
 		discovering,
 		hasLoaded,
+		hasLoadedInstalled,
 		install,
 		uninstall,
 		update,

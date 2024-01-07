@@ -45,7 +45,7 @@ import ModsPage from './ModsPage.vue';
 
 const modStore = useModStore();
 const mods = computed(() => {
-	if (!modStore.mods) return modStore.mods;
+	if (!modStore.mods || !modStore.hasLoadedInstalled) return null;
 
 	const mods = {};
 	for (const mod of Object.values(modStore.mods)) {
@@ -169,6 +169,7 @@ async function discoverInstalledMods() {
 			type: 'info',
 		});
 	} catch (err) {
+		console.error('Error discovering installed mods', err);
 		message(`Error discovering installed mods:\n${err}`, {
 			title: 'Error discovering mods',
 			type: 'error',

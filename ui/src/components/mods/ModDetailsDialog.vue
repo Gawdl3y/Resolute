@@ -58,7 +58,7 @@
 				</ModUpdater>
 
 				<ModInstaller
-					v-else
+					v-else-if="!mod.isUnrecognized"
 					v-slot="{ install, installing, busy }"
 					:mod="mod"
 					:version="semver"
