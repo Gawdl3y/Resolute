@@ -5,7 +5,8 @@ use std::{
 	path::{Path, PathBuf},
 };
 
-use semver::{Version, VersionReq};
+use once_cell::sync::Lazy;
+use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -17,6 +18,18 @@ use native_model::{native_model, Model};
 use crate::manifest::{
 	ManifestAuthors, ManifestData, ManifestEntryArtifact, ManifestEntryDependencies, ManifestEntryVersions,
 };
+
+/// Group string for unrecognized mods
+pub const UNRECOGNIZED_GROUP: &str = "dev.gawdl3y.resolute.unrecognized";
+
+/// Semver representing an unknown version
+pub static UNKNOWN_SEMVER: Lazy<Version> = Lazy::new(|| Version {
+	major: 0,
+	minor: 0,
+	patch: 0,
+	pre: Prerelease::new("unknown").expect("unable to create prerelease struct for unknown semver"),
+	build: BuildMetadata::default(),
+});
 
 /// Builds a mod map from the given raw manifest data
 pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
@@ -153,6 +166,48 @@ impl ResoluteMod {
 			None => None,
 		}
 	}
+
+	/// Checks whether this mod is unrecognized (ID begins with [UNRECOGNIZED_GROUP])
+	pub fn is_unrecognized(&self) -> bool {
+		self.id.starts_with(UNRECOGNIZED_GROUP)
+	}
+
+	/// Creates a new unrecognized mod from details about an encountered artifact file
+	pub fn new_unrecognized(
+		artifact_filename: impl AsRef<str>,
+		artifact_install_location: impl AsRef<str>,
+		artifact_sha256: impl AsRef<str>,
+	) -> Self {
+		let artifact_filename = artifact_filename.as_ref();
+		let artifact_path = PathBuf::from(artifact_filename);
+		let artifact_stem = artifact_path
+			.file_stem()
+			.map(|stem| {
+				stem.to_str()
+					.expect("unable to convert artifact filename stem to string")
+			})
+			.unwrap_or(artifact_filename);
+
+		let mut versions = HashMap::new();
+		let version = ModVersion::new_unrecognized(artifact_filename, &artifact_install_location, artifact_sha256);
+		let semver = version.semver.clone();
+		versions.insert(semver.clone(), version);
+
+		Self {
+			id: format!("{}.{}", UNRECOGNIZED_GROUP, artifact_stem.replace(' ', "-")),
+			name: artifact_stem.to_owned(),
+			description: format!("Unrecognized mod discovered in {}", artifact_install_location.as_ref()),
+			category: "Unrecognized".to_owned(),
+			authors: vec![ModAuthor::unknown()],
+			source_location: None,
+			website: None,
+			tags: Some(vec!["unrecognized".to_owned()]),
+			flags: None,
+			platforms: None,
+			versions,
+			installed_version: Some(semver),
+		}
+	}
 }
 
 impl Display for ResoluteMod {
@@ -170,6 +225,18 @@ pub struct ModAuthor {
 	pub support: Option<Url>,
 }
 
+impl ModAuthor {
+	/// Creates a new unknown author
+	pub fn unknown() -> Self {
+		Self {
+			name: "Unknown".to_owned(),
+			url: None,
+			icon: None,
+			support: None,
+		}
+	}
+}
+
 impl Display for ModAuthor {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.name)
@@ -185,6 +252,35 @@ pub struct ModVersion {
 	pub conflicts: ModDependencyMap,
 	#[serde(rename = "releaseUrl")]
 	pub release_url: Option<Url>,
+}
+
+impl ModVersion {
+	/// Checks whether this version is unrecognized (semver equals [UNKNOWN_SEMVER])
+	pub fn is_unrecognized(&self) -> bool {
+		self.semver.eq(&UNKNOWN_SEMVER)
+	}
+
+	/// Creates a new unrecognized version from details about an encountered artifact file
+	pub fn new_unrecognized(
+		artifact_filename: impl AsRef<str>,
+		artifact_install_location: impl AsRef<str>,
+		artifact_sha256: impl AsRef<str>,
+	) -> Self {
+		let semver = UNKNOWN_SEMVER.clone();
+		let artifacts = vec![ModArtifact::new_unrecognized(
+			artifact_filename,
+			artifact_install_location,
+			artifact_sha256,
+		)];
+
+		Self {
+			semver,
+			artifacts,
+			dependencies: ModDependencyMap::new(),
+			conflicts: ModDependencyMap::new(),
+			release_url: None,
+		}
+	}
 }
 
 impl Display for ModVersion {
@@ -218,6 +314,31 @@ impl ModArtifact {
 				_ => PathBuf::from("rml_mods"),
 			},
 			None => PathBuf::from("rml_mods"),
+		}
+	}
+
+	/// Creates a new unrecognized artifact from details about an encountered artifact file
+	pub fn new_unrecognized(
+		filename: impl AsRef<str>,
+		install_location: impl AsRef<str>,
+		sha256: impl AsRef<str>,
+	) -> Self {
+		let filename = filename.as_ref();
+		let install_location = install_location.as_ref();
+		let sha256 = sha256.as_ref();
+
+		let mut url =
+			Url::parse("resolute://unrecognized/artifact").expect("unable to parse unrecognized artifact base url");
+		url.path_segments_mut()
+			.expect("unable to get mutable path segments of unrecognized artifact base url")
+			.push(install_location)
+			.push(filename);
+
+		ModArtifact {
+			url,
+			sha256: sha256.to_owned(),
+			filename: Some(filename.to_owned()),
+			install_location: Some(install_location.to_owned()),
 		}
 	}
 }
