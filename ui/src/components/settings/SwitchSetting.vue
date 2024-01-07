@@ -1,7 +1,8 @@
 <template>
-	<v-checkbox
+	<v-switch
 		v-model="settings.current[setting]"
 		:label="label"
+		color="primary"
 		@update:model-value="save"
 	/>
 </template>

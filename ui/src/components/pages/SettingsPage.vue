@@ -14,7 +14,7 @@
 				<v-container>
 					<DropdownSetting setting="theme" :items="themes" label="Theme" />
 					<ResonitePathSetting />
-					<CheckboxSetting
+					<SwitchSetting
 						setting="groupModIndex"
 						label="Group Mod Index by category"
 					/>
@@ -41,7 +41,7 @@
 						suffix="seconds"
 						hint="How long to wait before an attempted HTTP connection is considered failed"
 					/>
-					<CheckboxSetting
+					<SwitchSetting
 						setting="modAuthorTools"
 						label="Show mod authoring tools"
 					/>
@@ -59,7 +59,7 @@ import AppHeader from '../AppHeader.vue';
 import ResonitePathSetting from '../settings/ResonitePathSetting.vue';
 import TextSetting from '../settings/TextSetting.vue';
 import NumberSetting from '../settings/NumberSetting.vue';
-import CheckboxSetting from '../settings/CheckboxSetting.vue';
+import SwitchSetting from '../settings/SwitchSetting.vue';
 import DropdownSetting from '../settings/DropdownSetting.vue';
 
 const settings = useSettings();
