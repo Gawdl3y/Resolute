@@ -8,6 +8,7 @@ let storeUnlisten;
 const currentSettings = reactive({
 	resonitePath: null,
 	manifestUrl: null,
+	connectTimeout: 10,
 	theme: null,
 	groupModIndex: true,
 	modsPerPageGrouped: -1,
@@ -50,7 +51,9 @@ export function useSettings() {
 		await store.set(setting, value);
 		info(`Setting ${setting} set to ${value}, persistNow = ${persistNow}`);
 		if (persistNow) await persist();
+
 		if (setting === 'resonitePath') invoke('resonite_path_changed');
+		else if (setting === 'connectTimeout') invoke('connect_timeout_changed');
 	}
 
 	/**
