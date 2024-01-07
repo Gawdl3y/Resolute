@@ -70,7 +70,9 @@ onMounted(async () => {
 
 	unlistenToFileHover = await listen('tauri://file-drop-hover', (evt) => {
 		console.debug('File hover received', evt);
-		fileHovering.value = true;
+		if (evt.payload && evt.payload.length > 0) {
+			fileHovering.value = true;
+		}
 	});
 
 	unlistenToFileCancelled = await listen(
