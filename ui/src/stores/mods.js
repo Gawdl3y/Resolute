@@ -1,41 +1,61 @@
 import { ref, reactive } from 'vue';
 import { defineStore } from 'pinia';
+import { lt as semverLt } from 'semver';
 import { invoke } from '@tauri-apps/api';
 import { message } from '@tauri-apps/api/dialog';
 import { info, error } from 'tauri-plugin-log-api';
 
-import { ResoluteMod } from '../structs/mod';
+// eslint-disable-next-line no-unused-vars
+import { ResoluteMod, ModVersion } from '../structs/mod';
 
 export const useModStore = defineStore('mods', () => {
 	const mods = ref(null);
 	const loading = ref(false);
 	const loadingInstalled = ref(false);
 	const discovering = ref(false);
+	const hasLoaded = ref(false);
+	const hasLoadedInstalled = ref(false);
 	const operations = reactive({});
 
 	/**
 	 * Retrieves mod data from the backend
 	 * @param {boolean} [bypassCache=false] Whether to bypass the manifest cache when possible
 	 * @param {boolean} [alert=true] Whether to alert the user for failures
-	 * @returns {Object} Raw mod data
+	 * @returns {Object} {@link ResoluteMod}s mapped by their ID
 	 */
 	async function load(bypassCache = false, alert = true) {
+		// Ensure we're not already loading the mods elsewhere
 		if (loading.value) throw new Error('Already loading mods.');
 		loading.value = true;
 
 		try {
+			// Load the mods from the backend
 			await info(`Requesting mod load, bypassCache = ${bypassCache}`);
-			const mods = await invoke('load_all_mods', { bypassCache });
-			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+			const { mods: newMods, removed } = await invoke('load_all_mods', {
+				bypassCache,
+			});
+			for (const id of Object.keys(newMods)) {
+				newMods[id] = new ResoluteMod(newMods[id]);
+			}
 
-			console.debug('Mods loaded', mods);
-			info(`${Object.keys(mods).length} mods loaded`);
+			// Ditch any mods that were specifically removed
+			if (mods.value && removed) {
+				for (const id of Object.keys(removed)) {
+					if (mods.value[id]) delete mods.value[id];
+				}
+			}
 
-			this.$patch({ mods });
-			return mods;
+			// Mark the mods as loaded
+			hasLoaded.value = true;
+			console.debug('Mods loaded', newMods);
+			info(`${Object.keys(newMods).length} mods loaded`);
+
+			this.$patch({ mods: newMods });
+			return newMods;
 		} catch (err) {
 			error(`Error loading mods: ${err}`);
 
+			// Alert the user to the failure
 			if (alert) {
 				message(`Error loading mod list:\n${err}`, {
 					title: 'Error loading mods',
@@ -51,25 +71,39 @@ export const useModStore = defineStore('mods', () => {
 
 	/**
 	 * Retrieves installed mod data from the backend
-	 * @returns {Object} Raw mod data
+	 * @returns {Object} {@link ResoluteMod}s mapped by their ID
 	 */
 	async function loadInstalled() {
+		// Ensure we're not already loading the installed mods elsewhere
 		if (loadingInstalled.value) {
 			throw new Error('Already loading installed mods.');
 		}
 		loadingInstalled.value = true;
 
 		try {
+			// Load the installed mods from the backend
 			await info('Requesting installed mod load');
-			const mods = await invoke('load_installed_mods');
-			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+			const { mods: newMods, removed } = await invoke('load_installed_mods');
+			for (const id of Object.keys(newMods)) {
+				newMods[id] = new ResoluteMod(newMods[id]);
+			}
 
-			console.debug('Installed mods loaded', mods);
-			info(`${Object.keys(mods).length} installed mods loaded`);
+			// Ditch any mods that were specifically removed
+			if (mods.value && removed) {
+				for (const id of Object.keys(removed)) {
+					if (mods.value[id]) delete mods.value[id];
+				}
+			}
 
-			this.$patch({ mods });
-			return mods;
+			// Mark the installed mods as loaded
+			hasLoadedInstalled.value = true;
+			console.debug('Installed mods loaded', newMods);
+			info(`${Object.keys(newMods).length} installed mods loaded`);
+
+			this.$patch({ mods: newMods });
+			return newMods;
 		} catch (err) {
+			// Alert the user to the failure
 			error(`Error loading installed mods: ${err}`);
 			message(`Error loading installed mod list:\n${err}`, {
 				title: 'Error loading mods',
@@ -83,15 +117,19 @@ export const useModStore = defineStore('mods', () => {
 
 	/**
 	 * Requests the installation of a mod from the backend and displays an alert when a result is received
-	 * @param {string} modID
+	 * @param {ResoluteMod|string} mod
+	 * @param {ModVersion|string} [version] Version to install (defaults to latest available)
 	 */
-	async function install(modID) {
-		const mod = mods.value[modID];
-		const version = mod.latestVersion;
+	async function install(mod, version) {
+		mod = typeof mod === 'string' ? mods.value[mod] : mod;
+
+		// Determine the version to request the install of
+		if (!version) version = mod.latestVersion;
+		else if (typeof version === 'string') version = mod.versions[version];
 
 		try {
 			// Add an operation for the mod being installed and request the installation from the backend
-			operations[modID] = 'install';
+			operations[mod.id] = 'install';
 			await info(
 				`Requesting installation of mod ${mod.name} v${version.semver}`,
 			);
@@ -115,21 +153,21 @@ export const useModStore = defineStore('mods', () => {
 			throw err;
 		} finally {
 			// Clear the operation for the mod
-			operations[modID] = null;
+			operations[mod.id] = null;
 		}
 	}
 
 	/**
 	 * Requests the uninstallation of a mod from the backend and displays an alert when a result is received
-	 * @param {string} modID
+	 * @param {ResoluteMod|string} mod
 	 */
-	async function uninstall(modID) {
-		const mod = mods.value[modID];
-		const version = mod.latestVersion;
+	async function uninstall(mod) {
+		mod = typeof mod === 'string' ? mods.value[mod] : mod;
+		const version = mod.installedVersion;
 
 		try {
 			// Add an operation for the mod being installed and request the installation from the backend
-			operations[modID] = 'uninstall';
+			operations[mod.id] = 'uninstall';
 			await info(
 				`Requesting uninstallation of mod ${mod.name} v${version.semver}`,
 			);
@@ -150,23 +188,27 @@ export const useModStore = defineStore('mods', () => {
 			throw err;
 		} finally {
 			// Clear the operation for the mod
-			operations[modID] = null;
+			operations[mod.id] = null;
 		}
 	}
 
 	/**
 	 * Requests the replacement of a mod version from the backend and displays an alert when a result is received
-	 * @param {string} modID
+	 * @param {ResoluteMod|string} mod
+	 * @param {ModVersion|string} [version] Version to update to (defaults to latest available)
 	 * @param {boolean} [alert=true] Whether to alert the user for a result
 	 */
-	async function update(modID, alert = true) {
-		const mod = mods.value[modID];
-		const version = mod.latestVersion;
+	async function update(mod, version, alert = true) {
+		mod = typeof mod === 'string' ? mods.value[mod] : mod;
 		const oldVersion = mod.installedVersion;
+
+		// Determine the version to request the update to
+		if (!version) version = mod.latestVersion;
+		else if (typeof version === 'string') version = mod.versions[version];
 
 		try {
 			// Add an operation for the mod being installed and request the installation from the backend
-			operations[modID] = 'update';
+			operations[mod.id] = 'update';
 			await info(
 				`Requesting replacement of mod ${mod.name} v${version.semver} with v${oldVersion.semver}`,
 			);
@@ -178,10 +220,13 @@ export const useModStore = defineStore('mods', () => {
 			// Update the mod's installed version and notify the user of the success
 			mod.installedVersion = version;
 			if (alert) {
+				const action = semverLt(version.semver, oldVersion.semver)
+					? 'downgraded'
+					: 'updated';
 				message(
-					`${mod.name} v${oldVersion.semver} was successfully updated to ${version.semver}.`,
+					`${mod.name} v${oldVersion.semver} was successfully ${action} to ${version.semver}.`,
 					{
-						title: 'Mod updated',
+						title: `Mod ${action}`,
 						type: 'info',
 					},
 				);
@@ -189,10 +234,13 @@ export const useModStore = defineStore('mods', () => {
 		} catch (err) {
 			// Notify the user of the failure
 			if (alert) {
+				const action = semverLt(version.semver, oldVersion.semver)
+					? 'downgrading'
+					: 'updating';
 				message(
-					`Error updating ${mod.name} v${oldVersion.semver} to v${version.semver}:\n${err}`,
+					`Error ${action} ${mod.name} v${oldVersion.semver} to v${version.semver}:\n${err}`,
 					{
-						title: 'Error updating mod',
+						title: `Error ${action} mod`,
 						type: 'error',
 					},
 				);
@@ -200,13 +248,13 @@ export const useModStore = defineStore('mods', () => {
 			throw err;
 		} finally {
 			// Clear the operation for the mod
-			operations[modID] = null;
+			operations[mod.id] = null;
 		}
 	}
 
 	/**
 	 * Requests discovery of installed mods from the backend and alerts the user to the result
-	 * @returns {Object} Raw mod data
+	 * @returns {Object} {@link ResoluteMod}s mapped by their ID
 	 */
 	async function discover() {
 		if (discovering.value) {
@@ -238,34 +286,38 @@ export const useModStore = defineStore('mods', () => {
 
 	/**
 	 * Check whether a mod is being operated on, and thus actions for it should be disabled
-	 * @param {Object} modID
+	 * @param {ResoluteMod|string} mod
 	 */
-	function isBusy(modID) {
-		return Boolean(operations?.[modID]);
+	function isBusy(mod) {
+		mod = typeof mod === 'object' ? mod.id : mod;
+		return Boolean(operations?.[mod]);
 	}
 
 	/**
 	 * Check whether a mod is being installed
-	 * @param {Object} modID
+	 * @param {ResoluteMod|string} mod
 	 */
-	function isInstalling(modID) {
-		return operations?.[modID] === 'install';
+	function isInstalling(mod) {
+		mod = typeof mod === 'object' ? mod.id : mod;
+		return operations?.[mod] === 'install';
 	}
 
 	/**
 	 * Check whether a mod is being uninstalled
-	 * @param {Object} modID
+	 * @param {ResoluteMod|string} mod
 	 */
-	function isUninstalling(modID) {
-		return operations?.[modID] === 'uninstall';
+	function isUninstalling(mod) {
+		mod = typeof mod === 'object' ? mod.id : mod;
+		return operations?.[mod] === 'uninstall';
 	}
 
 	/**
 	 * Check whether a mod is being updated
-	 * @param {Object} modID
+	 * @param {ResoluteMod|string} mod
 	 */
-	function isUpdating(modID) {
-		return operations?.[modID] === 'update';
+	function isUpdating(mod) {
+		mod = typeof mod === 'object' ? mod.id : mod;
+		return operations?.[mod] === 'update';
 	}
 
 	return {
@@ -277,6 +329,8 @@ export const useModStore = defineStore('mods', () => {
 		loading,
 		loadingInstalled,
 		discovering,
+		hasLoaded,
+		hasLoadedInstalled,
 		install,
 		uninstall,
 		update,

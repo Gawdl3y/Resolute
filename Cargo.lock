@@ -3297,14 +3297,16 @@ dependencies = [
 
 [[package]]
 name = "resolute"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "futures-util",
  "log",
  "native_db",
  "native_model",
+ "once_cell",
  "path-clean",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "sha2",
@@ -3316,7 +3318,7 @@ dependencies = [
 
 [[package]]
 name = "resolute-app"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "log",

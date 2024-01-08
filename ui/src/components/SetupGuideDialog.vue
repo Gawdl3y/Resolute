@@ -92,7 +92,7 @@
 								:prepend-icon="mdiDownload"
 								:disabled="
 									installed ||
-									!modStore.mods ||
+									!modStore.hasLoaded ||
 									!resonitePathSelected ||
 									(busy && !installing)
 								"
@@ -121,7 +121,7 @@
 								:prepend-icon="mdiDownload"
 								:disabled="
 									installed ||
-									!modStore.mods ||
+									!modStore.hasLoaded ||
 									!resonitePathSelected ||
 									(busy && !installing)
 								"
@@ -206,7 +206,7 @@ const prereqsInstalled = ref(0);
 
 onMounted(() => {
 	info('Setup guide showing');
-	if (!modStore.mods && !modStore.loading) modStore.load();
+	if (!modStore.hasLoaded && !modStore.loading) modStore.load();
 });
 
 /**
@@ -227,11 +227,11 @@ function advanceStep() {
 		}, 500);
 
 		// Kick off mod autodiscovery
-		if (!settings.current.modsAutodiscovered && !modStore.discovering) {
+		if (!settings.current.modsAutodiscovered2 && !modStore.discovering) {
 			modStore
 				.discover()
 				.then(() => {
-					settings.set('modsAutodiscovered', true);
+					settings.set('modsAutodiscovered2', true);
 				})
 				.catch(() => {});
 		}

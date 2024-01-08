@@ -1,11 +1,13 @@
 <template>
 	<v-data-table
+		ref="dataTable"
 		:headers="headers"
 		:items="items"
 		item-key="id"
 		:items-per-page="settings.current[modsPerPageSetting]"
 		:loading="loading"
 		:search="filter"
+		filter-mode="some"
 		:group-by="groupBy"
 		:no-data-text="noDataText"
 		fixed-header
@@ -19,9 +21,12 @@
 				@click="emit('showModDetails', mod)"
 			>
 				<td v-if="groupBy"></td>
-				<td style="max-width: 14em; overflow-wrap: break-word">
-					{{ mod.name }}
-				</td>
+				<!-- eslint-disable vue/no-v-html -->
+				<td
+					style="min-width: 12em; max-width: 16em; overflow-wrap: break-word"
+					v-html="wrappableCamelCase(mod.name)"
+				></td>
+				<!-- eslint-enable vue/no-v-html -->
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
 				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
@@ -48,7 +53,7 @@
 						</ModUninstaller>
 
 						<ModInstaller
-							v-if="!mod.hasUpdate"
+							v-if="!mod.hasUpdate && !mod.isUnrecognized"
 							v-slot="{ install, installing, busy }"
 							:mod="mod"
 						>
@@ -70,7 +75,11 @@
 							</v-tooltip>
 						</ModInstaller>
 
-						<ModUpdater v-else v-slot="{ update, updating, busy }" :mod="mod">
+						<ModUpdater
+							v-else-if="mod.hasUpdate"
+							v-slot="{ update, updating, busy }"
+							:mod="mod"
+						>
 							<v-tooltip text="Update" :open-delay="500">
 								<template #activator="{ props: activator }">
 									<v-btn
@@ -98,7 +107,10 @@
 		<template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
 			<tr>
 				<td
+					:ref="addGroupHeader"
 					:colspan="columns.length"
+					:data-open="isGroupOpen(item)"
+					:data-group="item.value"
 					style="cursor: pointer"
 					@click="toggleGroup(item)"
 				>
@@ -139,9 +151,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUpdate } from 'vue';
 import { mdiDownload, mdiDelete, mdiUpdate, mdiRefresh } from '@mdi/js';
 
+import { wrappableCamelCase } from '../../util';
 import useSettings from '../../composables/settings';
 import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
@@ -152,10 +165,12 @@ const props = defineProps({
 	mods: { type: Object, default: null },
 	disabled: { type: Boolean, default: false },
 	loading: { type: Boolean, default: false },
-	allowGrouping: { type: Boolean, default: true },
+	grouped: { type: Boolean, default: true },
 	noDataText: { type: String, default: undefined },
 });
 const emit = defineEmits(['showModDetails']);
+defineExpose({ expandAllGroups, collapseAllGroups });
+
 const settings = useSettings();
 
 /**
@@ -166,12 +181,12 @@ const headers = computed(() => {
 		{ title: 'Name', key: 'name' },
 		{ title: 'Description', key: 'description' },
 		{ title: 'Category', key: 'category' },
-		{ title: 'Version', key: 'sortableVersionStatus' },
-		{ title: null, sortable: false },
+		{ title: 'Version', key: 'sortableVersionStatus', filterable: false },
+		{ title: null, key: 'tags', sortable: false, filter: filterItem },
 	];
 
 	// If the mods should be grouped, ditch the category header
-	if (props.allowGrouping && settings.current.groupModIndex) {
+	if (props.grouped) {
 		const categoryIdx = headers.findIndex((head) => head.key === 'category');
 		headers.splice(categoryIdx, 1);
 	}
@@ -188,16 +203,29 @@ const items = computed(() => (props.mods ? Object.values(props.mods) : []));
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
  */
 const groupBy = computed(() => {
-	if (!props.allowGrouping) return undefined;
-	return settings.current.groupModIndex
-		? [{ key: 'category', order: 'asc' }]
-		: undefined;
+	return props.grouped ? [{ key: 'category', order: 'asc' }] : undefined;
 });
 
 /**
  * Text to filter the table with
  */
 const filter = ref(null);
+
+/**
+ * Custom filter function used for the fake tags column - searches tags, authors, and category
+ * @param {?string[]} value Categories of of the item
+ * @param {?string} query Search string
+ * @param {Object} item Data table item object
+ */
+function filterItem(value, query, item) {
+	if (!query) return false;
+	query = query.toLowerCase();
+	return (
+		value?.join?.(' ')?.toLowerCase?.()?.includes?.(query) ||
+		item.raw.category.toLowerCase().includes(query) ||
+		item.raw.authors.some((author) => author.name.toLowerCase().includes(query))
+	);
+}
 
 /**
  * Setting key to use for the itemsPerPage parameter on the table
@@ -212,5 +240,49 @@ const modsPerPageSetting = computed(
  */
 function onItemsPerPageUpdate(itemsPerPage) {
 	settings.set(modsPerPageSetting.value, itemsPerPage);
+}
+
+/**
+ * Group header cells that have been added by the ref function {@link addGroupHeader}
+ */
+let groupHeaders = [];
+
+// Need to clear the group header cells whenever the component is doing an update
+onBeforeUpdate(() => {
+	groupHeaders = [];
+});
+
+/**
+ * Adds a group header cell to the list of cells if there isn't already one for that group
+ * @param {HTMLTableCellElement} header
+ */
+function addGroupHeader(header) {
+	if (!header) return;
+
+	const group = header.getAttribute('data-group');
+	const alreadyExists = groupHeaders.some(
+		(header) => header.getAttribute('data-group') === group,
+	);
+	if (alreadyExists) return;
+
+	groupHeaders.push(header);
+}
+
+/**
+ * Expands any collapsed group headers
+ */
+function expandAllGroups() {
+	for (const header of groupHeaders) {
+		if (header.getAttribute('data-open') === 'false') header.click();
+	}
+}
+
+/**
+ * Collapses any expanded group headers
+ */
+function collapseAllGroups() {
+	for (const header of groupHeaders) {
+		if (header.getAttribute('data-open') === 'true') header.click();
+	}
 }
 </script>

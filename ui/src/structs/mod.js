@@ -84,6 +84,14 @@ export class ResoluteMod {
 	}
 
 	/**
+	 * Whether this is an unrecognized mod
+	 * @type {boolean}
+	 */
+	get isUnrecognized() {
+		return this.id.startsWith('dev.gawdl3y.resolute.unrecognized');
+	}
+
+	/**
 	 * Latest available version
 	 * @type {ModVersion}
 	 */
@@ -100,22 +108,23 @@ export class ResoluteMod {
 	}
 
 	/**
-	 * A number for the version status, for the purposes of sorting.
-	 * 0 for update available, 1 for installed, 2 for not installed
-	 * @type {number}
-	 */
-	get sortableVersionStatus() {
-		return this.hasUpdate ? 0 : this.installedVersion ? 1 : 2;
-	}
-
-	/**
 	 * A CSS class to use for the version text.
 	 * text-success if installed and up-to-date, text-warning if there is an update available, nothing otherwise.
 	 * @type {string}
 	 */
 	get versionTextClass() {
 		if (!this.installedVersion) return '';
+		if (this.isUnrecognized) return 'text-blue';
 		return this.hasUpdate ? 'text-warning' : 'text-success';
+	}
+
+	/**
+	 * A number for the version status, for the purposes of sorting.
+	 * 0 for update available, 1 for installed, 2 for not installed
+	 * @type {number}
+	 */
+	get sortableVersionStatus() {
+		return this.hasUpdate ? 0 : this.installedVersion ? 1 : 2;
 	}
 
 	toJSON() {
@@ -194,6 +203,22 @@ export class ModVersion {
 		 */
 		this.releaseUrl = data.releaseUrl;
 	}
+
+	/**
+	 * Whether this version is for an unrecognized artifact
+	 * @type {boolean}
+	 */
+	get isUnrecognized() {
+		return this.semver === '0.0.0-unknown';
+	}
+
+	/**
+	 * Text label for the version
+	 * @type {string}
+	 */
+	get label() {
+		return this.isUnrecognized ? 'Unknown' : this.semver;
+	}
 }
 
 /**
@@ -224,5 +249,25 @@ export class ModArtifact {
 		 * @type {?string}
 		 */
 		this.installLocation = data.installLocation;
+	}
+
+	/**
+	 * The inferred filename of the artifact (obtained from the end of the URL)
+	 * @returns {string}
+	 */
+	get inferredFilename() {
+		const url = new URL(this.url);
+		const lastSlashIdx = url.pathname.lastIndexOf('/');
+		return url.pathname.substring(lastSlashIdx + 1);
+	}
+
+	/**
+	 * Gets the inferred install location of the artifact
+	 * (always "/rml_mods" unless the given category is "Plugins", in which case it's "/Libraries")
+	 * @returns {string}
+	 */
+	inferredInstallLocation(category) {
+		if (category === 'Plugins') return '/Libraries';
+		return '/rml_mods';
 	}
 }

@@ -17,7 +17,7 @@ use super::ArtifactPaths;
 /// Handles mod downloads
 pub struct Downloader {
 	pub base_dest: PathBuf,
-	http_client: Client,
+	pub http_client: Client,
 }
 
 impl Downloader {

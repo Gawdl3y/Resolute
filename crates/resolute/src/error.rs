@@ -1,6 +1,7 @@
 use std::{fmt::Display, path::PathBuf};
 
 use reqwest::StatusCode;
+use semver::Version;
 
 use crate::mods::ResoluteMod;
 
@@ -25,6 +26,9 @@ pub enum Error {
 	#[error("unable to parse url: {0}")]
 	Url(String),
 
+	#[error("unable to parse semver: {0}")]
+	Semver(#[from] semver::Error),
+
 	#[error("json error: {0}")]
 	Json(#[from] serde_json::Error),
 
@@ -36,7 +40,7 @@ pub enum Error {
 	},
 
 	#[error("unknown version \"{1}\" for mod \"{0}\"")]
-	UnknownVersion(String, String),
+	UnknownVersion(String, Version),
 
 	#[error("mod \"{0}\" isn't installed")]
 	ModNotInstalled(Box<ResoluteMod>),

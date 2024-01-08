@@ -76,7 +76,6 @@ jobs:
       releaseBody: ${{ needs.changelog.outputs.changelog }}
       releaseDraft: true
       includeUpdaterJson: true
-      updaterJsonPreferNsis: true
     secrets:
       updaterKey: ${{ secrets.TAURI_UPDATER_KEY }}
       updaterKeyPassword: ${{ secrets.TAURI_UPDATER_KEY_PASSWORD }}

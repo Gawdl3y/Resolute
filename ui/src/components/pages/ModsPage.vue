@@ -3,6 +3,20 @@
 		<template #actions>
 			<slot name="actions" :resonite-path-exists="resonitePathExists" />
 
+			<v-tooltip
+				v-if="grouped"
+				:text="`${expanded ? 'Collapse' : 'Expand'} all`"
+				:open-delay="500"
+			>
+				<template #activator="{ props: tooltipProps }">
+					<v-btn
+						:icon="expanded ? mdiArrowCollapseVertical : mdiArrowExpandVertical"
+						v-bind="tooltipProps"
+						@click="toggleAllGroups"
+					/>
+				</template>
+			</v-tooltip>
+
 			<v-tooltip text="Refresh mods" :open-delay="500">
 				<template #activator="{ props: tooltipProps }">
 					<v-btn
@@ -36,11 +50,12 @@
 		</div>
 
 		<ModTable
+			ref="modTable"
 			:mods="mods"
 			:disabled="disabled || !resonitePathExists"
 			:loading="loading"
 			:style="`height: ${tableHeight}`"
-			:allow-grouping="allowGrouping"
+			:grouped="grouped"
 			:no-data-text="noDataText"
 			@show-mod-details="showModDetails"
 		/>
@@ -63,7 +78,11 @@ import {
 	onUnmounted,
 } from 'vue';
 import { invoke } from '@tauri-apps/api';
-import { mdiRefresh } from '@mdi/js';
+import {
+	mdiArrowCollapseVertical,
+	mdiArrowExpandVertical,
+	mdiRefresh,
+} from '@mdi/js';
 
 import useSettings from '../../composables/settings';
 import useModStore from '../../stores/mods';
@@ -77,16 +96,18 @@ const props = defineProps({
 	mods: { type: Object, default: null },
 	loadMods: { type: Function, required: true },
 	disabled: { type: Boolean, default: false },
-	allowGrouping: { type: Boolean, default: true },
+	grouped: { type: Boolean, default: true },
 	noDataText: { type: String, default: undefined },
 });
+
 const settings = useSettings();
 const modStore = useModStore();
-const alerts = ref(null);
+
 const loading = ref(false);
 const resonitePathExists = ref(true);
 const modDetails = ref(null);
 
+const alerts = ref(null);
 const alertHeight = ref(0);
 const tableHeight = computed(() => {
 	if (!alerts.value) return '100%';
@@ -99,14 +120,14 @@ onMounted(() => {
 
 	// Automatically discover mods if it hasn't been done before and the setup guide has already been done
 	const shouldAutodiscover =
-		!settings.current.modsAutodiscovered &&
+		!settings.current.modsAutodiscovered2 &&
 		settings.current.setupGuideDone &&
 		!modStore.discovering;
 	if (shouldAutodiscover) {
 		modStore
 			.discover()
 			.then(() => {
-				settings.set('modsAutodiscovered', true);
+				settings.set('modsAutodiscovered2', true);
 			})
 			.catch(() => {});
 	}
@@ -121,6 +142,7 @@ onUnmounted(() => {
 	sidebarBus.off('toggle', onSidebarToggle);
 });
 
+// Validate the Resonite path on load and change
 onBeforeMount(checkIfResonitePathExists);
 watch(settings.current, checkIfResonitePathExists);
 
@@ -141,7 +163,7 @@ async function loadModsFromFn(bypassCache = false) {
 
 /**
  * Shows the details dialog for a mod
- * @param {Object} mod Raw mod data
+ * @param {ResoluteMod} mod
  */
 function showModDetails(mod) {
 	if (mod === modDetails.value) {
@@ -194,5 +216,17 @@ function adjustTableHeight() {
  */
 function onSidebarToggle() {
 	adjustTableHeight();
+}
+
+const modTable = ref(null);
+const expanded = ref(false);
+
+/**
+ * Expands or collapses all groups in the mod table
+ */
+function toggleAllGroups() {
+	expanded.value = !expanded.value;
+	if (expanded.value) modTable.value.expandAllGroups();
+	else modTable.value.collapseAllGroups();
 }
 </script>

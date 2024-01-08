@@ -4,7 +4,7 @@
 		no-data-text="No mods have been installed yet."
 		:mods="mods"
 		:load-mods="loadMods"
-		:allow-grouping="false"
+		:grouped="false"
 	>
 		<template #actions="{ resonitePathExists }">
 			<v-tooltip text="Discover installed" :open-delay="500">
@@ -45,7 +45,7 @@ import ModsPage from './ModsPage.vue';
 
 const modStore = useModStore();
 const mods = computed(() => {
-	if (!modStore.mods) return modStore.mods;
+	if (!modStore.mods || !modStore.hasLoadedInstalled) return null;
 
 	const mods = {};
 	for (const mod of Object.values(modStore.mods)) {
@@ -97,7 +97,9 @@ async function updateAllMods() {
 
 	try {
 		// Request the update of every outdated mod
-		const promises = outdated.map((mod) => modStore.update(mod.id, false));
+		const promises = outdated.map((mod) =>
+			modStore.update(mod.id, null, false),
+		);
 		const results = await Promise.allSettled(promises);
 		const updated = results.map((result, i) => ({
 			mod: outdated[i],
@@ -167,6 +169,7 @@ async function discoverInstalledMods() {
 			type: 'info',
 		});
 	} catch (err) {
+		console.error('Error discovering installed mods', err);
 		message(`Error discovering installed mods:\n${err}`, {
 			title: 'Error discovering mods',
 			type: 'error',
