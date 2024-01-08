@@ -189,15 +189,7 @@ pub fn discover_mods_by_filename(
 						.expect("unable to get installed version from discovered mod versions map")
 						.artifacts
 						.iter()
-						.any(|artifact| {
-							artifact
-								.filename
-								.as_ref()
-								.map(|filename| OsString::from(&filename))
-								.or_else(|| artifact.infer_filename())
-								.expect("unable to get filename of artifact")
-								== artifact_file.file_name()
-						})
+						.any(|artifact| artifact.usable_filename() == artifact_file.file_name())
 				});
 
 				if exists {

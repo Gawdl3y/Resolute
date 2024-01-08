@@ -265,13 +265,12 @@ impl ModVersion {
 		self.semver.eq(&UNRECOGNIZED_SEMVER)
 	}
 
-	/// Creates a new unrecognized version from details about an encountered artifact file
+	/// Creates a new unrecognized version from details about a single encountered artifact file
 	pub fn new_unrecognized(
 		artifact_filename: impl AsRef<str>,
 		artifact_install_location: impl AsRef<str>,
 		artifact_sha256: impl AsRef<str>,
 	) -> Self {
-		let semver = UNRECOGNIZED_SEMVER.clone();
 		let artifacts = vec![ModArtifact::new_unrecognized(
 			artifact_filename,
 			artifact_install_location,
@@ -279,7 +278,18 @@ impl ModVersion {
 		)];
 
 		Self {
-			semver,
+			semver: UNRECOGNIZED_SEMVER.clone(),
+			artifacts,
+			dependencies: ModDependencyMap::new(),
+			conflicts: ModDependencyMap::new(),
+			release_url: None,
+		}
+	}
+
+	/// Creates a new unrecognized version with a list of artifacts
+	pub fn new_unrecognized_with_artifacts(artifacts: Vec<ModArtifact>) -> Self {
+		Self {
+			semver: UNRECOGNIZED_SEMVER.clone(),
 			artifacts,
 			dependencies: ModDependencyMap::new(),
 			conflicts: ModDependencyMap::new(),
@@ -320,6 +330,15 @@ impl ModArtifact {
 			},
 			None => PathBuf::from("rml_mods"),
 		}
+	}
+
+	/// Gets the filename or inferred filename. Panics if neither can be obtained.
+	pub fn usable_filename(&self) -> OsString {
+		self.filename
+			.as_ref()
+			.map(|filename| OsString::from(&filename))
+			.or_else(|| self.infer_filename())
+			.expect("unable to get filename of artifact")
 	}
 
 	/// Checks whether this artifact is unrecognized (URL begins with [UNRECOGNIZED_ARTIFACT_BASE_URL])
