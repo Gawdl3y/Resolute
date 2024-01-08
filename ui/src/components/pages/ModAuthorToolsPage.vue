@@ -17,7 +17,7 @@
 						<template #append-inner>
 							<v-tooltip text="Select file" :open-delay="500">
 								<template #activator="{ props: activator }">
-									<FieldCopyButton :text="checksum" :hidden="checksumLoading" />
+									<CopyButton :text="checksum" :hidden="checksumLoading" />
 									<v-btn
 										v-bind="activator"
 										variant="text"
@@ -50,7 +50,7 @@ import { open, message } from '@tauri-apps/api/dialog';
 import { mdiFileCheck, mdiFileSearch } from '@mdi/js';
 
 import AppHeader from '../AppHeader.vue';
-import FieldCopyButton from '../FieldCopyButton.vue';
+import CopyButton from '../CopyButton.vue';
 
 const checksum = ref('');
 const checksumFile = ref('');
