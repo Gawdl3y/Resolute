@@ -120,14 +120,14 @@ onMounted(() => {
 
 	// Automatically discover mods if it hasn't been done before and the setup guide has already been done
 	const shouldAutodiscover =
-		!settings.current.modsAutodiscovered &&
+		!settings.current.modsAutodiscovered2 &&
 		settings.current.setupGuideDone &&
 		!modStore.discovering;
 	if (shouldAutodiscover) {
 		modStore
 			.discover()
 			.then(() => {
-				settings.set('modsAutodiscovered', true);
+				settings.set('modsAutodiscovered2', true);
 			})
 			.catch(() => {});
 	}

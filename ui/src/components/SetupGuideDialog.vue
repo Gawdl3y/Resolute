@@ -227,11 +227,11 @@ function advanceStep() {
 		}, 500);
 
 		// Kick off mod autodiscovery
-		if (!settings.current.modsAutodiscovered && !modStore.discovering) {
+		if (!settings.current.modsAutodiscovered2 && !modStore.discovering) {
 			modStore
 				.discover()
 				.then(() => {
-					settings.set('modsAutodiscovered', true);
+					settings.set('modsAutodiscovered2', true);
 				})
 				.catch(() => {});
 		}
