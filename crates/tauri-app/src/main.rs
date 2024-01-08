@@ -10,7 +10,7 @@ use once_cell::sync::Lazy;
 use resolute::{
 	db::ResoluteDatabase,
 	discover,
-	manager::ModManager,
+	manager::{LoadedMods, ModManager},
 	manifest,
 	mods::{ModVersion, ResoluteMod, ResoluteModMap},
 };
@@ -286,7 +286,7 @@ async fn load_all_mods(
 	app: AppHandle,
 	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
 	bypass_cache: bool,
-) -> Result<ResoluteModMap, String> {
+) -> Result<LoadedMods, String> {
 	let mods = manager
 		.lock()
 		.await
@@ -298,7 +298,7 @@ async fn load_all_mods(
 
 /// Loads installed mods from the manager
 #[tauri::command]
-async fn load_installed_mods(manager: tauri::State<'_, Mutex<ModManager<'_>>>) -> Result<ResoluteModMap, String> {
+async fn load_installed_mods(manager: tauri::State<'_, Mutex<ModManager<'_>>>) -> Result<LoadedMods, String> {
 	let mods = manager
 		.lock()
 		.await
