@@ -254,8 +254,7 @@ fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config, String> {
 
 /// Builds an HTTP client that takes the user-configured settings into account
 fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyhow::Error> {
-	let connect_timeout: f32 =
-		settings::require(app, "connectTimeout").context("Unable to retrieve connectTimeout setting")?;
+	let connect_timeout: f32 = settings::get(app, "connectTimeout")?.unwrap_or(10f32);
 	debug!("Building HTTP client, connectTimeout = {}s", connect_timeout);
 
 	reqwest::Client::builder()
