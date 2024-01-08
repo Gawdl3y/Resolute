@@ -31,12 +31,24 @@
 				<td>
 					<a :href="artifact.url" target="_blank">{{ artifact.url }}</a>
 				</td>
-				<td>{{ artifact.sha256.toLowerCase() }}</td>
+				<td>
+					<TextCopier
+						v-slot="{ props: copierProps, copy }"
+						:text="artifact.sha256.toLowerCase()"
+					>
+						<ClickableSpan v-bind="copierProps" :action="copy">
+							{{ artifact.sha256.toLowerCase() }}
+						</ClickableSpan>
+					</TextCopier>
+				</td>
 			</tr>
 		</tbody>
 	</v-table>
 </template>
 
 <script setup>
+import TextCopier from '../TextCopier.vue';
+import ClickableSpan from '../ClickableSpan.vue';
+
 defineProps({ artifacts: { type: Array, required: true } });
 </script>
