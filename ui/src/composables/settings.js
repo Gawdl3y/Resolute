@@ -16,7 +16,7 @@ const currentSettings = reactive({
 	modAuthorTools: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
-	modsAutodiscovered: false,
+	modsAutodiscovered2: false,
 });
 
 export function useSettings() {

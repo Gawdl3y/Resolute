@@ -53,7 +53,7 @@
 						</ModUninstaller>
 
 						<ModInstaller
-							v-if="!mod.hasUpdate"
+							v-if="!mod.hasUpdate && !mod.isUnrecognized"
 							v-slot="{ install, installing, busy }"
 							:mod="mod"
 						>
@@ -75,7 +75,11 @@
 							</v-tooltip>
 						</ModInstaller>
 
-						<ModUpdater v-else v-slot="{ update, updating, busy }" :mod="mod">
+						<ModUpdater
+							v-else-if="mod.hasUpdate"
+							v-slot="{ update, updating, busy }"
+							:mod="mod"
+						>
 							<v-tooltip text="Update" :open-delay="500">
 								<template #activator="{ props: activator }">
 									<v-btn

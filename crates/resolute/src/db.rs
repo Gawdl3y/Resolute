@@ -58,20 +58,27 @@ impl<'a> ResoluteDatabase<'a> {
 		Ok(())
 	}
 
-	/// Removes a mod from the database by its ID
-	pub fn remove_mod(&self, id: impl AsRef<str>) -> Result<()> {
-		// Find the item in the database
-		let id = id.as_ref().to_string();
-		let read = self.db.r_transaction()?;
-		let rmod: ResoluteMod = read.get().primary(id.clone())?.ok_or_else(|| Error::ItemNotFound(id))?;
+	/// Removes a mod from the database
+	pub fn remove_mod(&self, rmod: ResoluteMod) -> Result<()> {
 		let mod_name = rmod.to_string();
 
-		// Remove it
+		// Remove the mod
 		let rw = self.db.rw_transaction()?;
 		rw.remove(rmod)?;
 		rw.commit()?;
 
 		info!("Removed mod {} from the database", mod_name);
 		Ok(())
+	}
+
+	/// Removes a mod from the database by its ID
+	pub fn remove_mod_by_id(&self, id: impl AsRef<str>) -> Result<()> {
+		// Find the item in the database
+		let id = id.as_ref().to_string();
+		let read = self.db.r_transaction()?;
+		let rmod: ResoluteMod = read.get().primary(id.clone())?.ok_or_else(|| Error::ItemNotFound(id))?;
+
+		// Remove it
+		self.remove_mod(rmod)
 	}
 }

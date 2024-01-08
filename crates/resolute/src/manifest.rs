@@ -5,6 +5,7 @@ use std::{
 };
 
 use log::{info, warn};
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use tokio::{
 	fs,
@@ -257,7 +258,7 @@ pub struct ManifestEntry {
 }
 
 /// Represents a "versions" object in the manifest JSON
-pub type ManifestEntryVersions = HashMap<String, ManifestEntryVersion>;
+pub type ManifestEntryVersions = HashMap<Version, ManifestEntryVersion>;
 
 /// Represents a single "versions" entry in the manifest JSON
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -285,5 +286,5 @@ pub type ManifestEntryDependencies = HashMap<String, ManifestEntryDependency>;
 /// Represents a single "dependencies" or "conflicts" entry in the manifest JSON
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ManifestEntryDependency {
-	pub version: String,
+	pub version: VersionReq,
 }

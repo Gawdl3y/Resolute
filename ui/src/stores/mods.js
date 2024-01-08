@@ -14,6 +14,7 @@ export const useModStore = defineStore('mods', () => {
 	const loadingInstalled = ref(false);
 	const discovering = ref(false);
 	const hasLoaded = ref(false);
+	const hasLoadedInstalled = ref(false);
 	const operations = reactive({});
 
 	/**
@@ -23,23 +24,38 @@ export const useModStore = defineStore('mods', () => {
 	 * @returns {Object} {@link ResoluteMod}s mapped by their ID
 	 */
 	async function load(bypassCache = false, alert = true) {
+		// Ensure we're not already loading the mods elsewhere
 		if (loading.value) throw new Error('Already loading mods.');
 		loading.value = true;
 
 		try {
+			// Load the mods from the backend
 			await info(`Requesting mod load, bypassCache = ${bypassCache}`);
-			const mods = await invoke('load_all_mods', { bypassCache });
-			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+			const { mods: newMods, removed } = await invoke('load_all_mods', {
+				bypassCache,
+			});
+			for (const id of Object.keys(newMods)) {
+				newMods[id] = new ResoluteMod(newMods[id]);
+			}
 
+			// Ditch any mods that were specifically removed
+			if (mods.value && removed) {
+				for (const id of Object.keys(removed)) {
+					if (mods.value[id]) delete mods.value[id];
+				}
+			}
+
+			// Mark the mods as loaded
 			hasLoaded.value = true;
-			console.debug('Mods loaded', mods);
-			info(`${Object.keys(mods).length} mods loaded`);
+			console.debug('Mods loaded', newMods);
+			info(`${Object.keys(newMods).length} mods loaded`);
 
-			this.$patch({ mods });
-			return mods;
+			this.$patch({ mods: newMods });
+			return newMods;
 		} catch (err) {
 			error(`Error loading mods: ${err}`);
 
+			// Alert the user to the failure
 			if (alert) {
 				message(`Error loading mod list:\n${err}`, {
 					title: 'Error loading mods',
@@ -58,22 +74,36 @@ export const useModStore = defineStore('mods', () => {
 	 * @returns {Object} {@link ResoluteMod}s mapped by their ID
 	 */
 	async function loadInstalled() {
+		// Ensure we're not already loading the installed mods elsewhere
 		if (loadingInstalled.value) {
 			throw new Error('Already loading installed mods.');
 		}
 		loadingInstalled.value = true;
 
 		try {
+			// Load the installed mods from the backend
 			await info('Requesting installed mod load');
-			const mods = await invoke('load_installed_mods');
-			for (const id of Object.keys(mods)) mods[id] = new ResoluteMod(mods[id]);
+			const { mods: newMods, removed } = await invoke('load_installed_mods');
+			for (const id of Object.keys(newMods)) {
+				newMods[id] = new ResoluteMod(newMods[id]);
+			}
 
-			console.debug('Installed mods loaded', mods);
-			info(`${Object.keys(mods).length} installed mods loaded`);
+			// Ditch any mods that were specifically removed
+			if (mods.value && removed) {
+				for (const id of Object.keys(removed)) {
+					if (mods.value[id]) delete mods.value[id];
+				}
+			}
 
-			this.$patch({ mods });
-			return mods;
+			// Mark the installed mods as loaded
+			hasLoadedInstalled.value = true;
+			console.debug('Installed mods loaded', newMods);
+			info(`${Object.keys(newMods).length} installed mods loaded`);
+
+			this.$patch({ mods: newMods });
+			return newMods;
 		} catch (err) {
+			// Alert the user to the failure
 			error(`Error loading installed mods: ${err}`);
 			message(`Error loading installed mod list:\n${err}`, {
 				title: 'Error loading mods',
@@ -300,6 +330,7 @@ export const useModStore = defineStore('mods', () => {
 		loadingInstalled,
 		discovering,
 		hasLoaded,
+		hasLoadedInstalled,
 		install,
 		uninstall,
 		update,
