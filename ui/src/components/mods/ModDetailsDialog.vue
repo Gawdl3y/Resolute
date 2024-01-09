@@ -1,6 +1,66 @@
 <template>
 	<v-dialog v-model="showDialog" scrollable style="max-width: 960px">
-		<v-card :title="mod.name" :subtitle="mod.id">
+		<v-card :title="mod.name">
+			<!-- Copiable mod ID subtitle -->
+			<template #subtitle>
+				<TextCopier v-slot="{ props: copierProps, copy }" :text="mod.id">
+					<ClickableSpan v-bind="copierProps" :action="copy">
+						{{ mod.id }}
+					</ClickableSpan>
+				</TextCopier>
+			</template>
+
+			<!-- Header actions and version selector -->
+			<template #append>
+				<div class="d-flex">
+					<v-select
+						v-model="semver"
+						label="Version"
+						:items="versions"
+						variant="solo-filled"
+						density="comfortable"
+						hide-details
+						class="me-4"
+					/>
+
+					<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiWeb"
+								:href="mod.website"
+								target="_blank"
+								variant="text"
+							/>
+						</template>
+					</v-tooltip>
+
+					<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiSourceBranch"
+								:href="mod.sourceLocation"
+								target="_blank"
+								variant="text"
+							/>
+						</template>
+					</v-tooltip>
+
+					<v-tooltip text="Close" :open-delay="500">
+						<template #activator="{ props: tooltipProps }">
+							<v-btn
+								v-bind="tooltipProps"
+								:icon="mdiClose"
+								variant="text"
+								@click="close"
+							/>
+						</template>
+					</v-tooltip>
+				</div>
+			</template>
+
+			<!-- Mod details body -->
 			<v-card-text>
 				<p class="text-body-1 mt-2 mb-6">{{ mod.description }}</p>
 
@@ -10,7 +70,7 @@
 				<ModAuthors :authors="mod.authors" class="mb-6" />
 
 				<h2 class="d-flex align-center ga-2 text-h5 mb-2">
-					Version v{{ semver }}
+					Version {{ semver }}
 					<v-btn
 						v-if="version.releaseUrl"
 						:icon="mdiLinkVariant"
@@ -23,6 +83,7 @@
 				<ModVersionInfoPanels :version="version" />
 			</v-card-text>
 
+			<!-- Mod actions -->
 			<v-card-actions>
 				<v-spacer />
 
@@ -73,55 +134,6 @@
 					</v-btn>
 				</ModInstaller>
 			</v-card-actions>
-
-			<template #append>
-				<div class="d-flex">
-					<v-select
-						v-model="semver"
-						label="Version"
-						:items="versions"
-						variant="solo-filled"
-						density="comfortable"
-						hide-details
-						class="me-4"
-					/>
-
-					<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiWeb"
-								:href="mod.website"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
-
-					<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiSourceBranch"
-								:href="mod.sourceLocation"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
-
-					<v-tooltip text="Close" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiClose"
-								variant="text"
-								@click="close"
-							/>
-						</template>
-					</v-tooltip>
-				</div>
-			</template>
 		</v-card>
 	</v-dialog>
 </template>
@@ -147,6 +159,8 @@ import ModUpdater from './ModUpdater.vue';
 import ModTags from './ModTags.vue';
 import ModAuthors from './ModAuthors.vue';
 import ModVersionInfoPanels from './ModVersionInfoPanels.vue';
+import TextCopier from '../TextCopier.vue';
+import ClickableSpan from '../ClickableSpan.vue';
 
 const props = defineProps({
 	mod: { type: Object, required: true },
@@ -180,7 +194,7 @@ const updateText = computed(() => {
 	return `Update to ${semver.value}`;
 });
 
-watch(showDialog, (_, show) => {
+watch(showDialog, (show) => {
 	if (!show) emit('close');
 });
 

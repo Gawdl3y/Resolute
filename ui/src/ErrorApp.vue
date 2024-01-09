@@ -30,7 +30,7 @@
 						class="text-mono"
 					>
 						<template #append-inner>
-							<FieldCopyButton :text="error" />
+							<CopyButton :text="error" />
 						</template>
 					</v-textarea>
 				</v-card-text>
@@ -51,7 +51,7 @@ import { relaunch } from '@tauri-apps/api/process';
 import { info } from 'tauri-plugin-log-api';
 import { mdiAlert } from '@mdi/js';
 
-import FieldCopyButton from './components/FieldCopyButton.vue';
+import CopyButton from './components/CopyButton.vue';
 
 const themeMediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 const systemTheme = ref(themeMediaMatcher.matches ? 'dark' : 'light');

@@ -156,7 +156,7 @@
 							class="mb-5"
 						>
 							<template #append-inner>
-								<FieldCopyButton
+								<CopyButton
 									text="-LoadAssembly Libraries/ResoniteModLoader.dll"
 								/>
 							</template>
@@ -193,7 +193,7 @@ import useSettings from '../composables/settings';
 import useModStore from '../stores/mods';
 import ModInstaller from './mods/ModInstaller.vue';
 import ResonitePathSetting from './settings/ResonitePathSetting.vue';
-import FieldCopyButton from './FieldCopyButton.vue';
+import CopyButton from './CopyButton.vue';
 
 const settings = useSettings();
 const modStore = useModStore();
