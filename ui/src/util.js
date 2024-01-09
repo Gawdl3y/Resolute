@@ -82,7 +82,12 @@ export function disableTextSelection(node = document) {
 	node.addEventListener(
 		'selectstart',
 		(evt) => {
-			if (isInput || !(evt.target instanceof HTMLInputElement)) {
+			const target = evt.target;
+			const el = target.closest ? target : target.parentElement;
+			const whitelisted = Boolean(el.closest('.text-selectable'));
+			const blocked = isInput || !(target instanceof HTMLInputElement);
+
+			if (!whitelisted && blocked) {
 				evt.preventDefault();
 				window.getSelection().removeAllRanges();
 				return false;

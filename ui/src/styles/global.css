@@ -36,6 +36,10 @@ pre {
 	font-size: 14px;
 }
 
+.text-selectable {
+	cursor: auto !important;
+}
+
 .text-mono {
 	font-family: 'Roboto Mono' !important;
 	font-size: 14px !important;
