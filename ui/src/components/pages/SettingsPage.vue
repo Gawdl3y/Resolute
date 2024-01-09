@@ -17,6 +17,7 @@
 					<SwitchSetting
 						setting="groupModIndex"
 						label="Group Mod Index by category"
+						class="mb-4"
 					/>
 					<v-btn @click="settings.current.setupGuideDone = false">
 						Setup guide
@@ -45,6 +46,7 @@
 						setting="modAuthorTools"
 						label="Show mod authoring tools"
 					/>
+					<SwitchSetting setting="console" label="Show console" />
 				</v-container>
 			</v-window-item>
 		</v-window>

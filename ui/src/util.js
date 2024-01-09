@@ -49,6 +49,20 @@ export function renderMarkdown(markdown) {
 }
 
 /**
+ * Replaces all HTML special characters with HTML entities
+ * @param {string} text
+ * @returns {string}
+ */
+export function escapeHTML(text) {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
+/**
  * Inserts HTML <wbr> tags in between CamelCase word sections (and sanitizes the input)
  * @param {*} text
  * @returns

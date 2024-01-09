@@ -4,6 +4,7 @@
 use std::{io, time::Duration};
 
 use anyhow::{anyhow, Context};
+use itertools::Itertools;
 use log::{debug, error, info, warn};
 use native_db::DatabaseBuilder;
 use once_cell::sync::Lazy;
@@ -18,7 +19,7 @@ use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window, WindowEvent};
 use tauri_plugin_log::LogTarget;
 use tauri_plugin_window_state::StateFlags;
-use tokio::{fs, join, sync::Mutex};
+use tokio::{fs, io::AsyncReadExt, join, sync::Mutex};
 
 mod settings;
 
@@ -43,7 +44,7 @@ fn main() -> anyhow::Result<()> {
 				use tauri_plugin_log::RotationStrategy;
 
 				tauri_plugin_log::Builder::default()
-					.targets(vec![LogTarget::Stdout, LogTarget::LogDir])
+					.targets(vec![LogTarget::Stdout, LogTarget::Webview, LogTarget::LogDir])
 					.rotation_strategy(RotationStrategy::KeepAll)
 					.max_file_size(1024 * 256)
 					.level(log::LevelFilter::Debug)
@@ -75,6 +76,7 @@ fn main() -> anyhow::Result<()> {
 			discover_installed_mods,
 			verify_resonite_path,
 			hash_file,
+			get_session_log,
 			open_log_dir,
 			resonite_path_changed,
 			connect_timeout_changed,
@@ -511,6 +513,38 @@ async fn hash_file(path: String) -> Result<String, String> {
 	let hash = format!("{:x}", digest);
 	info!("Finished hashing file {}: {}", path, hash);
 	Ok(hash)
+}
+
+/// Gets the log file content from this session
+#[tauri::command]
+async fn get_session_log(app: AppHandle) -> Result<String, String> {
+	// Figure out the path to the log file
+	let resolver = app.path_resolver();
+	let mut log_path = resolver.app_log_dir().ok_or("Unable to get log directory")?;
+	log_path.push(format!("{}.log", app.package_info().name));
+
+	let log = {
+		// Open and read the file
+		let mut file = fs::File::open(log_path)
+			.await
+			.map_err(|err| format!("Error opening log file: {}", err))?;
+		let mut log = String::new();
+		file.read_to_string(&mut log)
+			.await
+			.map_err(|err| format!("Error reading log file contents: {}", err))?;
+
+		// Get only the log lines after the most recent initializing line
+		log.lines()
+			.rev()
+			.take_while_inclusive(|line| !line.ends_with("initializing"))
+			.fold(String::new(), |mut acc, line| {
+				acc.insert(0, '\n');
+				acc.insert_str(0, line);
+				acc
+			})
+	};
+
+	Ok(log)
 }
 
 /// Opens the app's log directory in the system file browser

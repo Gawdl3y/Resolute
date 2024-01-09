@@ -11,12 +11,15 @@ import DashboardPage from './components/pages/DashboardPage.vue';
 import AllModsPage from './components/pages/AllModsPage.vue';
 import InstalledModsPage from './components/pages/InstalledModsPage.vue';
 import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
+import SessionLogPage from './components/pages/SessionLogPage.vue';
 import SettingsPage from './components/pages/SettingsPage.vue';
 
 import 'vuetify/styles';
 import './styles/global.css';
 
-attachConsole().then(() => {
+const debug = window.location.hostname === 'tauri.localhost';
+
+(debug ? attachConsole() : Promise.resolve()).then(() => {
 	const router = createRouter({
 		history: createWebHashHistory(),
 		routes: [
@@ -24,6 +27,7 @@ attachConsole().then(() => {
 			{ path: '/mods', component: AllModsPage },
 			{ path: '/mods/installed', component: InstalledModsPage },
 			{ path: '/author-tools', component: ModAuthorToolsPage },
+			{ path: '/log', component: SessionLogPage },
 			{ path: '/settings', component: SettingsPage },
 		],
 	});
