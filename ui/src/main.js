@@ -14,6 +14,8 @@ import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
 import SessionLogPage from './components/pages/SessionLogPage.vue';
 import SettingsPage from './components/pages/SettingsPage.vue';
 
+import '@fontsource/roboto-mono/300.css';
+import '@fontsource/roboto-mono/400.css';
 import 'vuetify/styles';
 import './styles/global.css';
 
