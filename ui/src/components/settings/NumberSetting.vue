@@ -5,6 +5,7 @@
 		:rules="effectiveRules"
 		:variant="variant"
 		:suffix="suffix"
+		type="number"
 		@keypress.enter="save"
 		@blur="save"
 	/>
