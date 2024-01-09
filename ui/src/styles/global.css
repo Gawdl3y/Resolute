@@ -32,12 +32,16 @@ a:focus:not(.v-list-item) {
 }
 
 pre {
-	font-family: 'Roboto Mono';
+	font-family: 'Roboto Mono', monospace;
 	font-size: 14px;
 }
 
+.text-selectable {
+	cursor: auto !important;
+}
+
 .text-mono {
-	font-family: 'Roboto Mono' !important;
+	font-family: 'Roboto Mono', monospace !important;
 	font-size: 14px !important;
 }
 

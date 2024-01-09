@@ -27,6 +27,13 @@
 				:expanded="isExpanded"
 			/>
 			<SidebarItem
+				v-if="settings.current.console"
+				label="Console"
+				path="/log"
+				:icon="mdiConsole"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
 				label="Settings"
 				path="/settings"
 				:icon="mdiCog"
@@ -62,6 +69,7 @@ import {
 	mdiPackageDown,
 	mdiPackageCheck,
 	mdiToolbox,
+	mdiConsole,
 	mdiCog,
 	mdiMenuClose,
 	mdiMenuOpen,

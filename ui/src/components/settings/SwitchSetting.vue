@@ -3,6 +3,7 @@
 		v-model="settings.current[setting]"
 		:label="label"
 		color="primary"
+		hide-details
 		@update:model-value="save"
 	/>
 </template>

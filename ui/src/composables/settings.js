@@ -14,6 +14,7 @@ const currentSettings = reactive({
 	modsPerPageGrouped: -1,
 	modsPerPageUngrouped: 25,
 	modAuthorTools: false,
+	console: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
 	modsAutodiscovered2: false,
