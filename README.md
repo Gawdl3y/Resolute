@@ -15,14 +15,14 @@ The goal is to provide a cross-platform beginning-to-end setup experience for Re
 Resolute loads its mod index and metadata from the
 [Resonite Mod Manifest](https://github.com/resonite-modding-group/resonite-mod-manifest).
 
-<p align="center">
-	<img src=".github/images/screenshot.png" alt="Resolute Mod Index screenshot" />
-</p>
-
 > [!IMPORTANT]  
 > Resolute is built with [Tauri](https://tauri.app/), which relies upon your operating system's WebView to function.
 > If you're on Windows and have completely removed WebView2 and Edge from your system, Resolute will not work.
 > If you remove Edge but leave WebView2 intact, it should work fine.
+
+<p align="center">
+	<img src=".github/images/screenshot.png" alt="Resolute Mod Index screenshot" />
+</p>
 
 ## Features
 
