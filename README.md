@@ -1,6 +1,15 @@
-# Resolute (Mod Manager for Resonite)
+<h1 align="center">
+	<a href="https://github.com/Gawdl3y/Resolute">
+		<img src=".github/images/logo-512.png" width="200" height="200" alt="" /><br />
+		Resolute
+	</a>
+</h1>
+<p align="center">
+	<strong>Mod Manager GUI for Resonite</strong>
+</p>
+<br />
 
-This is a WIP project to create a friendly GUI for downloading, updating, and setup of Resonite mods.
+Resolute is a friendly GUI application for installing, updating, and managing Resonite mods.
 The goal is to provide a cross-platform beginning-to-end setup experience for Resonite modding.
 
 Resolute loads its mod index and metadata from the
@@ -10,6 +19,10 @@ Resolute loads its mod index and metadata from the
 > Resolute is built with [Tauri](https://tauri.app/), which relies upon your operating system's WebView to function.
 > If you're on Windows and have completely removed WebView2 and Edge from your system, Resolute will not work.
 > If you remove Edge but leave WebView2 intact, it should work fine.
+
+<p align="center">
+	<img src=".github/images/screenshot.png" alt="Resolute Mod Index screenshot" />
+</p>
 
 ## Features
 
@@ -32,8 +45,9 @@ Resolute loads its mod index and metadata from the
 ### Planned
 
 - Mod disabling/reenabling
-- Platform-specific artifacts support
+- Drop mod file to install
 - ResoniteModLoader/Harmony alerts (missing or outdated)
+- Deprecated mod/mismatched platform alerts
 - Dependency resolution
   - Automatic installation
   - Conflict warnings
