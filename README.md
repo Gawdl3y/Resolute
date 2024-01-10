@@ -1,6 +1,15 @@
-# Resolute (Mod Manager for Resonite)
+<h1 align="center">
+	<a href="https://github.com/Gawdl3y/Resolute">
+		<img src="ui/src/assets/logo.svg" width="200" height="200" alt="" /><br />
+		Resolute
+	</a>
+</h1>
+<p align="center">
+	<strong>Mod Manager GUI for Resonite</strong>
+</p>
+<br />
 
-This is a WIP project to create a friendly GUI for downloading, updating, and setup of Resonite mods.
+Resolute is a friendly GUI application for installing, updating, and managing Resonite mods.
 The goal is to provide a cross-platform beginning-to-end setup experience for Resonite modding.
 
 Resolute loads its mod index and metadata from the
