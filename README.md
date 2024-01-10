@@ -45,8 +45,9 @@ Resolute loads its mod index and metadata from the
 ### Planned
 
 - Mod disabling/reenabling
-- Platform-specific artifacts support
+- Drop mod file to install
 - ResoniteModLoader/Harmony alerts (missing or outdated)
+- Deprecated mod/mismatched platform alerts
 - Dependency resolution
   - Automatic installation
   - Conflict warnings
