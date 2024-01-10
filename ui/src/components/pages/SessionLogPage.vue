@@ -1,5 +1,5 @@
 <template>
-	<AppHeader title="Console" :loading="loading">
+	<AppHeader title="Console" :loading="loading" :indeterminate="loading">
 		<template #actions>
 			<v-tooltip text="Open log folder" :open-delay="500">
 				<template #activator="{ props }">
