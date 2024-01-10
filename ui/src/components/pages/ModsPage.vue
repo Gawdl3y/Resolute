@@ -3,30 +3,26 @@
 		<template #actions>
 			<slot name="actions" :resonite-path-exists="resonitePathExists" />
 
-			<v-tooltip
+			<SimpleTooltip
 				v-if="grouped"
+				v-slot="{ props: tooltipProps }"
 				:text="`${expanded ? 'Collapse' : 'Expand'} all`"
-				:open-delay="500"
 			>
-				<template #activator="{ props: tooltipProps }">
-					<v-btn
-						:icon="expanded ? mdiArrowCollapseVertical : mdiArrowExpandVertical"
-						v-bind="tooltipProps"
-						@click="toggleAllGroups"
-					/>
-				</template>
-			</v-tooltip>
+				<v-btn
+					v-bind="tooltipProps"
+					:icon="expanded ? mdiArrowCollapseVertical : mdiArrowExpandVertical"
+					@click="toggleAllGroups"
+				/>
+			</SimpleTooltip>
 
-			<v-tooltip text="Refresh mods" :open-delay="500">
-				<template #activator="{ props: tooltipProps }">
-					<v-btn
-						:icon="mdiRefresh"
-						:loading="loading"
-						v-bind="tooltipProps"
-						@click="loadModsFromFn(true)"
-					/>
-				</template>
-			</v-tooltip>
+			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Refresh mods">
+				<v-btn
+					v-bind="tooltipProps"
+					:icon="mdiRefresh"
+					:loading="loading"
+					@click="loadModsFromFn(true)"
+				/>
+			</SimpleTooltip>
 		</template>
 	</AppHeader>
 
@@ -90,6 +86,7 @@ import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
 import ModTable from '../mods/ModTable.vue';
 import ModDetailsDialog from '../mods/ModDetailsDialog.vue';
+import SimpleTooltip from '../SimpleTooltip.vue';
 
 const props = defineProps({
 	title: { type: String, required: true },

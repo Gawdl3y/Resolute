@@ -37,19 +37,17 @@
 							v-slot="{ uninstall, uninstalling, busy }"
 							:mod="mod"
 						>
-							<v-tooltip text="Uninstall" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mdiDelete"
-										:disabled="disabled || (busy && !uninstalling)"
-										:loading="uninstalling"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="uninstall"
-									/>
-								</template>
-							</v-tooltip>
+							<SimpleTooltip v-slot="{ props: tooltipProps }" text="Uninstall">
+								<v-btn
+									v-bind="tooltipProps"
+									:icon="mdiDelete"
+									:disabled="disabled || (busy && !uninstalling)"
+									:loading="uninstalling"
+									variant="plain"
+									density="comfortable"
+									@click.stop="uninstall"
+								/>
+							</SimpleTooltip>
 						</ModUninstaller>
 
 						<ModInstaller
@@ -57,22 +55,20 @@
 							v-slot="{ install, installing, busy }"
 							:mod="mod"
 						>
-							<v-tooltip
+							<SimpleTooltip
+								v-slot="{ props: tooltipProps }"
 								:text="mod.installedVersion ? 'Reinstall' : 'Install'"
-								:open-delay="500"
 							>
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
-										:disabled="disabled || (busy && !installing)"
-										:loading="installing"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="install"
-									/>
-								</template>
-							</v-tooltip>
+								<v-btn
+									v-bind="tooltipProps"
+									:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
+									:disabled="disabled || (busy && !installing)"
+									:loading="installing"
+									variant="plain"
+									density="comfortable"
+									@click.stop="install"
+								/>
+							</SimpleTooltip>
 						</ModInstaller>
 
 						<ModUpdater
@@ -80,19 +76,17 @@
 							v-slot="{ update, updating, busy }"
 							:mod="mod"
 						>
-							<v-tooltip text="Update" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mdiUpdate"
-										:disabled="disabled || (busy && !updating)"
-										:loading="updating"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="update"
-									/>
-								</template>
-							</v-tooltip>
+							<SimpleTooltip v-slot="{ props: tooltipProps }" text="Update">
+								<v-btn
+									v-bind="tooltipProps"
+									:icon="mdiUpdate"
+									:disabled="disabled || (busy && !updating)"
+									:loading="updating"
+									variant="plain"
+									density="comfortable"
+									@click.stop="update"
+								/>
+							</SimpleTooltip>
 						</ModUpdater>
 					</div>
 				</td>
@@ -114,20 +108,18 @@
 					style="cursor: pointer"
 					@click="toggleGroup(item)"
 				>
-					<v-tooltip
+					<SimpleTooltip
+						v-slot="{ props: tooltipProps }"
 						:text="isGroupOpen(item) ? 'Collapse' : 'Expand'"
-						:open-delay="500"
 					>
-						<template #activator="{ props: activator }">
-							<v-btn
-								size="small"
-								variant="text"
-								:icon="isGroupOpen(item) ? '$expand' : '$next'"
-								v-bind="activator"
-								@click.stop="toggleGroup(item)"
-							/>
-						</template>
-					</v-tooltip>
+						<v-btn
+							v-bind="tooltipProps"
+							size="small"
+							variant="text"
+							:icon="isGroupOpen(item) ? '$expand' : '$next'"
+							@click.stop="toggleGroup(item)"
+						/>
+					</SimpleTooltip>
 
 					{{ item.value }} ({{ item.items.length }})
 				</td>
@@ -160,6 +152,7 @@ import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
 import ModUninstaller from './ModUninstaller.vue';
 import ModUpdater from './ModUpdater.vue';
+import SimpleTooltip from '../SimpleTooltip.vue';
 
 const props = defineProps({
 	mods: { type: Object, default: null },

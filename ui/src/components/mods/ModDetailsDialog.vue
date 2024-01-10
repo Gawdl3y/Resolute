@@ -23,40 +23,42 @@
 						class="me-4"
 					/>
 
-					<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiWeb"
-								:href="mod.website"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
+					<SimpleTooltip
+						v-if="mod.website"
+						v-slot="{ props: tooltipProps }"
+						text="Website"
+					>
+						<v-btn
+							v-bind="tooltipProps"
+							:icon="mdiWeb"
+							:href="mod.website"
+							target="_blank"
+							variant="text"
+						/>
+					</SimpleTooltip>
 
-					<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiSourceBranch"
-								:href="mod.sourceLocation"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
+					<SimpleTooltip
+						v-if="mod.sourceLocation"
+						v-slot="{ props: tooltipProps }"
+						text="Source"
+					>
+						<v-btn
+							v-bind="tooltipProps"
+							:icon="mdiSourceBranch"
+							:href="mod.sourceLocation"
+							target="_blank"
+							variant="text"
+						/>
+					</SimpleTooltip>
 
-					<v-tooltip text="Close" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiClose"
-								variant="text"
-								@click="close"
-							/>
-						</template>
-					</v-tooltip>
+					<SimpleTooltip v-slot="{ props: tooltipProps }" text="Close">
+						<v-btn
+							v-bind="tooltipProps"
+							:icon="mdiClose"
+							variant="text"
+							@click="close"
+						/>
+					</SimpleTooltip>
 				</div>
 			</template>
 
@@ -161,6 +163,7 @@ import ModAuthors from './ModAuthors.vue';
 import ModVersionInfoPanels from './ModVersionInfoPanels.vue';
 import TextCopier from '../TextCopier.vue';
 import ClickableSpan from '../ClickableSpan.vue';
+import SimpleTooltip from '../SimpleTooltip.vue';
 
 const props = defineProps({
 	mod: { type: Object, required: true },

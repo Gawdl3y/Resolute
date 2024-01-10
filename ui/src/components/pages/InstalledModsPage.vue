@@ -7,29 +7,25 @@
 		:grouped="false"
 	>
 		<template #actions="{ resonitePathExists }">
-			<v-tooltip text="Discover installed" :open-delay="500">
-				<template #activator="{ props: tooltipProps }">
-					<v-btn
-						:icon="mdiToyBrickSearch"
-						:loading="modStore.discovering"
-						:disabled="!resonitePathExists"
-						v-bind="tooltipProps"
-						@click="discoverInstalledMods"
-					/>
-				</template>
-			</v-tooltip>
+			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Discover installed">
+				<v-btn
+					v-bind="tooltipProps"
+					:icon="mdiToyBrickSearch"
+					:loading="modStore.discovering"
+					:disabled="!resonitePathExists"
+					@click="discoverInstalledMods"
+				/>
+			</SimpleTooltip>
 
-			<v-tooltip text="Update all" :open-delay="500">
-				<template #activator="{ props: tooltipProps }">
-					<v-btn
-						:icon="mdiUpdate"
-						:loading="modStore.operations.updateAll"
-						:disabled="outdatedMods.length === 0"
-						v-bind="tooltipProps"
-						@click="updateAllMods"
-					/>
-				</template>
-			</v-tooltip>
+			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Update all">
+				<v-btn
+					v-bind="tooltipProps"
+					:icon="mdiUpdate"
+					:loading="modStore.operations.updateAll"
+					:disabled="outdatedMods.length === 0"
+					@click="updateAllMods"
+				/>
+			</SimpleTooltip>
 		</template>
 	</ModsPage>
 </template>
@@ -42,6 +38,7 @@ import { mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
 
 import useModStore from '../../stores/mods';
 import ModsPage from './ModsPage.vue';
+import SimpleTooltip from '../SimpleTooltip.vue';
 
 const modStore = useModStore();
 const mods = computed(() => {

@@ -43,20 +43,18 @@
 
 		<template #append>
 			<v-list nav>
-				<v-tooltip
+				<SimpleTooltip
+					v-slot="{ props }"
 					:text="isExpanded ? 'Collapse' : 'Expand'"
-					:open-delay="500"
 					:disabled="isExpanded"
 				>
-					<template #activator="{ props }">
-						<v-list-item
-							:title="isExpanded ? 'Collapse' : 'Expand'"
-							:prepend-icon="isExpanded ? mdiMenuOpen : mdiMenuClose"
-							v-bind="props"
-							@click="toggle"
-						/>
-					</template>
-				</v-tooltip>
+					<v-list-item
+						v-bind="props"
+						:title="isExpanded ? 'Collapse' : 'Expand'"
+						:prepend-icon="isExpanded ? mdiMenuOpen : mdiMenuClose"
+						@click="toggle"
+					/>
+				</SimpleTooltip>
 			</v-list>
 		</template>
 	</v-navigation-drawer>
@@ -78,6 +76,7 @@ import {
 import useSettings from '../composables/settings';
 import sidebarBus from '../sidebar-bus';
 import SidebarItem from './SidebarItem.vue';
+import SimpleTooltip from './SimpleTooltip.vue';
 
 const emit = defineEmits(['toggle']);
 const settings = useSettings();
