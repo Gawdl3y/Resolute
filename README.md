@@ -1,6 +1,6 @@
 <h1 align="center">
 	<a href="https://github.com/Gawdl3y/Resolute">
-		<img src="ui/src/assets/logo-512.png" width="200" height="200" alt="" /><br />
+		<img src=".github/images/logo-512.png" width="200" height="200" alt="" /><br />
 		Resolute
 	</a>
 </h1>
