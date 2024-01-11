@@ -1,25 +1,20 @@
 <template>
 	<slot v-if="!tooltip" :copy="copy" :copied="copied" :reset="reset" />
 
-	<v-tooltip
+	<SimpleTooltip
 		v-else
+		v-slot="{ props: tooltipProps }"
 		v-model="showTooltip"
 		:text="copied ? 'Copied!' : 'Copy'"
-		:open-delay="500"
 	>
-		<template #activator="{ props: tooltipProps }">
-			<slot
-				:copy="copy"
-				:copied="copied"
-				:reset="reset"
-				:props="tooltipProps"
-			/>
-		</template>
-	</v-tooltip>
+		<slot :copy="copy" :copied="copied" :reset="reset" :props="tooltipProps" />
+	</SimpleTooltip>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+
+import SimpleTooltip from './SimpleTooltip.vue';
 
 defineExpose({ copy, reset });
 const props = defineProps({

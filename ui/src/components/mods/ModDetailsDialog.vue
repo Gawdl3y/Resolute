@@ -23,40 +23,30 @@
 						class="me-4"
 					/>
 
-					<v-tooltip v-if="mod.website" text="Website" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiWeb"
-								:href="mod.website"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
+					<IconButton
+						v-if="mod.website"
+						:icon="mdiWeb"
+						:href="mod.website"
+						target="_blank"
+						variant="text"
+						tooltip="Website"
+					/>
 
-					<v-tooltip v-if="mod.sourceLocation" text="Source" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiSourceBranch"
-								:href="mod.sourceLocation"
-								target="_blank"
-								variant="text"
-							/>
-						</template>
-					</v-tooltip>
+					<IconButton
+						v-if="mod.sourceLocation"
+						:icon="mdiSourceBranch"
+						:href="mod.sourceLocation"
+						target="_blank"
+						variant="text"
+						tooltip="Source"
+					/>
 
-					<v-tooltip text="Close" :open-delay="500">
-						<template #activator="{ props: tooltipProps }">
-							<v-btn
-								v-bind="tooltipProps"
-								:icon="mdiClose"
-								variant="text"
-								@click="close"
-							/>
-						</template>
-					</v-tooltip>
+					<IconButton
+						:icon="mdiClose"
+						variant="text"
+						tooltip="Close"
+						@click="close"
+					/>
 				</div>
 			</template>
 
@@ -71,13 +61,14 @@
 
 				<h2 class="d-flex align-center ga-2 text-h5 mb-2">
 					Version {{ semver }}
-					<v-btn
+					<IconButton
 						v-if="version.releaseUrl"
 						:icon="mdiLinkVariant"
 						:href="version.releaseUrl"
 						target="_blank"
 						variant="text"
 						density="comfortable"
+						tooltip="Release page"
 					/>
 				</h2>
 				<ModVersionInfoPanels :version="version" />
@@ -161,6 +152,7 @@ import ModAuthors from './ModAuthors.vue';
 import ModVersionInfoPanels from './ModVersionInfoPanels.vue';
 import TextCopier from '../TextCopier.vue';
 import ClickableSpan from '../ClickableSpan.vue';
+import IconButton from '../IconButton.vue';
 
 const props = defineProps({
 	mod: { type: Object, required: true },

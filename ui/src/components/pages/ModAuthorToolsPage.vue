@@ -15,18 +15,14 @@
 						readonly
 					>
 						<template #append-inner>
-							<v-tooltip text="Select file" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<CopyButton :text="checksum" :hidden="checksumLoading" />
-									<v-btn
-										v-bind="activator"
-										variant="text"
-										:icon="mdiFileSearch"
-										:loading="checksumLoading"
-										@click="hashFile()"
-									/>
-								</template>
-							</v-tooltip>
+							<CopyButton :text="checksum" :hidden="checksumLoading" />
+							<IconButton
+								:icon="mdiFileSearch"
+								:loading="checksumLoading"
+								tooltip="Select file"
+								variant="text"
+								@click="hashFile()"
+							/>
 						</template>
 					</v-text-field>
 				</v-col>
@@ -51,6 +47,7 @@ import { mdiFileCheck, mdiFileSearch } from '@mdi/js';
 
 import AppHeader from '../AppHeader.vue';
 import CopyButton from '../CopyButton.vue';
+import IconButton from '../IconButton.vue';
 
 const checksum = ref('');
 const checksumFile = ref('');

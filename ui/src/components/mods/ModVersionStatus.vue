@@ -4,8 +4,8 @@
 			<div class="d-flex h-100 position-relative">
 				<v-scroll-y-transition>
 					<div
-						:key="mod.versionTextClass ?? 'plain'"
 						v-bind="tooltipProps"
+						:key="mod.versionTextClass ?? 'plain'"
 						class="d-flex gc-2 align-center justify-space-between position-absolute h-100"
 						:class="mod.versionTextClass"
 					>
