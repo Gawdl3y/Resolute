@@ -25,11 +25,9 @@ fn main() -> anyhow::Result<()> {
 		.plugin(
 			#[cfg(debug_assertions)]
 			{
-				use tauri_plugin_log::fern::colors::ColoredLevelConfig;
-
 				tauri_plugin_log::Builder::default()
-					.targets(vec![LogTarget::Stdout, LogTarget::Webview])
-					.with_colors(ColoredLevelConfig::default())
+					.targets(vec![LogTarget::Stdout, LogTarget::Webview, LogTarget::LogDir])
+					.max_file_size(1024 * 1024)
 					.level_for("rustls", log::LevelFilter::Debug)
 					.build()
 			},
@@ -68,6 +66,7 @@ fn main() -> anyhow::Result<()> {
 			commands::discover::discover_resonite_path,
 			commands::discover::discover_installed_mods,
 			commands::system::show_window,
+			commands::system::get_app_info,
 			commands::system::verify_resonite_path,
 			commands::system::hash_file,
 			commands::system::get_session_log,
@@ -85,9 +84,15 @@ fn main() -> anyhow::Result<()> {
 				}
 			});
 
-			// Open the dev console automatically in development
+			// Rename the window and open the dev console in development
 			#[cfg(debug_assertions)]
-			window.open_devtools();
+			{
+				let mut title = window.title()?;
+				title.push_str(" (debug)");
+				window.set_title(&title)?;
+
+				window.open_devtools();
+			}
 
 			// Initialize the app
 			let handle = app.app_handle();
@@ -119,14 +124,17 @@ fn main() -> anyhow::Result<()> {
 
 /// Initializes the app
 async fn init(app: AppHandle) -> Result<(), anyhow::Error> {
+	let config = app.config();
 	info!(
 		"Resolute v{} initializing",
-		app.config()
-			.package
-			.version
-			.clone()
-			.unwrap_or_else(|| "Unknown".to_owned())
+		config.package.version.clone().unwrap_or_else(|| "Unknown".to_owned())
 	);
+
+	#[cfg(debug_assertions)]
+	{
+		warn!("App is in debug mode");
+		debug!("Tauri version: {}", tauri::VERSION);
+	}
 
 	// Ensure all needed app directories are created
 	if let Err(err) = create_app_dirs(app.clone()).await {

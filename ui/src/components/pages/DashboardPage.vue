@@ -7,7 +7,7 @@
 		<v-sheet rounded elevation="4" class="w-75 pa-4" style="max-width: 32em">
 			<div class="d-flex justify-space-between mb-3">
 				<h2 class="text-h5">What the HECK is Resolute?</h2>
-				<p v-if="version" class="text-body-1 text-disabled">v{{ version }}</p>
+				<p class="text-body-1 text-disabled">v{{ app.version.value }}</p>
 			</div>
 
 			<p class="mb-3 text-body-1">
@@ -43,14 +43,10 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from 'vue';
-import { getVersion } from '@tauri-apps/api/app';
 import { mdiSourceBranch } from '@mdi/js';
+
+import useApp from '../../composables/app';
 import AppHeader from '../AppHeader.vue';
 
-const version = ref(null);
-
-onBeforeMount(async () => {
-	version.value = await getVersion();
-});
+const app = useApp();
 </script>
