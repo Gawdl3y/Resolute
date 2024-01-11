@@ -3,26 +3,19 @@
 		<template #actions>
 			<slot name="actions" :resonite-path-exists="resonitePathExists" />
 
-			<SimpleTooltip
+			<IconButton
 				v-if="grouped"
-				v-slot="{ props: tooltipProps }"
-				:text="`${expanded ? 'Collapse' : 'Expand'} all`"
-			>
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="expanded ? mdiArrowCollapseVertical : mdiArrowExpandVertical"
-					@click="toggleAllGroups"
-				/>
-			</SimpleTooltip>
+				:icon="expanded ? mdiArrowCollapseVertical : mdiArrowExpandVertical"
+				:tooltip="`${expanded ? 'Collapse' : 'Expand'} all`"
+				@click="toggleAllGroups"
+			/>
 
-			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Refresh mods">
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="mdiRefresh"
-					:loading="loading"
-					@click="loadModsFromFn(true)"
-				/>
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiRefresh"
+				:loading="loading"
+				tooltip="Refresh mods"
+				@click="loadModsFromFn(true)"
+			/>
 		</template>
 	</AppHeader>
 
@@ -86,7 +79,7 @@ import sidebarBus from '../../sidebar-bus';
 import AppHeader from '../AppHeader.vue';
 import ModTable from '../mods/ModTable.vue';
 import ModDetailsDialog from '../mods/ModDetailsDialog.vue';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 const props = defineProps({
 	title: { type: String, required: true },

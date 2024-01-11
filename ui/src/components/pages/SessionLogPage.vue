@@ -1,9 +1,11 @@
 <template>
 	<AppHeader title="Console" :loading="loading" :indeterminate="loading">
 		<template #actions>
-			<SimpleTooltip v-slot="{ props }" text="Open log folder">
-				<v-btn v-bind="props" :icon="mdiFolderText" @click="openLogs" />
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiFolderText"
+				tooltip="Open log folder"
+				@click="openLogs"
+			/>
 		</template>
 	</AppHeader>
 
@@ -29,7 +31,7 @@ import { mdiFolderText } from '@mdi/js';
 
 import { escapeHTML } from '../../util';
 import AppHeader from '../AppHeader.vue';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 const sheet = ref(null);
 const loading = ref(true);

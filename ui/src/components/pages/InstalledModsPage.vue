@@ -7,25 +7,21 @@
 		:grouped="false"
 	>
 		<template #actions="{ resonitePathExists }">
-			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Discover installed">
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="mdiToyBrickSearch"
-					:loading="modStore.discovering"
-					:disabled="!resonitePathExists"
-					@click="discoverInstalledMods"
-				/>
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiToyBrickSearch"
+				:loading="modStore.discovering"
+				:disabled="!resonitePathExists"
+				tooltip="Discover installed"
+				@click="discoverInstalledMods"
+			/>
 
-			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Update all">
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="mdiUpdate"
-					:loading="modStore.operations.updateAll"
-					:disabled="outdatedMods.length === 0"
-					@click="updateAllMods"
-				/>
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiUpdate"
+				:loading="modStore.operations.updateAll"
+				:disabled="outdatedMods.length === 0"
+				tooltip="Update all"
+				@click="updateAllMods"
+			/>
 		</template>
 	</ModsPage>
 </template>
@@ -38,7 +34,7 @@ import { mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
 
 import useModStore from '../../stores/mods';
 import ModsPage from './ModsPage.vue';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 const modStore = useModStore();
 const mods = computed(() => {

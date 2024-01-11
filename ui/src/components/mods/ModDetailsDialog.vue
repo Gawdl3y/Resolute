@@ -23,42 +23,30 @@
 						class="me-4"
 					/>
 
-					<SimpleTooltip
+					<IconButton
 						v-if="mod.website"
-						v-slot="{ props: tooltipProps }"
-						text="Website"
-					>
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiWeb"
-							:href="mod.website"
-							target="_blank"
-							variant="text"
-						/>
-					</SimpleTooltip>
+						:icon="mdiWeb"
+						:href="mod.website"
+						target="_blank"
+						variant="text"
+						tooltip="Website"
+					/>
 
-					<SimpleTooltip
+					<IconButton
 						v-if="mod.sourceLocation"
-						v-slot="{ props: tooltipProps }"
-						text="Source"
-					>
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiSourceBranch"
-							:href="mod.sourceLocation"
-							target="_blank"
-							variant="text"
-						/>
-					</SimpleTooltip>
+						:icon="mdiSourceBranch"
+						:href="mod.sourceLocation"
+						target="_blank"
+						variant="text"
+						tooltip="Source"
+					/>
 
-					<SimpleTooltip v-slot="{ props: tooltipProps }" text="Close">
-						<v-btn
-							v-bind="tooltipProps"
-							:icon="mdiClose"
-							variant="text"
-							@click="close"
-						/>
-					</SimpleTooltip>
+					<IconButton
+						:icon="mdiClose"
+						variant="text"
+						tooltip="Close"
+						@click="close"
+					/>
 				</div>
 			</template>
 
@@ -73,13 +61,14 @@
 
 				<h2 class="d-flex align-center ga-2 text-h5 mb-2">
 					Version {{ semver }}
-					<v-btn
+					<IconButton
 						v-if="version.releaseUrl"
 						:icon="mdiLinkVariant"
 						:href="version.releaseUrl"
 						target="_blank"
 						variant="text"
 						density="comfortable"
+						tooltip="Release page"
 					/>
 				</h2>
 				<ModVersionInfoPanels :version="version" />
@@ -163,7 +152,7 @@ import ModAuthors from './ModAuthors.vue';
 import ModVersionInfoPanels from './ModVersionInfoPanels.vue';
 import TextCopier from '../TextCopier.vue';
 import ClickableSpan from '../ClickableSpan.vue';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 const props = defineProps({
 	mod: { type: Object, required: true },

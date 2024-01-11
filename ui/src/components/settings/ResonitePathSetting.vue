@@ -6,23 +6,19 @@
 		readonly
 	>
 		<template #append-inner>
-			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Autodetect">
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="mdiAutoFix"
-					variant="text"
-					@click="discoverPath"
-				/>
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiAutoFix"
+				tooltip="Autodetect"
+				variant="text"
+				@click="discoverPath"
+			/>
 
-			<SimpleTooltip v-slot="{ props: tooltipProps }" text="Choose folder">
-				<v-btn
-					v-bind="tooltipProps"
-					:icon="mdiFolderSearch"
-					variant="text"
-					@click="choosePath"
-				/>
-			</SimpleTooltip>
+			<IconButton
+				:icon="mdiFolderSearch"
+				tooltip="Choose folder"
+				variant="text"
+				@click="choosePath"
+			/>
 		</template>
 	</v-text-field>
 </template>
@@ -35,7 +31,7 @@ import { join as pathJoin } from '@tauri-apps/api/path';
 import { mdiFolderSearch, mdiAutoFix } from '@mdi/js';
 
 import useSettings from '../../composables/settings';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 defineProps({ variant: { type: String, default: 'solo' } });
 const settings = useSettings();

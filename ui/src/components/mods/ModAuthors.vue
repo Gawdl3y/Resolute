@@ -20,19 +20,14 @@
 			</template>
 
 			<template #append>
-				<SimpleTooltip
+				<IconButton
 					v-if="author.support"
-					v-slot="{ props: tooltipProps }"
-					:text="`Support ${author.name}`"
-				>
-					<v-btn
-						v-bind="tooltipProps"
-						:icon="mdiGift"
-						:href="author.support"
-						target="_blank"
-						variant="text"
-					/>
-				</SimpleTooltip>
+					:tooltip="`Support ${author.name}`"
+					:icon="mdiGift"
+					:href="author.support"
+					target="_blank"
+					variant="text"
+				/>
 			</template>
 		</v-card>
 	</div>
@@ -41,7 +36,7 @@
 <script setup>
 import { mdiAccount, mdiGift } from '@mdi/js';
 
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 defineProps({ authors: { type: Array, required: true } });
 </script>

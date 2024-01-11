@@ -37,17 +37,15 @@
 							v-slot="{ uninstall, uninstalling, busy }"
 							:mod="mod"
 						>
-							<SimpleTooltip v-slot="{ props: tooltipProps }" text="Uninstall">
-								<v-btn
-									v-bind="tooltipProps"
-									:icon="mdiDelete"
-									:disabled="disabled || (busy && !uninstalling)"
-									:loading="uninstalling"
-									variant="plain"
-									density="comfortable"
-									@click.stop="uninstall"
-								/>
-							</SimpleTooltip>
+							<IconButton
+								:icon="mdiDelete"
+								:disabled="disabled || (busy && !uninstalling)"
+								:loading="uninstalling"
+								tooltip="Uninstall"
+								variant="plain"
+								density="comfortable"
+								@click.stop="uninstall"
+							/>
 						</ModUninstaller>
 
 						<ModInstaller
@@ -55,20 +53,15 @@
 							v-slot="{ install, installing, busy }"
 							:mod="mod"
 						>
-							<SimpleTooltip
-								v-slot="{ props: tooltipProps }"
-								:text="mod.installedVersion ? 'Reinstall' : 'Install'"
-							>
-								<v-btn
-									v-bind="tooltipProps"
-									:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
-									:disabled="disabled || (busy && !installing)"
-									:loading="installing"
-									variant="plain"
-									density="comfortable"
-									@click.stop="install"
-								/>
-							</SimpleTooltip>
+							<IconButton
+								:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
+								:disabled="disabled || (busy && !installing)"
+								:loading="installing"
+								:tooltip="mod.installedVersion ? 'Reinstall' : 'Install'"
+								variant="plain"
+								density="comfortable"
+								@click.stop="install"
+							/>
 						</ModInstaller>
 
 						<ModUpdater
@@ -76,17 +69,15 @@
 							v-slot="{ update, updating, busy }"
 							:mod="mod"
 						>
-							<SimpleTooltip v-slot="{ props: tooltipProps }" text="Update">
-								<v-btn
-									v-bind="tooltipProps"
-									:icon="mdiUpdate"
-									:disabled="disabled || (busy && !updating)"
-									:loading="updating"
-									variant="plain"
-									density="comfortable"
-									@click.stop="update"
-								/>
-							</SimpleTooltip>
+							<IconButton
+								:icon="mdiUpdate"
+								:disabled="disabled || (busy && !updating)"
+								:loading="updating"
+								tooltip="Update"
+								variant="plain"
+								density="comfortable"
+								@click.stop="update"
+							/>
 						</ModUpdater>
 					</div>
 				</td>
@@ -108,18 +99,13 @@
 					style="cursor: pointer"
 					@click="toggleGroup(item)"
 				>
-					<SimpleTooltip
-						v-slot="{ props: tooltipProps }"
-						:text="isGroupOpen(item) ? 'Collapse' : 'Expand'"
-					>
-						<v-btn
-							v-bind="tooltipProps"
-							size="small"
-							variant="text"
-							:icon="isGroupOpen(item) ? '$expand' : '$next'"
-							@click.stop="toggleGroup(item)"
-						/>
-					</SimpleTooltip>
+					<IconButton
+						:icon="isGroupOpen(item) ? '$expand' : '$next'"
+						:tooltip="isGroupOpen(item) ? 'Collapse' : 'Expand'"
+						variant="text"
+						size="small"
+						@click.stop="toggleGroup(item)"
+					/>
 
 					{{ item.value }} ({{ item.items.length }})
 				</td>
@@ -152,7 +138,7 @@ import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
 import ModUninstaller from './ModUninstaller.vue';
 import ModUpdater from './ModUpdater.vue';
-import SimpleTooltip from '../SimpleTooltip.vue';
+import IconButton from '../IconButton.vue';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
