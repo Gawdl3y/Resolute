@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use log::{error, info};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Window};
 use tokio::io::AsyncReadExt;
@@ -11,6 +12,27 @@ use crate::settings;
 pub(crate) fn show_window(window: Window) -> Result<(), String> {
 	window.show().map_err(|err| format!("Unable to show window: {}", err))?;
 	Ok(())
+}
+
+/// Gets the Tauri app's bundle identifier
+#[tauri::command]
+pub(crate) fn get_app_info(app: AppHandle) -> Result<AppInfo, String> {
+	let config = app.config();
+	Ok(AppInfo {
+		name: config
+			.package
+			.product_name
+			.clone()
+			.ok_or_else(|| "Unable to get app name".to_owned())?,
+		identifier: config.tauri.bundle.identifier.clone(),
+		version: config
+			.package
+			.version
+			.clone()
+			.ok_or_else(|| "Unable to get app version".to_owned())?,
+		tauri_version: tauri::VERSION.to_owned(),
+		debug: cfg!(debug_assertions),
+	})
 }
 
 /// Verifies the Resonite path specified in the settings store exists
@@ -98,4 +120,14 @@ pub(crate) async fn open_log_dir(app: AppHandle) -> Result<(), String> {
 		.ok_or_else(|| "Unable to get log directory".to_owned())?;
 	opener::open(path).map_err(|err| format!("Unable to open log directory: {}", err))?;
 	Ok(())
+}
+
+/// Information about the app
+#[derive(Serialize, Deserialize)]
+pub(crate) struct AppInfo {
+	pub name: String,
+	pub identifier: String,
+	pub version: String,
+	pub tauri_version: String,
+	pub debug: bool,
 }

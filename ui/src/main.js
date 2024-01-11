@@ -6,6 +6,7 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { attachConsole } from 'tauri-plugin-log-api';
 
 import { disableContextMenu, disableTextSelection } from './util';
+import useApp from './composables/app';
 import AppWrapper from './AppWrapper.vue';
 import DashboardPage from './components/pages/DashboardPage.vue';
 import AllModsPage from './components/pages/AllModsPage.vue';
@@ -19,38 +20,42 @@ import '@fontsource/roboto-mono/400.css';
 import 'vuetify/styles';
 import './styles/global.css';
 
-const debug = window.location.hostname === 'tauri.localhost';
+const app = useApp();
+app
+	.init()
+	.then(() => (app.debug.value ? attachConsole() : null))
+	.then(() => {
+		// Set up the router
+		const router = createRouter({
+			history: createWebHashHistory(),
+			routes: [
+				{ path: '/', component: DashboardPage },
+				{ path: '/mods', component: AllModsPage },
+				{ path: '/mods/installed', component: InstalledModsPage },
+				{ path: '/author-tools', component: ModAuthorToolsPage },
+				{ path: '/log', component: SessionLogPage },
+				{ path: '/settings', component: SettingsPage },
+			],
+		});
 
-(debug ? attachConsole() : Promise.resolve()).then(() => {
-	const router = createRouter({
-		history: createWebHashHistory(),
-		routes: [
-			{ path: '/', component: DashboardPage },
-			{ path: '/mods', component: AllModsPage },
-			{ path: '/mods/installed', component: InstalledModsPage },
-			{ path: '/author-tools', component: ModAuthorToolsPage },
-			{ path: '/log', component: SessionLogPage },
-			{ path: '/settings', component: SettingsPage },
-		],
+		// Set up the Vue app and mount it to the root element
+		createApp(AppWrapper)
+			.use(router)
+			.use(createPinia())
+			.use(
+				createVuetify({
+					icons: {
+						defaultSet: 'mdi',
+						aliases,
+						sets: { mdi },
+					},
+				}),
+			)
+			.mount('#app');
+
+		// Disable the context menu and text selection if we appear to be in a production build
+		if (!app.debug.value) {
+			disableContextMenu();
+			disableTextSelection();
+		}
 	});
-
-	createApp(AppWrapper)
-		.use(router)
-		.use(createPinia())
-		.use(
-			createVuetify({
-				icons: {
-					defaultSet: 'mdi',
-					aliases,
-					sets: { mdi },
-				},
-			}),
-		)
-		.mount('#app');
-
-	// Disable the context menu and text selection if we appear to be in a production build
-	if (window.location.hostname === 'tauri.localhost') {
-		disableContextMenu();
-		disableTextSelection();
-	}
-});
