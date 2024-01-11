@@ -100,7 +100,18 @@ fn main() -> anyhow::Result<()> {
 
 			Ok(())
 		})
-		.run(tauri::generate_context!())
+		.run(
+			#[cfg(debug_assertions)]
+			{
+				let mut context = tauri::generate_context!();
+				context.config_mut().tauri.bundle.identifier += ".debug";
+				context
+			},
+			#[cfg(not(debug_assertions))]
+			{
+				tauri::generate_context!()
+			},
+		)
 		.with_context(|| "Unable to initialize Tauri application")?;
 
 	Ok(())
