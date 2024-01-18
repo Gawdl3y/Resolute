@@ -1,11 +1,11 @@
 <template>
 	<v-data-table
 		ref="dataTable"
-		:headers="headers"
-		:items="items"
+		:headers
+		:items
 		item-key="id"
 		:items-per-page="settings.current[modsPerPageSetting]"
-		:loading="loading"
+		:loading
 		:search="filter"
 		filter-mode="some"
 		:group-by="groupBy"
@@ -29,13 +29,13 @@
 				<!-- eslint-enable vue/no-v-html -->
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
-				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
+				<td style="width: 7em"><ModVersionStatus :mod /></td>
 				<td>
 					<div class="d-flex flex-nowrap justify-end">
 						<ModUninstaller
 							v-if="mod.installedVersion"
 							v-slot="{ uninstall, uninstalling, busy }"
-							:mod="mod"
+							:mod
 						>
 							<IconButton
 								:icon="mdiDelete"
@@ -51,7 +51,7 @@
 						<ModInstaller
 							v-if="!mod.hasUpdate && !mod.isUnrecognized"
 							v-slot="{ install, installing, busy }"
-							:mod="mod"
+							:mod
 						>
 							<IconButton
 								:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
@@ -67,7 +67,7 @@
 						<ModUpdater
 							v-else-if="mod.hasUpdate"
 							v-slot="{ update, updating, busy }"
-							:mod="mod"
+							:mod
 						>
 							<IconButton
 								:icon="mdiUpdate"

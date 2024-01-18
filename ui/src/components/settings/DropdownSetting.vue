@@ -1,9 +1,9 @@
 <template>
 	<v-select
 		v-model="settings.current[setting]"
-		:label="label"
-		:items="items"
-		:variant="variant"
+		:label
+		:items
+		:variant
 		item-title="label"
 		item-value="value"
 		@update:model-value="save"

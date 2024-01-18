@@ -1,5 +1,5 @@
 <template>
-	<AppHeader title="Console" :loading="loading" :indeterminate="loading">
+	<AppHeader title="Console" :loading :indeterminate="loading">
 		<template #actions>
 			<IconButton
 				:icon="mdiFolderText"

@@ -1,5 +1,5 @@
 <template>
-	<v-app :theme="theme">
+	<v-app :theme>
 		<v-layout class="rounded rounded-md">
 			<AppSidebar />
 			<router-view />

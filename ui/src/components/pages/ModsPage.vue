@@ -1,5 +1,5 @@
 <template>
-	<AppHeader :title="title">
+	<AppHeader :title>
 		<template #actions>
 			<slot name="actions" :resonite-path-exists="resonitePathExists" />
 
@@ -12,7 +12,7 @@
 
 			<IconButton
 				:icon="mdiRefresh"
-				:loading="loading"
+				:loading
 				tooltip="Refresh mods"
 				@click="loadModsFromFn(true)"
 			/>
@@ -40,11 +40,11 @@
 
 		<ModTable
 			ref="modTable"
-			:mods="mods"
+			:mods
 			:disabled="disabled || !resonitePathExists"
-			:loading="loading"
+			:loading
 			:style="`height: ${tableHeight}`"
-			:grouped="grouped"
+			:grouped
 			:no-data-text="noDataText"
 			@show-mod-details="showModDetails"
 		/>

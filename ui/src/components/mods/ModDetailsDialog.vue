@@ -54,7 +54,7 @@
 			<v-card-text>
 				<p class="text-body-1 mt-2 mb-6">{{ mod.description }}</p>
 
-				<ModTags :mod="mod" class="mb-6" />
+				<ModTags :mod class="mb-6" />
 
 				<h2 class="text-h5 mb-2">Authors</h2>
 				<ModAuthors :authors="mod.authors" class="mb-6" />
@@ -71,7 +71,7 @@
 						tooltip="Release page"
 					/>
 				</h2>
-				<ModVersionInfoPanels :version="version" />
+				<ModVersionInfoPanels :version />
 			</v-card-text>
 
 			<!-- Mod actions -->
@@ -81,7 +81,7 @@
 				<ModUninstaller
 					v-if="mod.installedVersion"
 					v-slot="{ uninstall, uninstalling, busy }"
-					:mod="mod"
+					:mod
 				>
 					<v-btn
 						:prepend-icon="mdiDelete"
@@ -96,7 +96,7 @@
 				<ModUpdater
 					v-if="updateAvailable"
 					v-slot="{ update, updating, busy }"
-					:mod="mod"
+					:mod
 					:version="semver"
 				>
 					<v-btn
@@ -112,7 +112,7 @@
 				<ModInstaller
 					v-else-if="!version.isUnrecognized"
 					v-slot="{ install, installing, busy }"
-					:mod="mod"
+					:mod
 					:version="semver"
 				>
 					<v-btn

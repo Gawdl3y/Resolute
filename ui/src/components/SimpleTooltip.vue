@@ -1,7 +1,7 @@
 <template>
-	<v-tooltip :text="text" :open-delay="openDelay">
+	<v-tooltip :text :open-delay="openDelay">
 		<template #activator="{ props }">
-			<slot :props="props" />
+			<slot :props />
 		</template>
 	</v-tooltip>
 </template>

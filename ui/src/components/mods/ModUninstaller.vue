@@ -1,11 +1,5 @@
 <template>
-	<slot
-		:uninstall="uninstall"
-		:busy="busy"
-		:uninstalling="uninstalling"
-		:uninstalled="uninstalled"
-		:error="error"
-	/>
+	<slot :uninstall :busy :uninstalling :uninstalled :error />
 </template>
 
 <script setup>

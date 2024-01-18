@@ -1,9 +1,9 @@
 <template>
 	<v-text-field
 		v-model="settings.current[setting]"
-		:label="label"
-		:rules="rules"
-		:variant="variant"
+		:label
+		:rules
+		:variant
 		@keypress.enter="save"
 		@blur="save"
 	/>
