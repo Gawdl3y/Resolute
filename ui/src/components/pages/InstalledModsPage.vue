@@ -2,7 +2,7 @@
 	<ModsPage
 		title="Installed Mods"
 		no-data-text="No mods have been installed yet."
-		:mods="mods"
+		:mods
 		:load-mods="loadMods"
 		:grouped="false"
 	>

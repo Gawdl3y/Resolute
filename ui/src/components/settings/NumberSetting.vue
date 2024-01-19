@@ -1,10 +1,10 @@
 <template>
 	<v-text-field
 		v-model="settings.current[setting]"
-		:label="label"
+		:label
 		:rules="effectiveRules"
-		:variant="variant"
-		:suffix="suffix"
+		:variant
+		:suffix
 		type="number"
 		@keypress.enter="save"
 		@blur="save"

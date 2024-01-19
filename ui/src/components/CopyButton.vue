@@ -1,5 +1,5 @@
 <template>
-	<TextCopier v-slot="{ props: copierProps, copy }" :text="text">
+	<TextCopier v-slot="{ props: copierProps, copy }" :text>
 		<v-slide-x-reverse-transition>
 			<v-btn
 				v-if="text && !hidden"

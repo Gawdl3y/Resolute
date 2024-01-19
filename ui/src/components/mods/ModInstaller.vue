@@ -1,11 +1,5 @@
 <template>
-	<slot
-		:install="install"
-		:busy="busy"
-		:installing="installing"
-		:installed="installed"
-		:error="error"
-	/>
+	<slot :install :busy :installing :installed :error />
 </template>
 
 <script setup>

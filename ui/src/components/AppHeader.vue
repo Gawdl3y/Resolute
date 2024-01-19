@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar :title="title" density="comfortable">
+	<v-app-bar :title density="comfortable">
 		<template #prepend>
 			<v-btn
 				:icon="mdiArrowLeft"
@@ -19,8 +19,8 @@
 		<v-progress-linear
 			v-model="progress"
 			:active="loading"
-			:indeterminate="indeterminate"
-			:stream="stream"
+			:indeterminate
+			:stream
 			absolute
 			location="bottom"
 		/>

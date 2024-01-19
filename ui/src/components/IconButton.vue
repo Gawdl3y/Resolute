@@ -1,6 +1,6 @@
 <template>
 	<SimpleTooltip v-slot="{ props: tooltipProps }" :text="tooltip">
-		<v-btn v-bind="{ ...tooltipProps, ...$attrs }" :icon="icon" />
+		<v-btn v-bind="{ ...tooltipProps, ...$attrs }" :icon />
 	</SimpleTooltip>
 </template>
 

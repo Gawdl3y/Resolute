@@ -2,7 +2,7 @@
 	<v-text-field
 		v-model="settings.current.resonitePath"
 		label="Resonite path"
-		:variant="variant"
+		:variant
 		readonly
 	>
 		<template #append-inner>

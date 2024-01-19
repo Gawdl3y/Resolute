@@ -1,5 +1,5 @@
 <template>
-	<slot v-if="!tooltip" :copy="copy" :copied="copied" :reset="reset" />
+	<slot v-if="!tooltip" :copy :copied :reset />
 
 	<SimpleTooltip
 		v-else
@@ -7,7 +7,7 @@
 		v-model="showTooltip"
 		:text="copied ? 'Copied!' : 'Copy'"
 	>
-		<slot :copy="copy" :copied="copied" :reset="reset" :props="tooltipProps" />
+		<slot :copy :copied :reset :props="tooltipProps" />
 	</SimpleTooltip>
 </template>
 
