@@ -69,7 +69,7 @@ onUnmounted(() => {
 function format(text) {
 	return escapeHTML(text)
 		.replace(
-			/^(\[.+\])(\[.+\])(\[.+\])(\[.+\])\s/gm,
+			/^(\[.+\])(\[.+\])(\[.+\])(\[.+\]) /gm,
 			'<span class="font-weight-light"><span class="text-disabled">$1$2</span>$3<span class="text-primary">$4</span></span> ',
 		)
 		.replace(/\[ERROR\]/g, '<span class="text-error">[ERROR]</span>')
