@@ -3,7 +3,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { createPinia } from 'pinia';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
-import { attachConsole } from 'tauri-plugin-log-api';
+import { attachConsole } from '@tauri-apps/plugin-log';
 
 import { disableContextMenu, disableTextSelection } from './util';
 import useApp from './composables/app';

@@ -66,7 +66,7 @@ import {
 	onMounted,
 	onUnmounted,
 } from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import {
 	mdiArrowCollapseVertical,
 	mdiArrowExpandVertical,

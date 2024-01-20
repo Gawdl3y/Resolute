@@ -9,42 +9,29 @@
 		"devPath": "http://localhost:1420",
 		"distDir": "../../ui/dist"
 	},
+	"plugins": {
+		"updater": {
+			"endpoints": [
+				"https://github.com/Gawdl3y/Resolute/releases/latest/download/latest.json"
+			]
+		}
+	},
 	"tauri": {
-		"allowlist": {
-			"all": false,
-			"dialog": {
-				"all": false,
-				"open": true,
-				"ask": true,
-				"message": true
-			},
-			"fs": {
-				"all": false,
-				"exists": true
-			},
-			"path": {
-				"all": true
-			},
-			"process": {
-				"all": false,
-				"relaunch": true
-			},
-			"shell": {
-				"all": false,
-				"open": true
-			}
-		},
 		"bundle": {
 			"active": true,
-			"targets": "all",
 			"identifier": "dev.gawdl3y.resolute",
+			"targets": "all",
 			"icon": [
 				"icons/32x32.png",
 				"icons/128x128.png",
 				"icons/128x128@2x.png",
 				"icons/icon.icns",
 				"icons/icon.ico"
-			]
+			],
+			"updater": {
+				"active": true,
+				"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFREFBMzMxM0Q2MjNDNTUKUldSVlBHSTlNYVBhZmlOcjFScm80c2dYSElvS2o0MTlGQ3VRU0tvTXdiY3FDdnp4WWVQelJ3cm0K"
+			}
 		},
 		"security": {
 			"csp": null
@@ -54,16 +41,9 @@
 				"title": "Resolute",
 				"visible": false,
 				"minWidth": 900,
-				"minHeight": 600
+				"minHeight": 600,
+				"fileDropEnabled": true
 			}
-		],
-		"updater": {
-			"active": true,
-			"dialog": false,
-			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFREFBMzMxM0Q2MjNDNTUKUldSVlBHSTlNYVBhZmlOcjFScm80c2dYSElvS2o0MTlGQ3VRU0tvTXdiY3FDdnp4WWVQelJ3cm0K",
-			"endpoints": [
-				"https://github.com/Gawdl3y/Resolute/releases/latest/download/latest.json"
-			]
-		}
+		]
 	}
 }

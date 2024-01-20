@@ -2,7 +2,7 @@ use itertools::Itertools;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use tauri::{AppHandle, Window};
+use tauri::{AppHandle, Manager, Window};
 use tokio::io::AsyncReadExt;
 
 use crate::settings;
@@ -83,8 +83,10 @@ pub(crate) async fn hash_file(path: String) -> Result<String, String> {
 #[tauri::command]
 pub(crate) async fn get_session_log(app: AppHandle) -> Result<String, String> {
 	// Figure out the path to the log file
-	let resolver = app.path_resolver();
-	let mut log_path = resolver.app_log_dir().ok_or("Unable to get log directory")?;
+	let resolver = app.path();
+	let mut log_path = resolver
+		.app_log_dir()
+		.map_err(|err| format!("Unable to get log directory: {}", err))?;
 	log_path.push(format!("{}.log", app.package_info().name));
 
 	let log = {
@@ -115,9 +117,9 @@ pub(crate) async fn get_session_log(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub(crate) async fn open_log_dir(app: AppHandle) -> Result<(), String> {
 	let path = app
-		.path_resolver()
+		.path()
 		.app_log_dir()
-		.ok_or_else(|| "Unable to get log directory".to_owned())?;
+		.map_err(|err| format!("Unable to get log directory: {}", err))?;
 	opener::open(path).map_err(|err| format!("Unable to open log directory: {}", err))?;
 	Ok(())
 }

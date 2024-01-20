@@ -10,7 +10,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.0.0-alpha", features = [] }
 
 [dependencies]
 resolute = { path = "../resolute" }
@@ -31,24 +31,22 @@ reqwest = { version = "0.11", features = [
 	"brotli",
 	"deflate",
 ], default-features = false }
-tauri = { version = "1.5", features = [
-	"updater",
-	"dialog-ask",
-	"dialog-message",
-	"dialog-open",
-	"fs-exists",
-	"path-all",
-	"process-relaunch",
-	"shell-open",
-] }
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = [
-	"colored",
-] }
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri = { version = "2.0.0-alpha", features = [] }
+tauri-plugin-dialog = "2.0.0-alpha"
+tauri-plugin-fs = "2.0.0-alpha"
+tauri-plugin-process = "2.0.0-alpha"
+tauri-plugin-shell = "2.0.0-alpha"
+tauri-plugin-updater = "2.0.0-alpha"
+tauri-plugin-log = "2.0.0-alpha"
+tauri-plugin-single-instance = "2.0.0-alpha"
+tauri-plugin-window-state = "2.0.0-alpha"
+tauri-plugin-store = "2.0.0-alpha"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]

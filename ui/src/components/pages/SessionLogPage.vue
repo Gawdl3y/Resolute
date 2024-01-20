@@ -24,9 +24,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { message } from '@tauri-apps/api/dialog';
+import { message } from '@tauri-apps/plugin-dialog';
 import { mdiFolderText } from '@mdi/js';
 
 import { escapeHTML } from '../../util';

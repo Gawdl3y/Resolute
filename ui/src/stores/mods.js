@@ -1,9 +1,9 @@
 import { ref, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import { lt as semverLt } from 'semver';
-import { invoke } from '@tauri-apps/api';
-import { message } from '@tauri-apps/api/dialog';
-import { info, error } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { message } from '@tauri-apps/plugin-dialog';
+import { info, error } from '@tauri-apps/plugin-log';
 
 // eslint-disable-next-line no-unused-vars
 import { ResoluteMod, ModVersion } from '../structs/mod';

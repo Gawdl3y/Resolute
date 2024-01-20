@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
-import { invoke } from '@tauri-apps/api';
-import { Store } from 'tauri-plugin-store-api';
-import { info } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { Store } from '@tauri-apps/plugin-store';
+import { info } from '@tauri-apps/plugin-log';
 
 let store;
 let storeUnlisten;

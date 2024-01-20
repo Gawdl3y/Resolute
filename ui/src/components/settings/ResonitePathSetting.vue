@@ -24,9 +24,9 @@
 </template>
 
 <script setup>
-import { invoke } from '@tauri-apps/api';
-import { open, ask, message } from '@tauri-apps/api/dialog';
-import { exists as fsExists } from '@tauri-apps/api/fs';
+import { invoke } from '@tauri-apps/api/core';
+import { open, ask, message } from '@tauri-apps/plugin-dialog';
+import { exists as fsExists } from '@tauri-apps/plugin-fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
 import { mdiFolderSearch, mdiAutoFix } from '@mdi/js';
 
