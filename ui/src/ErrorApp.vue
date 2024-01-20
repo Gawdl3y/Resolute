@@ -46,9 +46,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
-import { relaunch } from '@tauri-apps/api/process';
-import { info } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { info } from '@tauri-apps/plugin-log';
 import { mdiAlert } from '@mdi/js';
 
 import CopyButton from './components/CopyButton.vue';

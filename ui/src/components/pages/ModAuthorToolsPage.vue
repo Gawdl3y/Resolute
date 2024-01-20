@@ -40,9 +40,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { open, message } from '@tauri-apps/api/dialog';
+import { open, message } from '@tauri-apps/plugin-dialog';
 import { mdiFileCheck, mdiFileSearch } from '@mdi/js';
 
 import AppHeader from '../AppHeader.vue';
@@ -62,12 +62,12 @@ onMounted(async () => {
 	unlistenToFileDrop = await listen('tauri://file-drop', (evt) => {
 		console.debug('File drop received', evt);
 		fileHovering.value = false;
-		hashFile(evt.payload[0]);
+		hashFile(evt.payload.paths[0]);
 	});
 
 	unlistenToFileHover = await listen('tauri://file-drop-hover', (evt) => {
 		console.debug('File hover received', evt);
-		if (evt.payload && evt.payload.length > 0) {
+		if (evt.payload && evt.payload.paths.length > 0) {
 			fileHovering.value = true;
 		}
 	});
@@ -93,7 +93,7 @@ onUnmounted(() => {
  */
 async function hashFile(file = null) {
 	// Prompt to choose a file
-	if (!file) file = await open();
+	if (!file) file = (await open())?.path;
 	if (!file) return;
 
 	// Request the backend to checksum the selected file

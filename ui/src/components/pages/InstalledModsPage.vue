@@ -28,8 +28,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import { message, ask } from '@tauri-apps/api/dialog';
-import { info, error } from 'tauri-plugin-log-api';
+import { message, ask } from '@tauri-apps/plugin-dialog';
+import { info, error } from '@tauri-apps/plugin-log';
 import { mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
 
 import useModStore from '../../stores/mods';

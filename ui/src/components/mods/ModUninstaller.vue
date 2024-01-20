@@ -4,7 +4,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { ask } from '@tauri-apps/api/dialog';
+import { ask } from '@tauri-apps/plugin-dialog';
 
 import useModStore from '../../stores/mods';
 

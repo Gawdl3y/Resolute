@@ -24,9 +24,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { message } from '@tauri-apps/api/dialog';
+import { message } from '@tauri-apps/plugin-dialog';
 import { mdiFolderText } from '@mdi/js';
 
 import { escapeHTML } from '../../util';
@@ -69,7 +69,7 @@ onUnmounted(() => {
 function format(text) {
 	return escapeHTML(text)
 		.replace(
-			/^(\[.+\])(\[.+\])(\[.+\])(\[.+\])\s/gm,
+			/^(\[.+\])(\[.+\])(\[.+\])(\[.+\]) /gm,
 			'<span class="font-weight-light"><span class="text-disabled">$1$2</span>$3<span class="text-primary">$4</span></span> ',
 		)
 		.replace(/\[ERROR\]/g, '<span class="text-error">[ERROR]</span>')
