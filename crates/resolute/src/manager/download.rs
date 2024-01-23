@@ -12,8 +12,13 @@ use tokio::{
 	io::{AsyncWriteExt, BufWriter},
 };
 
-use crate::mods::{ModArtifact, ModVersion};
+use crate::{
+	manager::artifacts,
+	mods::{ModArtifact, ModVersion},
+};
 use crate::{Error, Result};
+
+use super::artifacts::{ArtifactAction, ArtifactError};
 
 /// Handles mod downloads
 #[derive(Debug)]
@@ -106,28 +111,42 @@ impl Downloader {
 		artifact: &'a ModArtifact,
 		progress: impl Fn(u64, u64),
 	) -> Result<DownloadedArtifact<'a>> {
-		let final_dest = artifact.dest_within(&self.base_dest)?;
+		let final_dest = artifact
+			.dest_within(&self.base_dest)
+			.map_err(ArtifactError::map_pathless(ArtifactAction::Download))?;
+		let tmp_dest =
+			ModArtifact::tmp_dest(&final_dest).map_err(ArtifactError::map_pathless(ArtifactAction::Download))?;
 
 		// Create any missing directories up to the destination
-		let result = fs::create_dir_all(
-			final_dest
-				.parent()
-				.ok_or_else(|| Error::Path("unable to get parent of artifact's final destination".to_owned()))?,
-		)
+		let result = fs::create_dir_all(tmp_dest.parent().ok_or_else(|| ArtifactError {
+			action: ArtifactAction::Download,
+			path: None,
+			source: Box::new(Error::Path(
+				"unable to get parent of artifact's temporary destination".to_owned(),
+			)),
+		})?)
 		.await;
 
 		// If the directory creation failed, ignore the error it if it's just because it already exists
 		if let Err(err) = result {
 			if err.kind() != std::io::ErrorKind::AlreadyExists {
-				return Err(Error::Io(err));
+				return Err(Error::Artifact(ArtifactError {
+					action: ArtifactAction::Download,
+					path: Some(tmp_dest),
+					source: Box::new(err.into()),
+				}));
 			}
 		}
 
 		// Download the artifact to its temporary location
-		let tmp_dest = ModArtifact::tmp_dest(&final_dest)?;
 		info!("Downloading artifact {} to {}", artifact.url, tmp_dest.display());
 		self.download(artifact.url.clone(), &tmp_dest, &artifact.sha256, progress)
-			.await?;
+			.await
+			.map_err(|err| ArtifactError {
+				action: ArtifactAction::Download,
+				path: Some(tmp_dest.clone()),
+				source: Box::new(err),
+			})?;
 
 		Ok(DownloadedArtifact {
 			artifact,
@@ -232,16 +251,12 @@ impl<'a> DownloadedArtifact<'a> {
 	/// If an artifact already exists at the final destination, it gets renamed with a temporary suffix.
 	/// The downloaded artifact at the temporary destination is then renamed to its final destination.
 	pub async fn finalize(self) -> Result<FinalizedArtifact<'a>> {
-		let mut has_old = false;
+		let old_dest =
+			ModArtifact::old_dest(&self.final_dest).map_err(ArtifactError::map_pathless(ArtifactAction::Rename))?;
 
-		// Try renaming any old file that may exist and ignore the error if it doesn't
-		let old_dest = ModArtifact::old_dest(&self.final_dest)?;
-		if let Err(err) = fs::rename(&self.final_dest, &old_dest).await {
-			if err.kind() != std::io::ErrorKind::NotFound {
-				return Err(Error::Io(err));
-			}
-		} else {
-			has_old = true;
+		// Rename the old file if one exists
+		let has_old = artifacts::rename(&self.final_dest, &old_dest, true).await?;
+		if has_old {
 			debug!(
 				"Renamed old artifact file {} to {}",
 				self.final_dest.display(),
@@ -250,7 +265,7 @@ impl<'a> DownloadedArtifact<'a> {
 		}
 
 		// Rename the downloaded file from its temporary name to its final one
-		fs::rename(&self.tmp_dest, &self.final_dest).await?;
+		artifacts::rename(&self.tmp_dest, &self.final_dest, false).await?;
 		debug!(
 			"Renamed temporary artifact file {} to {}",
 			self.tmp_dest.display(),
@@ -266,7 +281,7 @@ impl<'a> DownloadedArtifact<'a> {
 
 	/// Cancels the artifact. Deletes the downloaded file from the temporary destination.
 	pub async fn cancel(self) -> Result<()> {
-		fs::remove_file(&self.tmp_dest).await?;
+		artifacts::delete(&self.tmp_dest).await?;
 		debug!("Deleted temporary artifact file {}", self.tmp_dest.display());
 		Ok(())
 	}
@@ -293,12 +308,12 @@ impl FinalizedArtifact<'_> {
 	/// Deletes the downloaded artifact and renames the old artifact back to its original final destination.
 	pub async fn undo(self) -> Result<()> {
 		// Delete the artifact from its final destination
-		fs::remove_file(&self.final_dest).await?;
+		artifacts::delete(&self.final_dest).await?;
 		debug!("Deleted artifact file {}", self.final_dest.display());
 
 		// Rename the old artifact back to the final name if there was one
 		if let Some(old_dest) = self.old_dest {
-			fs::rename(&old_dest, &self.final_dest).await?;
+			artifacts::rename(&old_dest, &self.final_dest, false).await?;
 			debug!(
 				"Renamed old artifact file {} to {}",
 				old_dest.display(),
@@ -313,7 +328,7 @@ impl FinalizedArtifact<'_> {
 	/// Fails if there was no old artifact or if there is an issue during its deletion.
 	pub async fn delete_old(self) -> Result<()> {
 		let old_dest = self.old_dest.ok_or_else(|| Error::NoOldArtifact)?;
-		fs::remove_file(&old_dest).await?;
+		artifacts::delete(&old_dest).await?;
 		debug!("Deleted old artifact file {}", old_dest.display());
 		Ok(())
 	}
