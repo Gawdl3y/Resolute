@@ -1,6 +1,5 @@
 mod delete;
 mod download;
-mod paths;
 
 use std::path::{Path, PathBuf};
 
@@ -16,7 +15,6 @@ use crate::{discover, manifest, Error, Result};
 pub use self::delete::Deleter;
 pub use self::download::Downloader;
 pub use self::download::DownloaderBuilder;
-pub use self::paths::ArtifactPaths;
 
 /// Main entry point for all mod-related operations that need to be persisted
 pub struct ModManager<#[cfg(feature = "db")] 'a> {
