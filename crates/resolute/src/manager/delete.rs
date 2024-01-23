@@ -3,11 +3,10 @@ use std::path::{Path, PathBuf};
 
 use log::info;
 
-use crate::manager::artifacts::{self, ArtifactAction, ArtifactError};
 use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
-use super::artifacts::ArtifactErrorVec;
+use super::artifacts::{self, ArtifactAction, ArtifactError, ArtifactErrorVec};
 
 /// Handles deleting mods
 pub struct Deleter {

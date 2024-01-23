@@ -12,13 +12,10 @@ use tokio::{
 	io::{AsyncWriteExt, BufWriter},
 };
 
-use crate::{
-	manager::artifacts,
-	mods::{ModArtifact, ModVersion},
-};
+use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
-use super::artifacts::{ArtifactAction, ArtifactError};
+use super::artifacts::{self, ArtifactAction, ArtifactError};
 
 /// Handles mod downloads
 #[derive(Debug)]
