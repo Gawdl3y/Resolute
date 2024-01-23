@@ -2,11 +2,12 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use log::info;
-use tokio::fs;
 
-use crate::error::{ArtifactAction, ArtifactError, ArtifactErrorVec};
+use crate::manager::artifacts::{self, ArtifactAction, ArtifactError};
 use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
+
+use super::artifacts::ArtifactErrorVec;
 
 /// Handles deleting mods
 pub struct Deleter {
@@ -21,39 +22,28 @@ impl Deleter {
 	}
 
 	/// Deletes all installed artifacts for a specific mod version
-	pub async fn delete_version(&self, version: &ModVersion) -> Result<()> {
+	pub async fn delete_version(&self, version: &ModVersion) -> core::result::Result<(), ArtifactErrorVec> {
 		// Delete all artifacts and track any failed ones
 		let mut failed = ArtifactErrorVec::new();
 		for artifact in &version.artifacts {
-			self.delete_artifact(artifact)
-				.await
-				.map(|_| ())
-				.or_else(|(err, path)| {
-					failed.push(ArtifactError {
-						action: ArtifactAction::Delete,
-						path,
-						source: Box::new(err),
-					});
-					Ok::<_, Error>(())
-				})?;
+			if let Err(err) = self.delete_artifact(artifact).await {
+				failed.push(err);
+			}
 		}
 
 		if failed.is_empty() {
 			Ok(())
 		} else {
-			Err(Error::Artifacts(failed))
+			Err(failed)
 		}
 	}
 
 	/// Deletes a single artifact
-	pub async fn delete_artifact(
-		&self,
-		artifact: &ModArtifact,
-	) -> core::result::Result<PathBuf, (Error, Option<PathBuf>)> {
-		let path = artifact.dest_within(&self.base_dest).map_err(|err| (err, None))?;
-		fs::remove_file(&path)
-			.await
-			.map_err(|err| (err.into(), Some(path.clone())))?;
+	pub async fn delete_artifact(&self, artifact: &ModArtifact) -> core::result::Result<PathBuf, ArtifactError> {
+		let path = artifact
+			.dest_within(&self.base_dest)
+			.map_err(ArtifactError::map_pathless(ArtifactAction::Delete))?;
+		artifacts::delete(&path).await?;
 
 		info!("Deleted artifact file {}", path.display());
 		Ok(path)
@@ -81,14 +71,9 @@ impl Deleter {
 		// Delete each unnecessary artifact path and track any failures
 		let mut failed = ArtifactErrorVec::new();
 		for path in unnecessary_paths {
-			fs::remove_file(&path).await.map(|_| ()).or_else(|err| {
-				failed.push(ArtifactError {
-					action: ArtifactAction::Delete,
-					path: Some(path.clone()),
-					source: Box::new(Error::Io(err)),
-				});
-				Ok::<_, Error>(())
-			})?;
+			if let Err(err) = artifacts::delete(path).await {
+				failed.push(err);
+			}
 			info!("Deleted left-over artifact file {}", path.display());
 		}
 
