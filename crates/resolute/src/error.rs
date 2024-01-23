@@ -51,6 +51,9 @@ pub enum Error {
 	#[error("multiple artifact errors: {0}")]
 	Artifacts(ArtifactErrorVec),
 
+	#[error("no old artifact exists to delete")]
+	NoOldArtifact,
+
 	#[error("resonite discovery error: {0}")]
 	Discovery(#[from] steamlocate::Error),
 
