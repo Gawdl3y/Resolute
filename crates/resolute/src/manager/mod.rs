@@ -205,9 +205,9 @@ impl_ModManager_with_without_db! {
 
 						for umod in unrecognized_matches {
 							debug!(
-								"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
-								umod, rmod
-							);
+									"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
+									umod, rmod
+								);
 							self.db.remove_mod_by_id(&umod.id)?;
 							removed_mods.insert(umod.id.clone(), umod.clone());
 						}
@@ -226,10 +226,12 @@ impl_ModManager_with_without_db! {
 		}
 
 		/// Installs a mod, and if the "db" feature is active, stores it as installed in the database
-		pub async fn install_mod<P>(&self, rmod: &ResoluteMod, version: impl AsRef<str>, progress: P) -> Result<()>
-		where
-			P: Fn(u64, u64),
-		{
+		pub async fn install_mod(
+			&self,
+			rmod: &ResoluteMod,
+			version: impl AsRef<str>,
+			progress: impl Fn(u64, u64),
+		) -> Result<()> {
 			// Determine the version to install
 			let semver = Version::parse(version.as_ref())?;
 			let version = rmod
@@ -250,9 +252,12 @@ impl_ModManager_with_without_db! {
 		}
 
 		/// Installs a new version of a mod and removes any remaining artifacts from the previous version
-		pub async fn update_mod<P>(&self, rmod: &ResoluteMod, version: impl AsRef<str>, progress: P) -> Result<()>
-		where
-			P: Fn(u64, u64),
+		pub async fn update_mod(
+			&self,
+			rmod: &ResoluteMod,
+			version: impl AsRef<str>,
+			progress: impl Fn(u64, u64),
+		) -> Result<()>
 		{
 			// Ensure the mod is actually installed and determine which version
 			let old_version = {
