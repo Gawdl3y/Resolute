@@ -206,9 +206,9 @@ impl_ModManager_with_without_db! {
 
 						for umod in unrecognized_matches {
 							debug!(
-									"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
-									umod, rmod
-								);
+										"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
+										umod, rmod
+									);
 							self.db.remove_mod_by_id(&umod.id)?;
 							removed_mods.insert(umod.id.clone(), umod.clone());
 						}
@@ -258,8 +258,7 @@ impl_ModManager_with_without_db! {
 			rmod: &ResoluteMod,
 			version: impl AsRef<str>,
 			progress: impl Fn(u64, u64),
-		) -> Result<()>
-		{
+		) -> Result<()> {
 			// Ensure the mod is actually installed and determine which version
 			let old_version = {
 				let version = match &rmod.installed_version {

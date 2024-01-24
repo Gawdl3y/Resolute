@@ -6,7 +6,7 @@ use log::info;
 use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
-use super::artifacts::{self, ArtifactAction, ArtifactError, ArtifactErrorVec};
+use super::artifacts::{self, ArtifactAction, ArtifactError, ArtifactErrorVec, MappableToArtifactError};
 
 /// Handles deleting mods
 pub struct Deleter {
@@ -41,7 +41,7 @@ impl Deleter {
 	pub async fn delete_artifact(&self, artifact: &ModArtifact) -> core::result::Result<PathBuf, ArtifactError> {
 		let path = artifact
 			.dest_within(&self.base_dest)
-			.map_err(ArtifactError::map_pathless(ArtifactAction::Delete))?;
+			.map_pathless_artifact_err(ArtifactAction::Delete)?;
 		artifacts::delete(&path).await?;
 
 		info!("Deleted artifact file {}", path.display());
