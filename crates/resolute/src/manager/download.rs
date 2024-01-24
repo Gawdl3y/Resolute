@@ -15,7 +15,7 @@ use tokio::{
 use crate::mods::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
-use super::artifacts::{self, ArtifactAction, ArtifactError};
+use super::artifacts::{self, ArtifactAction, ArtifactError, MappableToArtifactError};
 
 /// Handles mod downloads
 #[derive(Debug)]
@@ -110,9 +110,8 @@ impl Downloader {
 	) -> Result<DownloadedArtifact<'a>> {
 		let final_dest = artifact
 			.dest_within(&self.base_dest)
-			.map_err(ArtifactError::map_pathless(ArtifactAction::Download))?;
-		let tmp_dest =
-			ModArtifact::tmp_dest(&final_dest).map_err(ArtifactError::map_pathless(ArtifactAction::Download))?;
+			.map_pathless_artifact_err(ArtifactAction::Download)?;
+		let tmp_dest = ModArtifact::tmp_dest(&final_dest).map_pathless_artifact_err(ArtifactAction::Download)?;
 
 		// Create any missing directories up to the destination
 		let result = fs::create_dir_all(tmp_dest.parent().ok_or_else(|| ArtifactError {
@@ -139,11 +138,7 @@ impl Downloader {
 		info!("Downloading artifact {} to {}", artifact.url, tmp_dest.display());
 		self.download(artifact.url.clone(), &tmp_dest, &artifact.sha256, progress)
 			.await
-			.map_err(|err| ArtifactError {
-				action: ArtifactAction::Download,
-				path: Some(tmp_dest.clone()),
-				source: Box::new(err),
-			})?;
+			.map_artifact_err(ArtifactAction::Download, &tmp_dest)?;
 
 		Ok(DownloadedArtifact {
 			artifact,
@@ -248,8 +243,7 @@ impl<'a> DownloadedArtifact<'a> {
 	/// If an artifact already exists at the final destination, it gets renamed with a temporary suffix.
 	/// The downloaded artifact at the temporary destination is then renamed to its final destination.
 	pub async fn finalize(self) -> Result<FinalizedArtifact<'a>> {
-		let old_dest =
-			ModArtifact::old_dest(&self.final_dest).map_err(ArtifactError::map_pathless(ArtifactAction::Rename))?;
+		let old_dest = ModArtifact::old_dest(&self.final_dest).map_pathless_artifact_err(ArtifactAction::Rename)?;
 
 		// Rename the old file if one exists
 		let has_old = artifacts::rename(&self.final_dest, &old_dest, true).await?;

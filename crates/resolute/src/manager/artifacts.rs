@@ -9,11 +9,9 @@ use crate::Error;
 
 /// Deletes an artifact file
 pub(crate) async fn delete(path: &Path) -> Result<(), ArtifactError> {
-	fs::remove_file(path).await.map_err(|err| ArtifactError {
-		action: ArtifactAction::Delete,
-		path: Some(path.to_owned()),
-		source: Box::new(err.into()),
-	})?;
+	fs::remove_file(path)
+		.await
+		.map_artifact_err(ArtifactAction::Delete, path)?;
 	Ok(())
 }
 
@@ -44,19 +42,22 @@ pub struct ArtifactError {
 }
 
 impl ArtifactError {
-	/// Creates a new ArtifactError without a path value
-	pub fn new_pathless(action: ArtifactAction, source: Error) -> Self {
+	/// Creates a new ArtifactError
+	pub fn new(action: ArtifactAction, path: impl AsRef<Path>, source: impl Into<Error>) -> Self {
 		Self {
 			action,
-			path: None,
-			source: Box::new(source),
+			path: Some(path.as_ref().to_owned()),
+			source: Box::new(source.into()),
 		}
 	}
 
-	/// Returns a closure that maps an [Error] to an [ArtifactError] with a None path
-	#[inline]
-	pub(crate) fn map_pathless(action: ArtifactAction) -> impl FnOnce(Error) -> Self {
-		|err| Self::new_pathless(action, err)
+	/// Creates a new ArtifactError without a path value
+	pub fn new_pathless(action: ArtifactAction, source: impl Into<Error>) -> Self {
+		Self {
+			action,
+			path: None,
+			source: Box::new(source.into()),
+		}
 	}
 }
 
@@ -135,3 +136,22 @@ impl Display for ArtifactErrorVec {
 }
 
 impl std::error::Error for ArtifactErrorVec {}
+
+/// Allows mapping errors for a result to an [ArtifactError]
+pub trait MappableToArtifactError<T> {
+	/// Maps the Result's err value to an ArtifactError with the given action and path
+	fn map_artifact_err(self, action: ArtifactAction, path: impl AsRef<Path>) -> Result<T, ArtifactError>;
+
+	/// Maps the Result's err value to an ArtifactError with the given action and no path
+	fn map_pathless_artifact_err(self, action: ArtifactAction) -> Result<T, ArtifactError>;
+}
+
+impl<T, E: Into<Error>> MappableToArtifactError<T> for Result<T, E> {
+	fn map_artifact_err(self, action: ArtifactAction, path: impl AsRef<Path>) -> Result<T, ArtifactError> {
+		self.map_err(|err| ArtifactError::new(action, path, err))
+	}
+
+	fn map_pathless_artifact_err(self, action: ArtifactAction) -> Result<T, ArtifactError> {
+		self.map_err(|err| ArtifactError::new_pathless(action, err))
+	}
+}
