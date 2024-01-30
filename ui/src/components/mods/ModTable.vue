@@ -17,19 +17,17 @@
 		<template #item="{ item: mod }">
 			<tr
 				tabindex="0"
-				style="cursor: pointer"
+				class="mod-table-row"
+				:class="{ deprecated: mod.isDeprecated }"
 				@click="emit('showModDetails', mod)"
 			>
 				<td v-if="groupBy"></td>
 				<!-- eslint-disable vue/no-v-html -->
-				<td
-					style="min-width: 12em; max-width: 16em; overflow-wrap: break-word"
-					v-html="wrappableCamelCase(mod.name)"
-				></td>
+				<td class="mod-name" v-html="wrappableCamelCase(mod.name)"></td>
 				<!-- eslint-enable vue/no-v-html -->
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
-				<td style="width: 7em"><ModVersionStatus :mod /></td>
+				<td class="mod-version"><ModVersionStatus :mod /></td>
 				<td>
 					<div class="d-flex flex-nowrap justify-end">
 						<ModUninstaller
@@ -176,7 +174,11 @@ const headers = computed(() => {
 /**
  * Items for the data table
  */
-const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+const items = computed(() => {
+	const mods = props.mods ? Object.values(props.mods) : [];
+	if (settings.current.showDeprecated) return mods;
+	return mods.filter((mod) => !mod.isDeprecated || mod.installedVersion);
+});
 
 /**
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
@@ -265,3 +267,23 @@ function collapseAllGroups() {
 	}
 }
 </script>
+
+<style>
+.mod-table-row {
+	cursor: pointer;
+}
+
+.mod-table-row.deprecated {
+	background: rgba(var(--v-theme-error), var(--v-selected-opacity));
+}
+
+.mod-table-row .mod-name {
+	min-width: 12em;
+	max-width: 16em;
+	overflow-wrap: break-word;
+}
+
+.mod-table-row .mod-version {
+	width: 7em;
+}
+</style>
