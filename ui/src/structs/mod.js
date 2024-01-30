@@ -54,7 +54,7 @@ export class ResoluteMod {
 
 		/**
 		 * Meta flags
-		 * @type {Array<'deprecated'|'plugin'|'final'>}
+		 * @type {?Array<'deprecated'|'plugin'|'final'>}
 		 */
 		this.flags = data.flags;
 
@@ -89,6 +89,14 @@ export class ResoluteMod {
 	 */
 	get isUnrecognized() {
 		return this.id.startsWith('dev.gawdl3y.resolute.unrecognized');
+	}
+
+	/**
+	 * Whether this mod has been deprecated (the {@link flags} property has 'deprecated' in it)
+	 * @type {boolean}
+	 */
+	get isDeprecated() {
+		return this.flags?.includes?.('deprecated') ?? false;
 	}
 
 	/**
