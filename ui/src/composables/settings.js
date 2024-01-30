@@ -13,6 +13,7 @@ const currentSettings = reactive({
 	groupModIndex: true,
 	modsPerPageGrouped: -1,
 	modsPerPageUngrouped: 25,
+	showDeprecated: false,
 	modAuthorTools: false,
 	console: false,
 	setupGuideDone: false,

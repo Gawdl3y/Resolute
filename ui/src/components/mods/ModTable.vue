@@ -174,7 +174,11 @@ const headers = computed(() => {
 /**
  * Items for the data table
  */
-const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+const items = computed(() => {
+	const mods = props.mods ? Object.values(props.mods) : [];
+	if (settings.current.showDeprecated) return mods;
+	return mods.filter((mod) => !mod.isDeprecated || mod.installedVersion);
+});
 
 /**
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped

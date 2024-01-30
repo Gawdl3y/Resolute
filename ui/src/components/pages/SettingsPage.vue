@@ -17,6 +17,10 @@
 					<SwitchSetting
 						setting="groupModIndex"
 						label="Group Mod Index by category"
+					/>
+					<SwitchSetting
+						setting="showDeprecated"
+						label="Show deprecated mods"
 						class="mb-4"
 					/>
 					<v-btn @click="settings.current.setupGuideDone = false">
