@@ -1,6 +1,6 @@
-use std::{io, time::Duration};
+use std::{env, io, time::Duration};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use log::{debug, error, info, warn};
 use native_db::DatabaseBuilder;
 use once_cell::sync::Lazy;
@@ -307,11 +307,25 @@ pub(crate) fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config,
 
 /// Builds an HTTP client that takes the user-configured settings into account
 pub(crate) fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyhow::Error> {
+	// Get the timeout from the settings store
 	let connect_timeout: f32 = settings::get(app, "connectTimeout")?.unwrap_or(10f32);
 	debug!("Building HTTP client, connectTimeout = {}s", connect_timeout);
 
+	// Grab some details about the application
+	let package = &app.config().package;
+	let name = package
+		.product_name
+		.as_ref()
+		.ok_or_else(|| anyhow!("Unable to get app product name"))?;
+	let version = package
+		.version
+		.as_ref()
+		.ok_or_else(|| anyhow!("Unable to get app version"))?;
+
+	// Build the client
 	reqwest::Client::builder()
 		.connect_timeout(Duration::from_secs_f32(connect_timeout))
+		.user_agent(format!("{}/{} ({})", name, version, env::consts::OS))
 		.use_rustls_tls()
 		.build()
 		.context("Unable to build HTTP client")
