@@ -1,7 +1,7 @@
 <template>
 	<AppHeader :title>
 		<template #actions>
-			<slot name="actions" :resonite-path-exists="resonitePathExists" />
+			<slot name="actions" :resonite-path-exists />
 
 			<IconButton
 				v-if="grouped"
@@ -81,6 +81,7 @@ import ModTable from '../mods/ModTable.vue';
 import ModDetailsDialog from '../mods/ModDetailsDialog.vue';
 import IconButton from '../IconButton.vue';
 
+defineExpose({ adjustTableHeight, toggleAllGroups, showModDetails });
 const props = defineProps({
 	title: { type: String, required: true },
 	mods: { type: Object, default: null },
