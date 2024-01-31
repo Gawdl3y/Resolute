@@ -42,7 +42,7 @@ impl Deleter {
 		let path = artifact
 			.dest_within(&self.base_dest)
 			.map_pathless_artifact_err(ArtifactAction::Delete)?;
-		artifacts::delete(&path).await?;
+		artifacts::delete(&path, true).await?;
 
 		info!("Deleted artifact file {}", path.display());
 		Ok(path)
@@ -70,7 +70,7 @@ impl Deleter {
 		// Delete each unnecessary artifact path and track any failures
 		let mut failed = ArtifactErrorVec::new();
 		for path in unnecessary_paths {
-			if let Err(err) = artifacts::delete(path).await {
+			if let Err(err) = artifacts::delete(path, true).await {
 				failed.push(err);
 			}
 			info!("Deleted left-over artifact file {}", path.display());

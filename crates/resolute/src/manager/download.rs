@@ -272,7 +272,7 @@ impl<'a> DownloadedArtifact<'a> {
 
 	/// Cancels the artifact. Deletes the downloaded file from the temporary destination.
 	pub async fn cancel(self) -> Result<()> {
-		artifacts::delete(&self.tmp_dest).await?;
+		artifacts::delete(&self.tmp_dest, true).await?;
 		debug!("Deleted temporary artifact file {}", self.tmp_dest.display());
 		Ok(())
 	}
@@ -299,7 +299,7 @@ impl FinalizedArtifact<'_> {
 	/// Deletes the downloaded artifact and renames the old artifact back to its original final destination.
 	pub async fn undo(self) -> Result<()> {
 		// Delete the artifact from its final destination
-		artifacts::delete(&self.final_dest).await?;
+		artifacts::delete(&self.final_dest, true).await?;
 		debug!("Deleted artifact file {}", self.final_dest.display());
 
 		// Rename the old artifact back to the final name if there was one
@@ -319,7 +319,7 @@ impl FinalizedArtifact<'_> {
 	/// Fails if there was no old artifact or if there is an issue during its deletion.
 	pub async fn delete_old(self) -> Result<()> {
 		let old_dest = self.old_dest.ok_or_else(|| Error::NoOldArtifact)?;
-		artifacts::delete(&old_dest).await?;
+		artifacts::delete(&old_dest, true).await?;
 		debug!("Deleted old artifact file {}", old_dest.display());
 		Ok(())
 	}

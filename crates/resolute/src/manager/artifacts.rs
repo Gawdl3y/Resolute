@@ -8,11 +8,21 @@ use tokio::fs;
 use crate::Error;
 
 /// Deletes an artifact file
-pub(crate) async fn delete(path: &Path) -> Result<(), ArtifactError> {
-	fs::remove_file(path)
-		.await
-		.map_artifact_err(ArtifactAction::Delete, path)?;
-	Ok(())
+pub(crate) async fn delete(path: &Path, ignore_nonexistent: bool) -> Result<bool, ArtifactError> {
+	match fs::remove_file(path).await {
+		Ok(..) => Ok(true),
+		Err(err) => {
+			if ignore_nonexistent && err.kind() == std::io::ErrorKind::NotFound {
+				Ok(false)
+			} else {
+				Err(ArtifactError {
+					action: ArtifactAction::Delete,
+					path: Some(path.to_owned()),
+					source: Box::new(err.into()),
+				})
+			}
+		}
+	}
 }
 
 /// Renames an artifact file
