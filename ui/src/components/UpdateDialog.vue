@@ -44,9 +44,11 @@ import { ref, onMounted } from 'vue';
 import { check as tauriCheckUpdate } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
-import { message } from '@tauri-apps/plugin-dialog';
 
+import useNotifications from '../composables/notifications';
 import { renderMarkdown } from '../util';
+
+const notify = useNotifications();
 
 const update = ref(null);
 const releaseNotes = ref('');
@@ -93,10 +95,10 @@ async function installUpdate() {
 		await relaunch();
 	} catch (err) {
 		error(`Error installing app update: ${err}`);
-		message(`Error installing app update:\n${err}`, {
-			title: 'Error installing update',
-			type: 'error',
-		});
+		notify.error(
+			'Error installing update',
+			`Error installing app update:\n${err}`,
+		);
 	} finally {
 		installingUpdate.value = false;
 	}

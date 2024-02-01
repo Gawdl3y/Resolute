@@ -2,9 +2,9 @@ import { ref, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import { lt as semverLt } from 'semver';
 import { invoke } from '@tauri-apps/api/core';
-import { message } from '@tauri-apps/plugin-dialog';
 import { info, error } from '@tauri-apps/plugin-log';
 
+import useNotifications from '../composables/notifications';
 // eslint-disable-next-line no-unused-vars
 import { ResoluteMod, ModVersion } from '../structs/mod';
 
@@ -16,6 +16,7 @@ export const useModStore = defineStore('mods', () => {
 	const hasLoaded = ref(false);
 	const hasLoadedInstalled = ref(false);
 	const operations = reactive({});
+	const notify = useNotifications();
 
 	/**
 	 * Retrieves mod data from the backend
@@ -57,10 +58,7 @@ export const useModStore = defineStore('mods', () => {
 
 			// Alert the user to the failure
 			if (alert) {
-				message(`Error loading mod list:\n${err}`, {
-					title: 'Error loading mods',
-					type: 'error',
-				});
+				notify.error('Error loading mods', `Error loading mod list:\n${err}`);
 			}
 
 			throw err;
@@ -105,10 +103,10 @@ export const useModStore = defineStore('mods', () => {
 		} catch (err) {
 			// Alert the user to the failure
 			error(`Error loading installed mods: ${err}`);
-			message(`Error loading installed mod list:\n${err}`, {
-				title: 'Error loading mods',
-				type: 'error',
-			});
+			notify.error(
+				'Error loading mods',
+				`Error loading installed mod list:\n${err}`,
+			);
 			throw err;
 		} finally {
 			loadingInstalled.value = false;
@@ -140,16 +138,16 @@ export const useModStore = defineStore('mods', () => {
 
 			// Update the mod's installed version and notify the user of the success
 			mod.installedVersion = version;
-			message(`${mod.name} v${version.semver} was successfully installed.`, {
-				title: 'Mod installed',
-				type: 'info',
-			});
+			notify.success(
+				'Mod installed',
+				`${mod.name} v${version.semver} was successfully installed.`,
+			);
 		} catch (err) {
 			// Notify the user of the failure
-			message(`Error installing ${mod.name} v${version.semver}:\n${err}`, {
-				title: 'Error installing mod',
-				type: 'error',
-			});
+			notify.error(
+				'Error installing mod',
+				`Error installing ${mod.name} v${version.semver}:\n${err}`,
+			);
 			throw err;
 		} finally {
 			// Clear the operation for the mod
@@ -175,16 +173,16 @@ export const useModStore = defineStore('mods', () => {
 
 			// Update the mod's installed version and notify the user of the success
 			mod.installedVersion = null;
-			message(`${mod.name} v${version.semver} was successfully uninstalled.`, {
-				title: 'Mod uninstalled',
-				type: 'info',
-			});
+			notify.success(
+				'Mod uninstalled',
+				`${mod.name} v${version.semver} was successfully uninstalled.`,
+			);
 		} catch (err) {
 			// Notify the user of the failure
-			message(`Error uninstalling ${mod.name} v${version.semver}:\n${err}`, {
-				title: 'Error uninstalling mod',
-				type: 'error',
-			});
+			notify.error(
+				'Error uninstalling mod',
+				`Error uninstalling ${mod.name} v${version.semver}:\n${err}`,
+			);
 			throw err;
 		} finally {
 			// Clear the operation for the mod
@@ -223,12 +221,9 @@ export const useModStore = defineStore('mods', () => {
 				const action = semverLt(version.semver, oldVersion.semver)
 					? 'downgraded'
 					: 'updated';
-				message(
+				notify.success(
+					`Mod ${action}`,
 					`${mod.name} v${oldVersion.semver} was successfully ${action} to ${version.semver}.`,
-					{
-						title: `Mod ${action}`,
-						type: 'info',
-					},
 				);
 			}
 		} catch (err) {
@@ -237,12 +232,9 @@ export const useModStore = defineStore('mods', () => {
 				const action = semverLt(version.semver, oldVersion.semver)
 					? 'downgrading'
 					: 'updating';
-				message(
+				notify.error(
+					`Error ${action} mod`,
 					`Error ${action} ${mod.name} v${oldVersion.semver} to v${version.semver}:\n${err}`,
-					{
-						title: `Error ${action} mod`,
-						type: 'error',
-					},
 				);
 			}
 			throw err;
@@ -274,10 +266,10 @@ export const useModStore = defineStore('mods', () => {
 			return mods;
 		} catch (err) {
 			error(`Error discovering installed mods: ${err}`);
-			message(`Error discovering installed mods:\n${err}`, {
-				title: 'Error discovering mods',
-				type: 'error',
-			});
+			notify.error(
+				'Error discovering mods',
+				`Error discovering installed mods:\n${err}`,
+			);
 			throw err;
 		} finally {
 			discovering.value = false;

@@ -42,12 +42,15 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { open, message } from '@tauri-apps/plugin-dialog';
+import { open } from '@tauri-apps/plugin-dialog';
 import { mdiFileCheck, mdiFileSearch } from '@mdi/js';
 
+import useNotifications from '../../composables/notifications';
 import AppHeader from '../AppHeader.vue';
 import CopyButton from '../CopyButton.vue';
 import IconButton from '../IconButton.vue';
+
+const notify = useNotifications();
 
 const checksum = ref('');
 const checksumFile = ref('');
@@ -105,10 +108,7 @@ async function hashFile(file = null) {
 	} catch (err) {
 		checksumFile.value = '';
 		checksum.value = '';
-		message(`Error hashing file:\n${err}`, {
-			title: 'Error hashing file',
-			type: 'error',
-		});
+		notify.error('Error hashing file', `Error hashing file:\n${err}`);
 	} finally {
 		checksumLoading.value = false;
 	}

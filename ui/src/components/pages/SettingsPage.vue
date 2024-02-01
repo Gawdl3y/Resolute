@@ -15,6 +15,10 @@
 					<DropdownSetting setting="theme" :items="themes" label="Theme" />
 					<ResonitePathSetting />
 					<SwitchSetting
+						setting="nativeNotifications"
+						label="Use system notifications"
+					/>
+					<SwitchSetting
 						setting="groupModIndex"
 						label="Group Mod Index by category"
 					/>

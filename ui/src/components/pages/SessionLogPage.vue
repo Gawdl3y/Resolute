@@ -26,12 +26,14 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { message } from '@tauri-apps/plugin-dialog';
 import { mdiFolderText } from '@mdi/js';
 
+import useNotifications from '../../composables/notifications';
 import { escapeHTML } from '../../util';
 import AppHeader from '../AppHeader.vue';
 import IconButton from '../IconButton.vue';
+
+const notify = useNotifications();
 
 const sheet = ref(null);
 const loading = ref(true);
@@ -48,10 +50,10 @@ onMounted(async () => {
 	try {
 		log.value = format(await invoke('get_session_log'));
 	} catch (err) {
-		message(`Error loading session log:\n${err}`, {
-			title: 'Error loading session log',
-			type: 'error',
-		});
+		notify.error(
+			'Error loading session log',
+			`Error loading session log:\n${err}`,
+		);
 	} finally {
 		loading.value = false;
 	}
