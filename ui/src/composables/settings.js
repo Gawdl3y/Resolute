@@ -10,6 +10,7 @@ const currentSettings = reactive({
 	manifestUrl: null,
 	connectTimeout: 10,
 	theme: null,
+	nativeNotifications: true,
 	groupModIndex: true,
 	modsPerPageGrouped: -1,
 	modsPerPageUngrouped: 25,

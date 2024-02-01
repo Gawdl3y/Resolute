@@ -25,15 +25,17 @@
 
 <script setup>
 import { invoke } from '@tauri-apps/api/core';
-import { open, ask, message } from '@tauri-apps/plugin-dialog';
+import { open, ask } from '@tauri-apps/plugin-dialog';
 import { exists as fsExists } from '@tauri-apps/plugin-fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
 import { mdiFolderSearch, mdiAutoFix } from '@mdi/js';
 
+import useNotifications from '../../composables/notifications';
 import useSettings from '../../composables/settings';
 import IconButton from '../IconButton.vue';
 
 defineProps({ variant: { type: String, default: 'solo' } });
+const notify = useNotifications();
 const settings = useSettings();
 
 /**
@@ -76,12 +78,9 @@ async function discoverPath() {
 		// Try discovering a path
 		const path = await invoke('discover_resonite_path');
 		if (!path) {
-			message(
+			notify.info(
+				'No Resonite Folder Found',
 				'No Resonite folder could be automatically located. Please manually choose it instead.',
-				{
-					title: 'No Resonite Folder Found',
-					type: 'info',
-				},
 			);
 			return;
 		}
@@ -93,10 +92,10 @@ async function discoverPath() {
 		);
 		if (answer) await settings.set('resonitePath', path);
 	} catch (err) {
-		message(`Error auto-discovering Resonite path:\n${err}`, {
-			title: 'Autodiscovery Error',
-			type: 'error',
-		});
+		notify.error(
+			'Autodiscovery Error',
+			`Error auto-discovering Resonite path:\n${err}`,
+		);
 	}
 }
 </script>
