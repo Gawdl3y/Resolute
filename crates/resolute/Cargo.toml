@@ -3,7 +3,7 @@ name = "resolute"
 version = "0.6.0"
 description = "Resonite mod manager, manifest, and dependency resolution library"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
-license = "LGPL-3.0"
+license = "LGPL-3.0-or-later"
 repository = "https://github.com/Gawdl3y/Resolute"
 edition = "2021"
 
