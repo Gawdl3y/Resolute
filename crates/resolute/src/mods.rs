@@ -359,7 +359,7 @@ impl ModArtifact {
 		let mut dest = base_path.join(match &self.install_location {
 			Some(install_location) => {
 				let path = Path::new(install_location);
-				path.strip_prefix("/").or::<Error>(Ok(path))?
+				path.strip_prefix("/").unwrap_or(path)
 			}
 			None => Path::new("rml_mods"),
 		});
