@@ -157,12 +157,14 @@ async function discoverInstalledMods() {
 		notify.success(
 			'Discovered mods',
 			`Discovered ${mods.length} installed mods:\n${modList}`,
+			{ alert: true },
 		);
 	} catch (err) {
 		console.error('Error discovering installed mods', err);
 		notify.error(
 			'Error discovering mods',
 			`Error discovering installed mods:\n${err}`,
+			{ alert: true },
 		);
 	}
 }
