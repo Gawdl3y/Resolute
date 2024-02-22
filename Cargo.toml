@@ -6,3 +6,4 @@ resolver = "2"
 lto = "thin"
 codegen-units = 1
 panic = "abort"
+strip = "debuginfo"
