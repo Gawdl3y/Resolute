@@ -49,6 +49,9 @@ app
 						aliases,
 						sets: { mdi },
 					},
+					theme: {
+						cspNonce: 'cEStTGt8qsTHCwfCKZ5ecUbba33gWfrY',
+					},
 				}),
 			)
 			.mount('#app');
