@@ -1,9 +1,12 @@
+use std::path::PathBuf;
+
 use itertools::Itertools;
 use log::{error, info};
+use path_clean::PathClean;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Window};
-use tokio::io::AsyncReadExt;
+use tokio::{fs, io::AsyncReadExt};
 
 use crate::settings;
 
@@ -109,6 +112,39 @@ pub(crate) async fn get_session_log(app: AppHandle) -> Result<String, String> {
 	};
 
 	Ok(log)
+}
+
+/// Opens the Resonite directory or a child of the Resonite directory in the system file browser, ensuring that child
+/// directories actually exist first.
+#[tauri::command]
+pub(crate) async fn open_resonite_dir(app: AppHandle, child: Option<PathBuf>) -> Result<(), String> {
+	let resonite_path =
+		PathBuf::from(settings::require::<String>(&app, "resonitePath").map_err(|err| err.to_string())?);
+
+	// Determine the full path to open
+	let path = match child {
+		Some(child) => {
+			let path = resonite_path.join(child.strip_prefix("/").unwrap_or(&child));
+
+			// Ensure the path didn't traverse above the Resonite path
+			let path = path.clean();
+			if !path.starts_with(resonite_path) {
+				return Err(format!(
+					"Given path ({}) is not a child of the Resonite directory",
+					child.display()
+				));
+			}
+
+			path
+		}
+		None => resonite_path,
+	};
+
+	// Ensure the directory exists, then open it
+	fs::create_dir_all(&path).await.map_err(|err| format!("Unable to ensure existence of Resonite directory: {}", err))?;
+	opener::open(path).map_err(|err| format!("Unable to open Resonite directory: {}", err))?;
+
+	Ok(())
 }
 
 /// Opens the app's log directory in the system file browser

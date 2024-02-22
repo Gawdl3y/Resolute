@@ -7,6 +7,35 @@
 		:grouped="false"
 	>
 		<template #actions="{ resonitePathExists }">
+			<v-menu>
+				<template #activator="{ props: menuProps }">
+					<IconButton
+						:icon="mdiFolder"
+						:disabled="!resonitePathExists"
+						tooltip="Open folder"
+						v-bind="menuProps"
+					/>
+				</template>
+
+				<v-list density="comfortable">
+					<v-list-item title="RML Mods" @click="openResoniteDir('rml_mods')" />
+					<v-list-item
+						title="RML Libraries"
+						@click="openResoniteDir('rml_libs')"
+					/>
+					<v-list-item
+						title="RML Config"
+						@click="openResoniteDir('rml_config')"
+					/>
+					<v-list-item title="Resonite" @click="openResoniteDir()" />
+					<v-list-item title="Resonite Logs" @click="openResoniteDir('Logs')" />
+					<v-list-item
+						title="Resonite Libraries"
+						@click="openResoniteDir('Libraries')"
+					/>
+				</v-list>
+			</v-menu>
+
 			<IconButton
 				:icon="mdiToyBrickSearch"
 				:loading="modStore.discovering"
@@ -28,9 +57,10 @@
 
 <script setup>
 import { computed } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
 import { ask } from '@tauri-apps/plugin-dialog';
 import { info, error } from '@tauri-apps/plugin-log';
-import { mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
+import { mdiFolder, mdiToyBrickSearch, mdiUpdate } from '@mdi/js';
 
 import useNotifications from '../../composables/notifications';
 import useModStore from '../../stores/mods';
@@ -167,5 +197,13 @@ async function discoverInstalledMods() {
 			{ alert: true },
 		);
 	}
+}
+
+/**
+ * Ensures the existence of and opens a Resonite directory or child directory in the default file browser
+ * @param {String} [child] Child directory to open
+ */
+async function openResoniteDir(child = null) {
+	await invoke('open_resonite_dir', { child });
 }
 </script>

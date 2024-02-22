@@ -3737,6 +3737,7 @@ dependencies = [
  "native_db",
  "once_cell",
  "opener",
+ "path-clean",
  "reqwest",
  "resolute",
  "serde",

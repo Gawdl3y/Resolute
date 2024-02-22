@@ -84,6 +84,7 @@ fn main() -> anyhow::Result<()> {
 			commands::system::verify_resonite_path,
 			commands::system::hash_file,
 			commands::system::get_session_log,
+			commands::system::open_resonite_dir,
 			commands::system::open_log_dir,
 			commands::settings::resonite_path_changed,
 			commands::settings::connect_timeout_changed,
