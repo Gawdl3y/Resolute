@@ -20,13 +20,11 @@ pub(crate) fn get_app_info(app: AppHandle) -> Result<AppInfo, String> {
 	let config = app.config();
 	Ok(AppInfo {
 		name: config
-			.package
 			.product_name
 			.clone()
 			.ok_or_else(|| "Unable to get app name".to_owned())?,
-		identifier: config.tauri.bundle.identifier.clone(),
+		identifier: config.identifier.clone(),
 		version: config
-			.package
 			.version
 			.clone()
 			.ok_or_else(|| "Unable to get app version".to_owned())?,

@@ -87,7 +87,7 @@ pub fn run() -> anyhow::Result<()> {
 			commands::settings::connect_timeout_changed,
 		])
 		.setup(|app| {
-			let window = app.get_window("main").ok_or("unable to get main window")?;
+			let window = app.get_webview_window("main").ok_or("unable to get main window")?;
 
 			// Workaround for poor resize performance on Windows
 			window.on_window_event(|event| {
@@ -121,7 +121,7 @@ pub fn run() -> anyhow::Result<()> {
 			#[cfg(debug_assertions)]
 			{
 				let mut context = tauri::generate_context!();
-				context.config_mut().tauri.bundle.identifier += ".debug";
+				context.config_mut().identifier += ".debug";
 				context
 			},
 			#[cfg(not(debug_assertions))]
@@ -129,9 +129,7 @@ pub fn run() -> anyhow::Result<()> {
 				tauri::generate_context!()
 			},
 		)
-		.with_context(|| "Unable to initialize Tauri application")?;
-
-	Ok(())
+		.with_context(|| "Unable to initialize Tauri application")
 }
 
 /// Initializes the app
@@ -139,7 +137,7 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 	let config = app.config();
 	info!(
 		"Resolute v{} initializing",
-		config.package.version.clone().unwrap_or_else(|| "Unknown".to_owned())
+		config.version.clone().unwrap_or_else(|| "Unknown".to_owned())
 	);
 
 	#[cfg(debug_assertions)]
@@ -271,7 +269,7 @@ async fn autodiscover_resonite_path(app: &AppHandle) -> Result<(), anyhow::Error
 /// Builds the error window for a given error, then closes the main window
 fn build_error_window(app: &AppHandle, err: anyhow::Error) {
 	let init_script = format!("globalThis.error = `{:?}`;", err);
-	tauri::WindowBuilder::new(app, "error", tauri::WindowUrl::App("error.html".into()))
+	tauri::WebviewWindowBuilder::new(app, "error", tauri::WebviewUrl::App("error.html".into()))
 		.title("Resolute")
 		.center()
 		.resizable(false)
@@ -279,7 +277,10 @@ fn build_error_window(app: &AppHandle, err: anyhow::Error) {
 		.initialization_script(&init_script)
 		.build()
 		.expect("Error occurred while initializing and the error window couldn't be displayed");
-	let _ = app.get_window("main").expect("unable to get main window").close();
+	let _ = app
+		.get_webview_window("main")
+		.expect("unable to get main window")
+		.close();
 }
 
 /// Builds a manifest config that takes the user-configured settings into account
@@ -313,12 +314,12 @@ pub(crate) fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyh
 	debug!("Building HTTP client, connectTimeout = {}s", connect_timeout);
 
 	// Grab some details about the application
-	let package = &app.config().package;
-	let name = package
+	let config = &app.config();
+	let name = config
 		.product_name
 		.as_ref()
 		.ok_or_else(|| anyhow!("Unable to get app product name"))?;
-	let version = package
+	let version = config
 		.version
 		.as_ref()
 		.ok_or_else(|| anyhow!("Unable to get app version"))?;
