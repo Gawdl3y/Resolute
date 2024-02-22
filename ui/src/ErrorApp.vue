@@ -57,7 +57,10 @@ const themeMediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 const systemTheme = ref(themeMediaMatcher.matches ? 'dark' : 'light');
 
 const error = globalThis.error;
-const errorRows = Math.min(Math.max(error.match(/\n/g).length + 2, 5), 10);
+const errorRows = Math.min(
+	Math.max((error.match(/\n/g)?.length ?? 0) + 2, 5),
+	10,
+);
 
 onMounted(() => {
 	info('ErrorApp mounted - showing error window');
