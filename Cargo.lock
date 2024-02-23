@@ -3708,7 +3708,7 @@ dependencies = [
 
 [[package]]
 name = "resolute"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "futures-util",
  "log",
@@ -3729,7 +3729,7 @@ dependencies = [
 
 [[package]]
 name = "resolute-app"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "itertools",
