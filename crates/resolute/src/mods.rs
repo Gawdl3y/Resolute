@@ -6,6 +6,7 @@ use std::{
 };
 
 use once_cell::sync::Lazy;
+use path_clean::PathClean;
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -15,8 +16,11 @@ use native_db::*;
 #[cfg(feature = "db")]
 use native_model::{native_model, Model};
 
-use crate::manifest::{
-	ManifestAuthors, ManifestData, ManifestEntryArtifact, ManifestEntryDependencies, ManifestEntryVersions,
+use crate::{
+	manifest::{
+		ManifestAuthors, ManifestData, ManifestEntryArtifact, ManifestEntryDependencies, ManifestEntryVersions,
+	},
+	Error,
 };
 
 /// Group string for unrecognized mods
@@ -346,6 +350,41 @@ impl ModArtifact {
 		self.url.as_str().starts_with(UNRECOGNIZED_ARTIFACT_BASE_URL.as_str())
 	}
 
+	/// Gets the full final destination path for the artifact within a base path.
+	/// Fails if the final destination is outside of the base path or if there are any issues building the path.
+	pub fn dest_within(&self, base_path: impl AsRef<Path>) -> crate::Result<PathBuf> {
+		let base_path = base_path.as_ref();
+
+		// Add the artifact's install location to the path
+		let mut dest = base_path.join(match &self.install_location {
+			Some(install_location) => {
+				let path = Path::new(install_location);
+				path.strip_prefix("/").unwrap_or(path)
+			}
+			None => Path::new("rml_mods"),
+		});
+
+		// Add the artifact's filename to the path
+		let filename = match &self.filename {
+			Some(filename) => OsString::from(filename),
+			None => self
+				.infer_filename()
+				.ok_or_else(|| Error::Path(format!("unable to infer filename from url: {}", self.url)))?
+				.to_owned(),
+		};
+		dest.push(&filename);
+
+		// Ensure the final path is inside the base path
+		let final_dest = dest.clean();
+		if !final_dest.starts_with(base_path) {
+			return Err(Error::Path(
+				"artifact's final destination is not a subdirectory of the base destination".to_owned(),
+			));
+		}
+
+		Ok(final_dest)
+	}
+
 	/// Creates a new unrecognized artifact from details about an encountered artifact file
 	pub fn new_unrecognized(
 		filename: impl AsRef<str>,
@@ -376,6 +415,40 @@ impl ModArtifact {
 			filename: Some(filename.to_owned()),
 			install_location: Some(install_location),
 		}
+	}
+
+	/// Gets the temporary destination path for an artifact from its final destination path.
+	/// Fails if there is no filename in the input path.
+	pub fn tmp_dest(dest: impl AsRef<Path>) -> crate::Result<PathBuf> {
+		let dest = dest.as_ref();
+		let mut filename = dest
+			.file_name()
+			.ok_or_else(|| {
+				Error::Path(format!(
+					"unable to build temporary destination for final destination ({})",
+					dest.display()
+				))
+			})?
+			.to_owned();
+		filename.push(".new");
+		Ok(dest.with_file_name(filename))
+	}
+
+	/// Gets the old (existing, being replaced) destination path for an artifact from its final destination path.
+	/// Fails if there is no filename in the input path.
+	pub fn old_dest(dest: impl AsRef<Path>) -> crate::Result<PathBuf> {
+		let dest = dest.as_ref();
+		let mut filename = dest
+			.file_name()
+			.ok_or_else(|| {
+				Error::Path(format!(
+					"unable to build old destination for final destination ({})",
+					dest.display()
+				))
+			})?
+			.to_owned();
+		filename.push(".old");
+		Ok(dest.with_file_name(filename))
 	}
 }
 

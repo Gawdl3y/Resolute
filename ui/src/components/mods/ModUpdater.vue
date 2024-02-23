@@ -1,11 +1,5 @@
 <template>
-	<slot
-		:update="update"
-		:busy="busy"
-		:updating="updating"
-		:updated="updated"
-		:error="error"
-	/>
+	<slot :update :busy :updating :updated :error />
 </template>
 
 <script setup>

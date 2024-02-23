@@ -49,6 +49,20 @@ export function renderMarkdown(markdown) {
 }
 
 /**
+ * Replaces all HTML special characters with HTML entities
+ * @param {string} text
+ * @returns {string}
+ */
+export function escapeHTML(text) {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
+/**
  * Inserts HTML <wbr> tags in between CamelCase word sections (and sanitizes the input)
  * @param {*} text
  * @returns
@@ -82,7 +96,12 @@ export function disableTextSelection(node = document) {
 	node.addEventListener(
 		'selectstart',
 		(evt) => {
-			if (isInput || !(evt.target instanceof HTMLInputElement)) {
+			const target = evt.target;
+			const el = target.closest ? target : target.parentElement;
+			const whitelisted = Boolean(el.closest('.text-selectable'));
+			const blocked = isInput || !(target instanceof HTMLInputElement);
+
+			if (!whitelisted && blocked) {
 				evt.preventDefault();
 				window.getSelection().removeAllRanges();
 				return false;

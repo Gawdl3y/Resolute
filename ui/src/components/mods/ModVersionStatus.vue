@@ -4,12 +4,14 @@
 			<div class="d-flex h-100 position-relative">
 				<v-scroll-y-transition>
 					<div
-						:key="mod.versionTextClass ?? 'plain'"
 						v-bind="tooltipProps"
+						:key="mod.versionTextClass ?? 'plain'"
 						class="d-flex gc-2 align-center justify-space-between position-absolute h-100"
 						:class="mod.versionTextClass"
 					>
-						{{ (mod.installedVersion ?? mod.latestVersion).label }}
+						<span :class="{ 'text-decoration-line-through': mod.isDeprecated }">
+							{{ (mod.installedVersion ?? mod.latestVersion).label }}
+						</span>
 
 						<v-icon v-if="mod.hasUpdate" :icon="mdiAlert" size="small" />
 						<v-icon

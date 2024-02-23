@@ -15,8 +15,17 @@
 					<DropdownSetting setting="theme" :items="themes" label="Theme" />
 					<ResonitePathSetting />
 					<SwitchSetting
+						setting="nativeNotifications"
+						label="Use system notifications"
+					/>
+					<SwitchSetting
 						setting="groupModIndex"
 						label="Group Mod Index by category"
+					/>
+					<SwitchSetting
+						setting="showDeprecated"
+						label="Show deprecated mods"
+						class="mb-4"
 					/>
 					<v-btn @click="settings.current.setupGuideDone = false">
 						Setup guide
@@ -45,6 +54,7 @@
 						setting="modAuthorTools"
 						label="Show mod authoring tools"
 					/>
+					<SwitchSetting setting="console" label="Show console" />
 				</v-container>
 			</v-window-item>
 		</v-window>

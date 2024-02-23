@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use steamlocate::SteamDir;
 
 use crate::{
-	manager::ArtifactPaths,
 	mods::{ModVersion, ResoluteMod, ResoluteModMap},
 	Result,
 };
@@ -52,7 +51,7 @@ pub fn discover_mods(base_path: impl AsRef<Path>, mods: ResoluteModMap) -> Resul
 pub fn discover_mods_by_checksum(base_path: impl AsRef<Path>, mods: &ResoluteModMap) -> Result<ResoluteModMap> {
 	let mut discovered = ResoluteModMap::new();
 	let mut checksums: HashMap<PathBuf, Option<String>> = HashMap::new();
-	let base_path = base_path.as_ref().to_path_buf();
+	let base_path = base_path.as_ref();
 
 	'mods: for (id, rmod) in mods {
 		'versions: for (semver, version) in &rmod.versions {
@@ -62,8 +61,8 @@ pub fn discover_mods_by_checksum(base_path: impl AsRef<Path>, mods: &ResoluteMod
 				trace!("Checking for artifact {} from mod {} v{}", artifact, rmod, semver);
 
 				// Build the path that the artifact would use
-				let path = match ArtifactPaths::try_new(artifact, &base_path) {
-					Ok(paths) => base_path.join(paths.final_dest),
+				let path = match artifact.dest_within(base_path) {
+					Ok(path) => path,
 					Err(_err) => continue 'versions,
 				};
 

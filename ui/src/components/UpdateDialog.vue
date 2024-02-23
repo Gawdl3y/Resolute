@@ -1,17 +1,17 @@
 <template>
 	<v-dialog v-model="showDialog" persistent scrollable style="max-width: 960px">
 		<v-card
-			:title="`Resolute v${updateDetails?.version} is available!`"
+			:title="`Resolute v${update?.version} is available!`"
 			subtitle="Would you like to install the update now?"
 		>
 			<v-card-text>
-				<div v-if="updateDetails?.notes">
+				<div v-if="releaseNotes">
 					<h3 class="text-h5">Release Notes</h3>
 					<v-divider class="my-2" />
 					<!-- eslint-disable vue/no-v-html -->
 					<div
 						class="pa-2 text-body-1 release-notes"
-						v-html="updateDetails.notes"
+						v-html="releaseNotes"
 					></div>
 					<!-- eslint-enable vue/no-v-html -->
 				</div>
@@ -21,14 +21,14 @@
 				<v-spacer />
 
 				<v-btn
-					:disabled="updateDetails?.installing"
+					:disabled="installingUpdate"
 					variant="plain"
 					@click="showDialog = false"
 				>
 					Not now
 				</v-btn>
 				<v-btn
-					:loading="updateDetails?.installing"
+					:loading="installingUpdate"
 					class="text-primary font-weight-bold"
 					@click="installUpdate"
 				>
@@ -40,30 +40,23 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import {
-	checkUpdate as tauriCheckUpdate,
-	installUpdate as tauriInstallUpdate,
-	onUpdaterEvent as tauriOnUpdaterEvent,
-} from '@tauri-apps/api/updater';
-import { relaunch } from '@tauri-apps/api/process';
-import { info, error } from 'tauri-plugin-log-api';
-import { message } from '@tauri-apps/api/dialog';
+import { ref, onMounted } from 'vue';
+import { check as tauriCheckUpdate } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { info, error } from '@tauri-apps/plugin-log';
 
+import useNotifications from '../composables/notifications';
 import { renderMarkdown } from '../util';
 
-const updateDetails = reactive({});
+const notify = useNotifications();
+
+const update = ref(null);
+const releaseNotes = ref('');
+const installingUpdate = ref(false);
 const showDialog = ref(false);
-let unlistenToUpdaterEvents = null;
 
 onMounted(async () => {
-	unlistenToUpdaterEvents = await tauriOnUpdaterEvent(onUpdaterEvent);
 	checkForUpdate();
-});
-
-onUnmounted(() => {
-	unlistenToUpdaterEvents();
-	unlistenToUpdaterEvents = null;
 });
 
 /**
@@ -72,13 +65,11 @@ onUnmounted(() => {
 async function checkForUpdate() {
 	// Check for an update
 	try {
-		const { shouldUpdate, manifest } = await tauriCheckUpdate();
-		if (!shouldUpdate) return;
+		update.value = await tauriCheckUpdate();
+		if (!update.value) return;
 
-		info(`App update available (v${manifest.version})`);
-		console.debug('App update manifest', manifest);
-		updateDetails.manifest = manifest;
-		updateDetails.version = manifest.version;
+		info(`App update available (v${update.value.version})`);
+		console.debug('App update', update.value);
 	} catch (err) {
 		error(`Error checking for app updates: ${err}`);
 		return;
@@ -86,7 +77,7 @@ async function checkForUpdate() {
 
 	// Render the release notes
 	try {
-		updateDetails.notes = renderMarkdown(updateDetails.manifest.body);
+		releaseNotes.value = renderMarkdown(update.value.body);
 	} catch (err) {
 		error(`Error rendering app release notes: ${err}`);
 	}
@@ -99,27 +90,18 @@ async function checkForUpdate() {
  */
 async function installUpdate() {
 	try {
-		updateDetails.installing = true;
-		await tauriInstallUpdate();
+		installingUpdate.value = true;
+		await update.value.downloadAndInstall();
 		await relaunch();
 	} catch (err) {
 		error(`Error installing app update: ${err}`);
-		message(`Error installing app update:\n${err}`, {
-			title: 'Error installing update',
-			type: 'error',
-		});
+		notify.error(
+			'Error installing update',
+			`Error installing app update:\n${err}`,
+		);
 	} finally {
-		updateDetails.installing = false;
+		installingUpdate.value = false;
 	}
-}
-
-/**
- * Handles app updater events
- * @param {Object} data
- */
-function onUpdaterEvent({ error, status }) {
-	if (error) error(`App updater error received (${status}): ${error}`);
-	else info(`App updater event received: ${status}`);
 }
 </script>
 

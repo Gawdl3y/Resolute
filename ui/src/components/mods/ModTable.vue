@@ -1,11 +1,11 @@
 <template>
 	<v-data-table
 		ref="dataTable"
-		:headers="headers"
-		:items="items"
+		:headers
+		:items
 		item-key="id"
 		:items-per-page="settings.current[modsPerPageSetting]"
-		:loading="loading"
+		:loading
 		:search="filter"
 		filter-mode="some"
 		:group-by="groupBy"
@@ -17,82 +17,65 @@
 		<template #item="{ item: mod }">
 			<tr
 				tabindex="0"
-				style="cursor: pointer"
+				class="mod-table-row"
+				:class="{ deprecated: mod.isDeprecated }"
 				@click="emit('showModDetails', mod)"
 			>
 				<td v-if="groupBy"></td>
 				<!-- eslint-disable vue/no-v-html -->
-				<td
-					style="min-width: 12em; max-width: 16em; overflow-wrap: break-word"
-					v-html="wrappableCamelCase(mod.name)"
-				></td>
+				<td class="mod-name" v-html="wrappableCamelCase(mod.name)"></td>
 				<!-- eslint-enable vue/no-v-html -->
 				<td>{{ mod.description }}</td>
 				<td v-if="!groupBy">{{ mod.category }}</td>
-				<td style="width: 7em"><ModVersionStatus :mod="mod" /></td>
+				<td class="mod-version"><ModVersionStatus :mod /></td>
 				<td>
 					<div class="d-flex flex-nowrap justify-end">
 						<ModUninstaller
 							v-if="mod.installedVersion"
 							v-slot="{ uninstall, uninstalling, busy }"
-							:mod="mod"
+							:mod
 						>
-							<v-tooltip text="Uninstall" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mdiDelete"
-										:disabled="disabled || (busy && !uninstalling)"
-										:loading="uninstalling"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="uninstall"
-									/>
-								</template>
-							</v-tooltip>
+							<IconButton
+								:icon="mdiDelete"
+								:disabled="disabled || (busy && !uninstalling)"
+								:loading="uninstalling"
+								tooltip="Uninstall"
+								variant="plain"
+								density="comfortable"
+								@click.stop="uninstall"
+							/>
 						</ModUninstaller>
 
 						<ModInstaller
 							v-if="!mod.hasUpdate && !mod.isUnrecognized"
 							v-slot="{ install, installing, busy }"
-							:mod="mod"
+							:mod
 						>
-							<v-tooltip
-								:text="mod.installedVersion ? 'Reinstall' : 'Install'"
-								:open-delay="500"
-							>
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
-										:disabled="disabled || (busy && !installing)"
-										:loading="installing"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="install"
-									/>
-								</template>
-							</v-tooltip>
+							<IconButton
+								:icon="mod.installedVersion ? mdiRefresh : mdiDownload"
+								:disabled="disabled || (busy && !installing)"
+								:loading="installing"
+								:tooltip="mod.installedVersion ? 'Reinstall' : 'Install'"
+								variant="plain"
+								density="comfortable"
+								@click.stop="install"
+							/>
 						</ModInstaller>
 
 						<ModUpdater
 							v-else-if="mod.hasUpdate"
 							v-slot="{ update, updating, busy }"
-							:mod="mod"
+							:mod
 						>
-							<v-tooltip text="Update" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<v-btn
-										:icon="mdiUpdate"
-										:disabled="disabled || (busy && !updating)"
-										:loading="updating"
-										variant="plain"
-										density="comfortable"
-										v-bind="activator"
-										@click.stop="update"
-									/>
-								</template>
-							</v-tooltip>
+							<IconButton
+								:icon="mdiUpdate"
+								:disabled="disabled || (busy && !updating)"
+								:loading="updating"
+								tooltip="Update"
+								variant="plain"
+								density="comfortable"
+								@click.stop="update"
+							/>
 						</ModUpdater>
 					</div>
 				</td>
@@ -114,20 +97,13 @@
 					style="cursor: pointer"
 					@click="toggleGroup(item)"
 				>
-					<v-tooltip
-						:text="isGroupOpen(item) ? 'Collapse' : 'Expand'"
-						:open-delay="500"
-					>
-						<template #activator="{ props: activator }">
-							<v-btn
-								size="small"
-								variant="text"
-								:icon="isGroupOpen(item) ? '$expand' : '$next'"
-								v-bind="activator"
-								@click.stop="toggleGroup(item)"
-							/>
-						</template>
-					</v-tooltip>
+					<IconButton
+						:icon="isGroupOpen(item) ? '$expand' : '$next'"
+						:tooltip="isGroupOpen(item) ? 'Collapse' : 'Expand'"
+						variant="text"
+						size="small"
+						@click.stop="toggleGroup(item)"
+					/>
 
 					{{ item.value }} ({{ item.items.length }})
 				</td>
@@ -160,6 +136,7 @@ import ModVersionStatus from './ModVersionStatus.vue';
 import ModInstaller from './ModInstaller.vue';
 import ModUninstaller from './ModUninstaller.vue';
 import ModUpdater from './ModUpdater.vue';
+import IconButton from '../IconButton.vue';
 
 const props = defineProps({
 	mods: { type: Object, default: null },
@@ -197,7 +174,11 @@ const headers = computed(() => {
 /**
  * Items for the data table
  */
-const items = computed(() => (props.mods ? Object.values(props.mods) : []));
+const items = computed(() => {
+	const mods = props.mods ? Object.values(props.mods) : [];
+	if (settings.current.showDeprecated) return mods;
+	return mods.filter((mod) => !mod.isDeprecated || mod.installedVersion);
+});
 
 /**
  * groupBy parameter for the data table - automatically adjusted based on whether mods should be grouped
@@ -286,3 +267,23 @@ function collapseAllGroups() {
 	}
 }
 </script>
+
+<style>
+.mod-table-row {
+	cursor: pointer;
+}
+
+.mod-table-row.deprecated {
+	background: rgba(var(--v-theme-error), var(--v-selected-opacity));
+}
+
+.mod-table-row .mod-name {
+	min-width: 12em;
+	max-width: 16em;
+	overflow-wrap: break-word;
+}
+
+.mod-table-row .mod-version {
+	width: 7em;
+}
+</style>

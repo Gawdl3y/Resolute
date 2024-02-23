@@ -2,45 +2,40 @@
 	<v-text-field
 		v-model="settings.current.resonitePath"
 		label="Resonite path"
-		:variant="variant"
+		:variant
 		readonly
 	>
 		<template #append-inner>
-			<v-tooltip text="Autodetect" :open-delay="500">
-				<template #activator="{ props: activator }">
-					<v-btn
-						v-bind="activator"
-						:icon="mdiAutoFix"
-						variant="text"
-						@click="discoverPath"
-					/>
-				</template>
-			</v-tooltip>
+			<IconButton
+				:icon="mdiAutoFix"
+				tooltip="Autodetect"
+				variant="text"
+				@click="discoverPath"
+			/>
 
-			<v-tooltip text="Choose folder" :open-delay="500">
-				<template #activator="{ props: activator }">
-					<v-btn
-						v-bind="activator"
-						:icon="mdiFolderSearch"
-						variant="text"
-						@click="choosePath"
-					/>
-				</template>
-			</v-tooltip>
+			<IconButton
+				:icon="mdiFolderSearch"
+				tooltip="Choose folder"
+				variant="text"
+				@click="choosePath"
+			/>
 		</template>
 	</v-text-field>
 </template>
 
 <script setup>
-import { invoke } from '@tauri-apps/api';
-import { open, ask, message } from '@tauri-apps/api/dialog';
-import { exists as fsExists } from '@tauri-apps/api/fs';
+import { invoke } from '@tauri-apps/api/core';
+import { open, ask } from '@tauri-apps/plugin-dialog';
+import { exists as fsExists } from '@tauri-apps/plugin-fs';
 import { join as pathJoin } from '@tauri-apps/api/path';
 import { mdiFolderSearch, mdiAutoFix } from '@mdi/js';
 
+import useNotifications from '../../composables/notifications';
 import useSettings from '../../composables/settings';
+import IconButton from '../IconButton.vue';
 
 defineProps({ variant: { type: String, default: 'solo' } });
+const notify = useNotifications();
 const settings = useSettings();
 
 /**
@@ -83,12 +78,9 @@ async function discoverPath() {
 		// Try discovering a path
 		const path = await invoke('discover_resonite_path');
 		if (!path) {
-			message(
+			notify.info(
+				'No Resonite Folder Found',
 				'No Resonite folder could be automatically located. Please manually choose it instead.',
-				{
-					title: 'No Resonite Folder Found',
-					type: 'info',
-				},
 			);
 			return;
 		}
@@ -100,10 +92,10 @@ async function discoverPath() {
 		);
 		if (answer) await settings.set('resonitePath', path);
 	} catch (err) {
-		message(`Error auto-discovering Resonite path:\n${err}`, {
-			title: 'Autodiscovery Error',
-			type: 'error',
-		});
+		notify.error(
+			'Autodiscovery Error',
+			`Error auto-discovering Resonite path:\n${err}`,
+		);
 	}
 }
 </script>

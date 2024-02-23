@@ -2,12 +2,6 @@
 	<v-navigation-drawer :rail="!isExpanded" permanent width="180">
 		<v-list nav>
 			<SidebarItem
-				label="Dashboard"
-				path="/"
-				:icon="mdiViewDashboard"
-				:expanded="isExpanded"
-			/>
-			<SidebarItem
 				label="Mod Index"
 				path="/mods"
 				:icon="mdiPackageDown"
@@ -27,6 +21,19 @@
 				:expanded="isExpanded"
 			/>
 			<SidebarItem
+				v-if="settings.current.console"
+				label="Console"
+				path="/log"
+				:icon="mdiConsole"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
+				label="About"
+				path="/about"
+				:icon="mdiInformation"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
 				label="Settings"
 				path="/settings"
 				:icon="mdiCog"
@@ -36,20 +43,18 @@
 
 		<template #append>
 			<v-list nav>
-				<v-tooltip
+				<SimpleTooltip
+					v-slot="{ props }"
 					:text="isExpanded ? 'Collapse' : 'Expand'"
-					:open-delay="500"
 					:disabled="isExpanded"
 				>
-					<template #activator="{ props }">
-						<v-list-item
-							:title="isExpanded ? 'Collapse' : 'Expand'"
-							:prepend-icon="isExpanded ? mdiMenuOpen : mdiMenuClose"
-							v-bind="props"
-							@click="toggle"
-						/>
-					</template>
-				</v-tooltip>
+					<v-list-item
+						v-bind="props"
+						:title="isExpanded ? 'Collapse' : 'Expand'"
+						:prepend-icon="isExpanded ? mdiMenuOpen : mdiMenuClose"
+						@click="toggle"
+					/>
+				</SimpleTooltip>
 			</v-list>
 		</template>
 	</v-navigation-drawer>
@@ -58,10 +63,11 @@
 <script setup>
 import { ref } from 'vue';
 import {
-	mdiViewDashboard,
 	mdiPackageDown,
 	mdiPackageCheck,
 	mdiToolbox,
+	mdiConsole,
+	mdiInformation,
 	mdiCog,
 	mdiMenuClose,
 	mdiMenuOpen,
@@ -70,6 +76,7 @@ import {
 import useSettings from '../composables/settings';
 import sidebarBus from '../sidebar-bus';
 import SidebarItem from './SidebarItem.vue';
+import SimpleTooltip from './SimpleTooltip.vue';
 
 const emit = defineEmits(['toggle']);
 const settings = useSettings();

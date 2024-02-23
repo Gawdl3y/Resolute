@@ -1,16 +1,10 @@
 <template>
-	<slot
-		:uninstall="uninstall"
-		:busy="busy"
-		:uninstalling="uninstalling"
-		:uninstalled="uninstalled"
-		:error="error"
-	/>
+	<slot :uninstall :busy :uninstalling :uninstalled :error />
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { ask } from '@tauri-apps/api/dialog';
+import { ask } from '@tauri-apps/plugin-dialog';
 
 import useModStore from '../../stores/mods';
 

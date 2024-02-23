@@ -1,16 +1,16 @@
 [package]
 name = "resolute-app"
-version = "0.7.1"
+version = "0.8.0"
 description = "Resolute, a mod manager for Resonite"
 authors = ["Schuyler Cebulskie <me@gawdl3y.dev>"]
-license = ""
-repository = ""
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Gawdl3y/Resolute"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.0.0-beta.4", features = [] }
 
 [dependencies]
 resolute = { path = "../resolute" }
@@ -22,6 +22,8 @@ log = "0.4"
 sha2 = "0.10"
 native_db = "0.5"
 once_cell = "1.19"
+itertools = "0.12"
+path-clean = "1.0"
 opener = "0.6"
 reqwest = { version = "0.11", features = [
 	"rustls-tls",
@@ -30,22 +32,17 @@ reqwest = { version = "0.11", features = [
 	"brotli",
 	"deflate",
 ], default-features = false }
-tauri = { version = "1.5", features = [
-	"updater",
-	"dialog-ask",
-	"dialog-message",
-	"dialog-open",
-	"fs-exists",
-	"path-all",
-	"process-relaunch",
-	"shell-open",
-] }
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = [
-	"colored",
-] }
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri = { version = "2.0.0-beta.6", features = [] }
+tauri-plugin-dialog = "2.0.0-beta.1"
+tauri-plugin-fs = "2.0.0-beta.1"
+tauri-plugin-notification = "2.0.0-beta.1"
+tauri-plugin-process = "2.0.0-beta.1"
+tauri-plugin-shell = "2.0.0-beta.1"
+tauri-plugin-updater = "2.0.0-beta.1"
+tauri-plugin-log = "2.0.0-beta.1"
+tauri-plugin-single-instance = "2.0.0-beta.2"
+tauri-plugin-window-state = "2.0.0-beta.1"
+tauri-plugin-store = "2.0.0-beta.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

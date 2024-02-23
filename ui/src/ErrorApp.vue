@@ -30,7 +30,7 @@
 						class="text-mono"
 					>
 						<template #append-inner>
-							<FieldCopyButton :text="error" />
+							<CopyButton :text="error" />
 						</template>
 					</v-textarea>
 				</v-card-text>
@@ -46,18 +46,21 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
-import { relaunch } from '@tauri-apps/api/process';
-import { info } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { info } from '@tauri-apps/plugin-log';
 import { mdiAlert } from '@mdi/js';
 
-import FieldCopyButton from './components/FieldCopyButton.vue';
+import CopyButton from './components/CopyButton.vue';
 
 const themeMediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 const systemTheme = ref(themeMediaMatcher.matches ? 'dark' : 'light');
 
 const error = globalThis.error;
-const errorRows = Math.min(Math.max(error.match(/\n/g).length + 2, 5), 10);
+const errorRows = Math.min(
+	Math.max((error.match(/\n/g)?.length ?? 0) + 2, 5),
+	10,
+);
 
 onMounted(() => {
 	info('ErrorApp mounted - showing error window');

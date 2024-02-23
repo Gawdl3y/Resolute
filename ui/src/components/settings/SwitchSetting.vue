@@ -1,8 +1,9 @@
 <template>
 	<v-switch
 		v-model="settings.current[setting]"
-		:label="label"
+		:label
 		color="primary"
+		hide-details
 		@update:model-value="save"
 	/>
 </template>

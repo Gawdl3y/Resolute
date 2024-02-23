@@ -1,5 +1,5 @@
 <template>
-	<v-app :theme="theme">
+	<v-app :theme>
 		<v-layout class="rounded rounded-md">
 			<AppSidebar />
 			<router-view />
@@ -12,8 +12,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
-import { info } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { info } from '@tauri-apps/plugin-log';
 
 import useSettings from './composables/settings';
 import AppSidebar from './components/AppSidebar.vue';

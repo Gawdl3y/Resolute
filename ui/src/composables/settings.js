@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
-import { invoke } from '@tauri-apps/api';
-import { Store } from 'tauri-plugin-store-api';
-import { info } from 'tauri-plugin-log-api';
+import { invoke } from '@tauri-apps/api/core';
+import { Store } from '@tauri-apps/plugin-store';
+import { info } from '@tauri-apps/plugin-log';
 
 let store;
 let storeUnlisten;
@@ -10,10 +10,13 @@ const currentSettings = reactive({
 	manifestUrl: null,
 	connectTimeout: 10,
 	theme: null,
+	nativeNotifications: true,
 	groupModIndex: true,
 	modsPerPageGrouped: -1,
 	modsPerPageUngrouped: 25,
+	showDeprecated: false,
 	modAuthorTools: false,
+	console: false,
 	setupGuideDone: false,
 	allowClosingSetupGuide: false,
 	modsAutodiscovered2: false,

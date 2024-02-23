@@ -15,18 +15,14 @@
 						readonly
 					>
 						<template #append-inner>
-							<v-tooltip text="Select file" :open-delay="500">
-								<template #activator="{ props: activator }">
-									<FieldCopyButton :text="checksum" :hidden="checksumLoading" />
-									<v-btn
-										v-bind="activator"
-										variant="text"
-										:icon="mdiFileSearch"
-										:loading="checksumLoading"
-										@click="hashFile()"
-									/>
-								</template>
-							</v-tooltip>
+							<CopyButton :text="checksum" :hidden="checksumLoading" />
+							<IconButton
+								:icon="mdiFileSearch"
+								:loading="checksumLoading"
+								tooltip="Select file"
+								variant="text"
+								@click="hashFile()"
+							/>
 						</template>
 					</v-text-field>
 				</v-col>
@@ -44,13 +40,17 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { open, message } from '@tauri-apps/api/dialog';
+import { open } from '@tauri-apps/plugin-dialog';
 import { mdiFileCheck, mdiFileSearch } from '@mdi/js';
 
+import useNotifications from '../../composables/notifications';
 import AppHeader from '../AppHeader.vue';
-import FieldCopyButton from '../FieldCopyButton.vue';
+import CopyButton from '../CopyButton.vue';
+import IconButton from '../IconButton.vue';
+
+const notify = useNotifications();
 
 const checksum = ref('');
 const checksumFile = ref('');
@@ -65,12 +65,12 @@ onMounted(async () => {
 	unlistenToFileDrop = await listen('tauri://file-drop', (evt) => {
 		console.debug('File drop received', evt);
 		fileHovering.value = false;
-		hashFile(evt.payload[0]);
+		hashFile(evt.payload.paths[0]);
 	});
 
 	unlistenToFileHover = await listen('tauri://file-drop-hover', (evt) => {
 		console.debug('File hover received', evt);
-		if (evt.payload && evt.payload.length > 0) {
+		if (evt.payload && evt.payload.paths.length > 0) {
 			fileHovering.value = true;
 		}
 	});
@@ -96,7 +96,7 @@ onUnmounted(() => {
  */
 async function hashFile(file = null) {
 	// Prompt to choose a file
-	if (!file) file = await open();
+	if (!file) file = (await open())?.path;
 	if (!file) return;
 
 	// Request the backend to checksum the selected file
@@ -108,10 +108,7 @@ async function hashFile(file = null) {
 	} catch (err) {
 		checksumFile.value = '';
 		checksum.value = '';
-		message(`Error hashing file:\n${err}`, {
-			title: 'Error hashing file',
-			type: 'error',
-		});
+		notify.error('Error hashing file', `Error hashing file:\n${err}`);
 	} finally {
 		checksumLoading.value = false;
 	}

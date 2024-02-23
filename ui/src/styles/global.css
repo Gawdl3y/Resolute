@@ -32,15 +32,48 @@ a:focus:not(.v-list-item) {
 }
 
 pre {
-	font-family: 'Roboto Mono';
+	font-family: 'Roboto Mono', monospace;
 	font-size: 14px;
 }
 
+.text-selectable {
+	cursor: auto !important;
+}
+
 .text-mono {
-	font-family: 'Roboto Mono' !important;
+	font-family: 'Roboto Mono', monospace !important;
 	font-size: 14px !important;
 }
 
 .text-mono .v-field {
 	font-size: 14px !important;
+}
+
+.text-resograd {
+	background: linear-gradient(
+		46deg,
+		#00fffb,
+		#7700ff,
+		#ff0000,
+		#80ff00,
+		#00fffb,
+		#7700ff
+	);
+	background-size: 500%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: 60s ease-in-out infinite running resograd-slide;
+}
+
+@keyframes resograd-slide {
+	0% {
+		background-position: 0% 33%;
+	}
+	50% {
+		background-position: 100% 68%;
+	}
+	100% {
+		background-position: 0% 33%;
+	}
 }
