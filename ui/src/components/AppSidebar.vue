@@ -2,12 +2,6 @@
 	<v-navigation-drawer :rail="!isExpanded" permanent width="180">
 		<v-list nav>
 			<SidebarItem
-				label="Dashboard"
-				path="/"
-				:icon="mdiViewDashboard"
-				:expanded="isExpanded"
-			/>
-			<SidebarItem
 				label="Mod Index"
 				path="/mods"
 				:icon="mdiPackageDown"
@@ -31,6 +25,12 @@
 				label="Console"
 				path="/log"
 				:icon="mdiConsole"
+				:expanded="isExpanded"
+			/>
+			<SidebarItem
+				label="About"
+				path="/about"
+				:icon="mdiInformation"
 				:expanded="isExpanded"
 			/>
 			<SidebarItem
@@ -63,11 +63,11 @@
 <script setup>
 import { ref } from 'vue';
 import {
-	mdiViewDashboard,
 	mdiPackageDown,
 	mdiPackageCheck,
 	mdiToolbox,
 	mdiConsole,
+	mdiInformation,
 	mdiCog,
 	mdiMenuClose,
 	mdiMenuOpen,

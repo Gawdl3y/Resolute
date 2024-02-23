@@ -8,7 +8,7 @@ import { attachConsole } from '@tauri-apps/plugin-log';
 import { disableContextMenu, disableTextSelection } from './util';
 import useApp from './composables/app';
 import AppWrapper from './AppWrapper.vue';
-import DashboardPage from './components/pages/DashboardPage.vue';
+import AboutPage from './components/pages/AboutPage.vue';
 import AllModsPage from './components/pages/AllModsPage.vue';
 import InstalledModsPage from './components/pages/InstalledModsPage.vue';
 import ModAuthorToolsPage from './components/pages/ModAuthorToolsPage.vue';
@@ -29,11 +29,12 @@ app
 		const router = createRouter({
 			history: createWebHashHistory(),
 			routes: [
-				{ path: '/', component: DashboardPage },
+				{ path: '/', redirect: { path: '/mods' } },
 				{ path: '/mods', component: AllModsPage },
 				{ path: '/mods/installed', component: InstalledModsPage },
 				{ path: '/author-tools', component: ModAuthorToolsPage },
 				{ path: '/log', component: SessionLogPage },
+				{ path: '/about', component: AboutPage },
 				{ path: '/settings', component: SettingsPage },
 			],
 		});
