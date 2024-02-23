@@ -10,7 +10,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta.3", features = [] }
+tauri-build = { version = "2.0.0-beta.4", features = [] }
 
 [dependencies]
 resolute = { path = "../resolute" }
@@ -32,7 +32,7 @@ reqwest = { version = "0.11", features = [
 	"brotli",
 	"deflate",
 ], default-features = false }
-tauri = { version = "2.0.0-beta.4", features = [] }
+tauri = { version = "2.0.0-beta.6", features = [] }
 tauri-plugin-dialog = "2.0.0-beta.1"
 tauri-plugin-fs = "2.0.0-beta.1"
 tauri-plugin-notification = "2.0.0-beta.1"
@@ -40,7 +40,7 @@ tauri-plugin-process = "2.0.0-beta.1"
 tauri-plugin-shell = "2.0.0-beta.1"
 tauri-plugin-updater = "2.0.0-beta.1"
 tauri-plugin-log = "2.0.0-beta.1"
-tauri-plugin-single-instance = "2.0.0-beta.1"
+tauri-plugin-single-instance = "2.0.0-beta.2"
 tauri-plugin-window-state = "2.0.0-beta.1"
 tauri-plugin-store = "2.0.0-beta.1"
 
