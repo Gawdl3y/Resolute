@@ -62,8 +62,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install Rust 1.76
-        uses: dtolnay/rust-toolchain@1.76
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install system dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-22.04'
