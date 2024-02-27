@@ -10,7 +10,7 @@
 	},
 	"app": {
 		"security": {
-			"csp": "default-src 'self'; connect-src 'self' ipc.localhost; style-src 'self' 'nonce-cEStTGt8qsTHCwfCKZ5ecUbba33gWfrY'; img-src *"
+			"csp": "default-src 'self'; connect-src 'self' ipc.localhost ipc://localhost; style-src 'self' 'nonce-cEStTGt8qsTHCwfCKZ5ecUbba33gWfrY'; img-src *"
 		},
 		"windows": [
 			{
