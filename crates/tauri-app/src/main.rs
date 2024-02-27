@@ -167,7 +167,7 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 		// Open the database
 		let resolver = handle.path();
 		let db_path = resolver
-			.data_dir()
+			.app_data_dir()
 			.context("Unable to get data dir")?
 			.join("resolute.db");
 		info!("Opening database at {}", db_path.display());
@@ -202,17 +202,17 @@ async fn create_app_dirs(app: &AppHandle) -> Result<(), String> {
 	let results: [Result<(), io::Error>; 3] = join!(
 		fs::create_dir(
 			resolver
-				.data_dir()
+				.app_data_dir()
 				.map_err(|err| format!("unable to get data dir: {}", err))?
 		),
 		fs::create_dir(
 			resolver
-				.config_dir()
+				.app_config_dir()
 				.map_err(|err| format!("unable to get config dir: {}", err))?
 		),
 		fs::create_dir(
 			resolver
-				.cache_dir()
+				.app_cache_dir()
 				.map_err(|err| format!("unable to get cache dir: {}", err))?
 		),
 	)
@@ -292,7 +292,7 @@ pub(crate) fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config,
 	let mut config = manifest::Config {
 		cache_file_path: Some(
 			app.path()
-				.cache_dir()
+				.app_cache_dir()
 				.map_err(|err| format!("Unable to locate cache directory: {}", err))?
 				.join("resonite-mod-manifest.json"),
 		),
