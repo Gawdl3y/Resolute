@@ -1,7 +1,7 @@
 <template>
 	<v-dialog v-model="showDialog" persistent scrollable style="max-width: 960px">
 		<v-card
-			:title="`Resolute v${update?.version} is available!`"
+			:title="`Resolute v${newVersion} is available!`"
 			subtitle="Would you like to install the update now?"
 		>
 			<v-card-text>
@@ -50,7 +50,8 @@ import { renderMarkdown } from '../util';
 
 const notify = useNotifications();
 
-const update = ref(null);
+let update = null;
+const newVersion = ref('');
 const releaseNotes = ref('');
 const installingUpdate = ref(false);
 const showDialog = ref(false);
@@ -65,11 +66,13 @@ onMounted(async () => {
 async function checkForUpdate() {
 	// Check for an update
 	try {
-		update.value = await tauriCheckUpdate();
-		if (!update.value) return;
+		update = await tauriCheckUpdate();
+		if (!update) return;
 
-		info(`App update available (v${update.value.version})`);
-		console.debug('App update', update.value);
+		newVersion.value = update.version;
+
+		info(`App update available (v${newVersion.value})`);
+		console.debug('App update', update);
 	} catch (err) {
 		error(`Error checking for app updates: ${err}`);
 		return;
@@ -77,7 +80,7 @@ async function checkForUpdate() {
 
 	// Render the release notes
 	try {
-		releaseNotes.value = renderMarkdown(update.value.body);
+		releaseNotes.value = renderMarkdown(update.body);
 	} catch (err) {
 		error(`Error rendering app release notes: ${err}`);
 	}
@@ -91,9 +94,10 @@ async function checkForUpdate() {
 async function installUpdate() {
 	try {
 		installingUpdate.value = true;
-		await update.value.downloadAndInstall();
+		await update.downloadAndInstall();
 		await relaunch();
 	} catch (err) {
+		console.error(err);
 		error(`Error installing app update: ${err}`);
 		notify.error(
 			'Error installing update',
