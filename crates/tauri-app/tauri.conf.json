@@ -1,7 +1,7 @@
 {
 	"identifier": "dev.gawdl3y.resolute",
 	"productName": "Resolute",
-	"version": "0.8.2",
+	"version": "0.8.3",
 	"build": {
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build",
