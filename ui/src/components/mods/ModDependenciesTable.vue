@@ -5,8 +5,14 @@
 			<th scope="col" class="text-start ps-4">Version</th>
 		</thead>
 		<tbody>
-			<tr v-for="depend of depends" :key="depend.mod">
-				<td>{{ depend.mod }}</td>
+			<tr v-for="depend of depends" :key="depend.id">
+				<td>
+					<span v-if="depend.name">
+						{{ depend.name }}
+						<span class="text-disabled">({{ depend.id }})</span>
+					</span>
+					<span v-else>{{ depend.id }}</span>
+				</td>
 				<td>{{ depend.semver }}</td>
 			</tr>
 		</tbody>
@@ -25,7 +31,8 @@ const depends = computed(() =>
 	Object.entries(props.dependencies).map(([id, semver]) => {
 		const mod = modStore?.mods[id];
 		return {
-			mod: mod ? `${mod.name} (${id})` : id,
+			name: mod ? mod.name : null,
+			id,
 			semver,
 		};
 	}),
