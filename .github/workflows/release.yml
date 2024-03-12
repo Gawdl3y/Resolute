@@ -33,7 +33,11 @@ jobs:
               "categories": [
                 {
                   "title": "## 🚀 Features",
-                  "labels": ["enhancement", "feature"]
+                  "labels": ["feature", "feat"]
+                },
+                {
+                  "title": "## 💪 Enhancements",
+                  "labels": ["enhancement"]
                 },
                 {
                   "title": "## 🐛 Fixes",
@@ -41,15 +45,15 @@ jobs:
                 },
                 {
                   "title": "## 🧪 Tests",
-                  "labels": ["test"]
+                  "labels": ["test", "tests"]
                 },
                 {
                   "title": "## 📦 Dependencies",
-                  "labels": ["dependency", "dependencies"]
+                  "labels": ["dependency", "dependencies", "deps"]
                 },
                 {
                   "title": "## 🔧 Tooling",
-                  "labels": ["tooling", "ci/cd"]
+                  "labels": ["tooling", "tool", "ci/cd"]
                 },
                 {
                   "title": "## 📝 Documentation",
