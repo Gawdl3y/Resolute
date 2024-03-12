@@ -5,7 +5,10 @@
 		<img :src="logo" width="150" height="150" class="mb-4" />
 
 		<h1 class="text-h2 font-weight-black text-resograd mb-2">Resolute</h1>
-		<p class="text-subtitle text-disabled mb-6">v{{ app.version.value }}</p>
+		<p class="text-subtitle text-disabled mb-6">
+			v{{ app.version.value }}
+			<span v-if="app.debug.value">(debug)</span>
+		</p>
 
 		<p class="text-body-1 mb-1">
 			A mod manager for

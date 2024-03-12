@@ -50,7 +50,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-22.04, windows-latest, macos-latest]
+        include:
+          - platform: ubuntu-22.04
+            rust-targets: x86_64-unknown-linux-gnu
+            tauri-target: x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            rust-targets: x86_64-pc-windows-msvc
+            tauri-target: x86_64-pc-windows-msvc
+          - platform: macos-latest
+            rust-targets: x86_64-apple-darwin,aarch64-apple-darwin
+            tauri-target: universal-apple-darwin
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -64,6 +73,8 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
 
       - name: Install system dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-22.04'
@@ -88,7 +99,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.updaterKey }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.updaterKeyPassword }}
         with:
-          args: ${{ inputs.args }}
+          args: ${{ inputs.args }} --target ${{ matrix.tauri-target }}
           tagName: ${{ inputs.tagName }}
           releaseName: ${{ inputs.releaseName }}
           releaseBody: ${{ inputs.releaseBody }}
