@@ -144,10 +144,10 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 	);
 
 	#[cfg(debug_assertions)]
-	{
-		warn!("App is in debug mode");
-		debug!("Tauri version: {}", tauri::VERSION);
-	}
+	warn!("App is in debug mode");
+
+	debug!("Operating system: {} {}", env::consts::OS, env::consts::ARCH);
+	debug!("Tauri version: {}", tauri::VERSION);
 
 	// Ensure all needed app directories are created
 	if let Err(err) = create_app_dirs(app).await {
