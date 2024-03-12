@@ -32,7 +32,7 @@
 		"semver": "^7.6.0",
 		"vue": "^3.4.21",
 		"vue-router": "^4.3.0",
-		"vuetify": "3.5.8"
+		"vuetify": "^3.5.8"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.0.2",
