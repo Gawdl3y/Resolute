@@ -112,6 +112,7 @@ onMounted(() => {
 	// Automatically discover mods if it hasn't been done before and the setup guide has already been done
 	const shouldAutodiscover =
 		!settings.current.modsAutodiscovered2 &&
+		settings.current.resonitePath &&
 		settings.current.setupGuideDone &&
 		!modStore.discovering;
 	if (shouldAutodiscover) {

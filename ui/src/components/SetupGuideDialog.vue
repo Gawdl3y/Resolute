@@ -227,7 +227,11 @@ function advanceStep() {
 		}, 500);
 
 		// Kick off mod autodiscovery
-		if (!settings.current.modsAutodiscovered2 && !modStore.discovering) {
+		const shouldAutodiscover =
+			!settings.current.modsAutodiscovered2 &&
+			settings.current.resonitePath &&
+			!modStore.discovering;
+		if (shouldAutodiscover) {
 			modStore
 				.discover()
 				.then(() => {
