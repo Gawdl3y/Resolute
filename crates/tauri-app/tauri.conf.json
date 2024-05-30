@@ -18,7 +18,7 @@
 				"visible": false,
 				"minWidth": 900,
 				"minHeight": 600,
-				"fileDropEnabled": true
+				"dragDropEnabled": true
 			}
 		]
 	},
