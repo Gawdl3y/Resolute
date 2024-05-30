@@ -57,37 +57,32 @@ const checksumFile = ref('');
 const checksumLoading = ref(false);
 
 const fileHovering = ref(false);
-let unlistenToFileDrop;
-let unlistenToFileHover;
-let unlistenToFileCancelled;
+let unlistenToDragDrop;
+let unlistenToDragHover;
+let unlistenToDragCancelled;
 
 onMounted(async () => {
-	unlistenToFileDrop = await listen('tauri://file-drop', (evt) => {
+	unlistenToDragDrop = await listen('tauri://drop', (evt) => {
 		console.debug('File drop received', evt);
 		fileHovering.value = false;
 		hashFile(evt.payload.paths[0]);
 	});
 
-	unlistenToFileHover = await listen('tauri://file-drop-hover', (evt) => {
+	unlistenToDragHover = await listen('tauri://drop-over', (evt) => {
 		console.debug('File hover received', evt);
-		if (evt.payload && evt.payload.paths.length > 0) {
-			fileHovering.value = true;
-		}
+		if (evt.payload) fileHovering.value = true;
 	});
 
-	unlistenToFileCancelled = await listen(
-		'tauri://file-drop-cancelled',
-		(evt) => {
-			console.debug('File cancelled received', evt);
-			fileHovering.value = false;
-		},
-	);
+	unlistenToDragCancelled = await listen('tauri://drag-cancelled', (evt) => {
+		console.debug('File cancelled received', evt);
+		fileHovering.value = false;
+	});
 });
 
 onUnmounted(() => {
-	unlistenToFileDrop();
-	unlistenToFileHover();
-	unlistenToFileCancelled();
+	unlistenToDragDrop();
+	unlistenToDragHover();
+	unlistenToDragCancelled();
 });
 
 /**
