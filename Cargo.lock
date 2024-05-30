@@ -3733,6 +3733,7 @@ dependencies = [
  "native_model",
  "once_cell",
  "path-clean",
+ "redb 2.1.0",
  "reqwest",
  "semver",
  "serde",

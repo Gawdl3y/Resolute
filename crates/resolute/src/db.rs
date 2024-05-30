@@ -1,7 +1,7 @@
-use std::path::Path;
+use std::{io::ErrorKind, path::Path};
 
-use log::info;
-use native_db::{Database, DatabaseBuilder};
+use log::{info, warn};
+use native_db::{db_type::Error as NativeDbError, Database, DatabaseBuilder};
 
 use crate::{mods::ResoluteMod, Error, Result};
 
@@ -14,7 +14,22 @@ impl<'a> ResoluteDatabase<'a> {
 	/// Opens a database using a provided native_db builder
 	pub fn open(builder: &'a DatabaseBuilder, db_path: impl AsRef<Path>) -> Result<Self> {
 		info!("Opening database at {}", db_path.as_ref().display());
-		let db = builder.create(&db_path)?;
+
+		// Try to open an already-existing database
+		let db = match builder.open(&db_path) {
+			// If it fails because it doesn't exist, then go ahead and create one instead
+			Err(NativeDbError::Io(err))
+			| Err(NativeDbError::RedbDatabaseError(redb::DatabaseError::Storage(redb::StorageError::Io(err))))
+				if err.kind() == ErrorKind::NotFound =>
+			{
+				warn!("Database doesn't exist; creating");
+				builder.create(&db_path)?
+			}
+
+			Ok(db) => db,
+			Err(err) => return Err(err.into()),
+		};
+
 		info!("Database initialized");
 		Ok(Self { db })
 	}
