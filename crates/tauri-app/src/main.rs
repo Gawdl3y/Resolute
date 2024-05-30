@@ -17,7 +17,11 @@ mod commands;
 mod settings;
 
 /// Lazily-initialized database builder for the Resolute DB
-static mut DB_BUILDER: Lazy<DatabaseBuilder> = Lazy::new(DatabaseBuilder::new);
+static DB_BUILDER: Lazy<DatabaseBuilder> = Lazy::new(|| {
+	let mut builder = DatabaseBuilder::new();
+	ResoluteDatabase::define_models(&mut builder).expect("unable to define models on database builder");
+	builder
+});
 
 fn main() -> anyhow::Result<()> {
 	// Set up and run the Tauri app
@@ -170,8 +174,7 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 			.app_data_dir()
 			.context("Unable to get data dir")?
 			.join("resolute.db");
-		info!("Opening database at {}", db_path.display());
-		let db = unsafe { ResoluteDatabase::open(&mut DB_BUILDER, db_path) }.context("Unable to open database")?;
+		let db = ResoluteDatabase::open(&DB_BUILDER, db_path).context("Unable to open database")?;
 
 		// Get the Resonite path setting
 		info!("Retrieving Resonite path from settings store");

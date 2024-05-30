@@ -12,12 +12,17 @@ pub struct ResoluteDatabase<'a> {
 
 impl<'a> ResoluteDatabase<'a> {
 	/// Opens a database using a provided native_db builder
-	pub fn open(builder: &'a mut DatabaseBuilder, db_path: impl AsRef<Path>) -> Result<Self> {
-		builder.define::<ResoluteMod>()?;
+	pub fn open(builder: &'a DatabaseBuilder, db_path: impl AsRef<Path>) -> Result<Self> {
+		info!("Opening database at {}", db_path.as_ref().display());
 		let db = builder.create(&db_path)?;
-
-		info!("Database initialized at {}", db_path.as_ref().display());
+		info!("Database initialized");
 		Ok(Self { db })
+	}
+
+	/// Defines the database models on a native_db builder
+	pub fn define_models(builder: &mut DatabaseBuilder) -> Result<()> {
+		builder.define::<ResoluteMod>()?;
+		Ok(())
 	}
 
 	/// Retrieves all mods stored in the database
