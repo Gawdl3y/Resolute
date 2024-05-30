@@ -38,7 +38,7 @@ export function useNotifications() {
 			await alertMessage(msg, {
 				title,
 				icon,
-				type: type === 'success' ? 'info' : type,
+				kind: type === 'success' ? 'info' : type,
 			});
 			return;
 		}
