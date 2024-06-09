@@ -53,6 +53,16 @@ Resolute loads its mod index and metadata from the
   - Conflict warnings
 - CLI
 
+## Downloads
+
+All release builds are available in the [Releases](https://github.com/Gawdl3y/Resolute/releases) section, but below are
+some quick links for the most common ones from the latest release ([v0.8.3](https://github.com/Gawdl3y/Resolute/releases/tag/v0.8.3)).
+
+- [Windows installer (exe)](https://github.com/Gawdl3y/Resolute/releases/download/v0.8.3/Resolute_0.8.3_x64-setup.exe)
+- [Linux AppImage (Universal)](https://github.com/Gawdl3y/Resolute/releases/download/v0.8.3/resolute_0.8.3_amd64.AppImage)
+- [Linux RPM (Fedora, RHEL, etc.)](https://github.com/Gawdl3y/Resolute/releases/download/v0.8.3/resolute-0.8.3-1.x86_64.rpm)
+- [Linux DEB (Debian, Ubuntu, etc.)](https://github.com/Gawdl3y/Resolute/releases/download/v0.8.3/resolute_0.8.3_amd64.deb)
+
 ## Contributing
 
 All contributions are welcome!
