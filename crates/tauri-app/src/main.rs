@@ -38,7 +38,6 @@
 	clippy::map_err_ignore,
 	// clippy::missing_docs_in_private_items,
 	clippy::mixed_read_write_in_expression,
-	clippy::multiple_crate_versions,
 	clippy::multiple_inherent_impl,
 	clippy::mutex_atomic,
 	clippy::negative_feature_names,
