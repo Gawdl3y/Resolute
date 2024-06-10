@@ -1,5 +1,8 @@
+#![allow(clippy::module_name_repetitions)]
+
 use std::{
 	collections::HashMap,
+	fmt,
 	path::PathBuf,
 	time::{Duration, SystemTime},
 };
@@ -20,7 +23,7 @@ pub const MANIFEST_URL: &str =
 	"https://raw.githubusercontent.com/resonite-modding-group/resonite-mod-manifest/main/manifest.json";
 
 /// Client for performing manifest-related actions
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Client {
 	config: Config,
 	http_client: reqwest::Client,
@@ -28,11 +31,13 @@ pub struct Client {
 
 impl Client {
 	/// Creates a new Client
-	pub fn new(config: Config, http_client: reqwest::Client) -> Self {
+	#[must_use]
+	pub const fn new(config: Config, http_client: reqwest::Client) -> Self {
 		Self { config, http_client }
 	}
 
-	/// Creates a new ClientBuilder with defaults set
+	/// Creates a new builder with defaults set
+	#[must_use]
 	pub fn builder() -> ClientBuilder {
 		ClientBuilder::default()
 	}
@@ -112,7 +117,7 @@ impl Client {
 }
 
 /// Builder for a Client with a custom configuration
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ClientBuilder {
 	config: Config,
 	http_client: reqwest::Client,
@@ -120,58 +125,67 @@ pub struct ClientBuilder {
 
 impl ClientBuilder {
 	/// Creates a new builder with defaults set
+	#[must_use]
 	pub fn new() -> Self {
 		Self::default()
 	}
 
 	/// Sets the URL of the remote manifest file for downloads
+	#[must_use]
 	pub fn url<U>(mut self, url: U) -> Self
 	where
 		U: TryInto<Url>,
-		<U as TryInto<Url>>::Error: std::fmt::Debug,
+		<U as TryInto<Url>>::Error: fmt::Debug,
 	{
 		self.config.remote_url = url.try_into().expect("unable to parse given url");
 		self
 	}
 
 	/// Sets the cache file path to use
+	#[must_use]
 	pub fn cache(mut self, path: PathBuf) -> Self {
 		self.config.cache_file_path = Some(path);
 		self
 	}
 
 	/// Disables caching (and clears any cache file path that was previously set)
+	#[must_use]
 	pub fn no_cache(mut self) -> Self {
 		self.config.cache_file_path = None;
 		self
 	}
 
 	/// Marks the cache as stale after a provided duration
-	pub fn stale_after(mut self, duration: Duration) -> Self {
+	#[must_use]
+	pub const fn stale_after(mut self, duration: Duration) -> Self {
 		self.config.cache_stale_after = Some(duration);
 		self
 	}
 
 	/// Ensures the cache is never considered stale
-	pub fn never_stale(mut self) -> Self {
+	#[must_use]
+	pub const fn never_stale(mut self) -> Self {
 		self.config.cache_stale_after = None;
 		self
 	}
 
 	/// Sets the HTTP client to use
+	#[must_use]
 	pub fn http_client(mut self, http_client: reqwest::Client) -> Self {
 		self.http_client = http_client;
 		self
 	}
 
 	/// Creates a Client using this builder's configuration and HTTP client
+	#[must_use]
 	pub fn build(self) -> Client {
 		Client::new(self.config, self.http_client)
 	}
 }
 
 /// Configuration for manifest Client behavior
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Config {
 	pub remote_url: Url,
 	pub cache_file_path: Option<PathBuf>,
@@ -179,20 +193,11 @@ pub struct Config {
 }
 
 impl Config {
-	/// Creates a new manifest configuration with defaults set
-	pub fn new() -> Self {
-		Self {
-			remote_url: Url::parse(MANIFEST_URL).expect("cannot parse default manifest url"),
-			cache_file_path: None,
-			cache_stale_after: Some(Duration::from_secs(60 * 60 * 6)),
-		}
-	}
-
-	/// Attempts to parse a URL and assign it to the remote_url field
+	/// Attempts to parse a URL and assign it to the `remote_url` field
 	pub fn set_remote_url<U>(&mut self, url: U) -> Result<()>
 	where
 		U: TryInto<Url>,
-		<U as TryInto<Url>>::Error: std::fmt::Debug,
+		<U as TryInto<Url>>::Error: fmt::Debug,
 	{
 		self.remote_url = url
 			.try_into()
@@ -203,12 +208,17 @@ impl Config {
 
 impl Default for Config {
 	fn default() -> Self {
-		Self::new()
+		Self {
+			remote_url: Url::parse(MANIFEST_URL).expect("cannot parse default manifest url"),
+			cache_file_path: None,
+			cache_stale_after: Some(Duration::from_secs(60 * 60 * 6)),
+		}
 	}
 }
 
 /// Represents the top-level object in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestData {
 	pub objects: ManifestObjects,
 	#[serde(rename = "schemaVersion")]
@@ -219,7 +229,8 @@ pub struct ManifestData {
 pub type ManifestObjects = HashMap<String, ManifestObject>;
 
 /// Represents a single "objects" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestObject {
 	#[serde(rename = "author")]
 	pub authors: ManifestAuthors,
@@ -230,7 +241,8 @@ pub struct ManifestObject {
 pub type ManifestAuthors = HashMap<String, ManifestAuthor>;
 
 /// Represents a single "author" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestAuthor {
 	pub url: Option<Url>,
 	pub icon: Option<Url>,
@@ -241,7 +253,8 @@ pub struct ManifestAuthor {
 pub type ManifestEntries = HashMap<String, ManifestEntry>;
 
 /// Represents a single "entries" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestEntry {
 	pub name: String,
 	pub description: String,
@@ -261,7 +274,8 @@ pub struct ManifestEntry {
 pub type ManifestEntryVersions = HashMap<Version, ManifestEntryVersion>;
 
 /// Represents a single "versions" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestEntryVersion {
 	pub artifacts: Vec<ManifestEntryArtifact>,
 	pub dependencies: Option<ManifestEntryDependencies>,
@@ -271,7 +285,8 @@ pub struct ManifestEntryVersion {
 }
 
 /// Represents a single "artifacts" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestEntryArtifact {
 	pub url: Url,
 	pub sha256: String,
@@ -284,7 +299,8 @@ pub struct ManifestEntryArtifact {
 pub type ManifestEntryDependencies = HashMap<String, ManifestEntryDependency>;
 
 /// Represents a single "dependencies" or "conflicts" entry in the manifest JSON
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ManifestEntryDependency {
 	pub version: VersionReq,
 }

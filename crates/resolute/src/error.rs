@@ -1,5 +1,11 @@
+use core::result;
+use std::io;
+
+#[cfg(feature = "db")]
+use native_db::db_type;
 use reqwest::StatusCode;
 use semver::Version;
+use tokio::task;
 
 use crate::{
 	manager::artifacts::{ArtifactError, ArtifactErrorVec},
@@ -8,6 +14,7 @@ use crate::{
 
 /// Error returned from a Downloader
 #[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
 pub enum Error {
 	#[error("http connection failed: {0}")]
 	Request(#[from] reqwest::Error),
@@ -16,10 +23,10 @@ pub enum Error {
 	Http(StatusCode),
 
 	#[error("io error: {0}")]
-	Io(#[from] std::io::Error),
+	Io(#[from] io::Error),
 
 	#[error("task error: {0}")]
-	Task(#[from] tokio::task::JoinError),
+	Task(#[from] task::JoinError),
 
 	#[error("unable to process path: {0}")]
 	Path(String),
@@ -60,7 +67,7 @@ pub enum Error {
 
 	#[cfg(feature = "db")]
 	#[error("database error: {0}")]
-	Database(#[from] native_db::db_type::Error),
+	Database(#[from] db_type::Error),
 
 	#[cfg(feature = "db")]
 	#[error("item not found in database: {0}")]
@@ -68,4 +75,4 @@ pub enum Error {
 }
 
 /// Alias for a `Result` with the error type `resolute::Error`.
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = result::Result<T, Error>;

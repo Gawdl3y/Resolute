@@ -17,15 +17,14 @@ use crate::{
 pub const RESONITE_APP: u32 = 2_519_830;
 
 /// Searches for a potenial Resonite game directory
-pub fn discover_resonite(steam: Option<SteamDir>) -> Result<Option<PathBuf>> {
+pub fn resonite(steam: Option<SteamDir>) -> Result<Option<PathBuf>> {
 	// Find a Steam installation if one isn't provided
-	let steam = match steam {
-		Some(steam) => steam,
-		None => {
-			let steam = SteamDir::locate()?;
-			debug!("Steam installation located at {}", steam.path().display());
-			steam
-		}
+	let steam = if let Some(steam) = steam {
+		steam
+	} else {
+		let steam = SteamDir::locate()?;
+		debug!("Steam installation located at {}", steam.path().display());
+		steam
 	};
 
 	// Check the Steam installation for Resonite
@@ -41,14 +40,14 @@ pub fn discover_resonite(steam: Option<SteamDir>) -> Result<Option<PathBuf>> {
 }
 
 /// Searches for any installed mods in a Resonite directory by checksum then filename, including unrecognized mods
-pub fn discover_mods(base_path: impl AsRef<Path>, mods: ResoluteModMap) -> Result<ResoluteModMap> {
-	let mut discovered = discover_mods_by_checksum(&base_path, &mods)?;
-	discovered.extend(discover_mods_by_filename(&base_path, &mods, Some(&discovered))?);
+pub fn mods(base_path: impl AsRef<Path>, mods: &ResoluteModMap) -> Result<ResoluteModMap> {
+	let mut discovered = mods_by_checksum(&base_path, mods)?;
+	discovered.extend(mods_by_filename(&base_path, mods, Some(&discovered))?);
 	Ok(discovered)
 }
 
 /// Searches for any installed mods in a Resonite directory using artifact checksums
-pub fn discover_mods_by_checksum(base_path: impl AsRef<Path>, mods: &ResoluteModMap) -> Result<ResoluteModMap> {
+pub fn mods_by_checksum(base_path: impl AsRef<Path>, mods: &ResoluteModMap) -> Result<ResoluteModMap> {
 	let mut discovered = ResoluteModMap::new();
 	let mut checksums: HashMap<PathBuf, Option<String>> = HashMap::new();
 	let base_path = base_path.as_ref();
@@ -140,7 +139,7 @@ pub fn discover_mods_by_checksum(base_path: impl AsRef<Path>, mods: &ResoluteMod
 }
 
 /// Searches for any installed mods in a Resonite directory using artifact filenames
-pub fn discover_mods_by_filename(
+pub fn mods_by_filename(
 	base_path: impl AsRef<Path>,
 	mods: &ResoluteModMap,
 	already_discovered: Option<&ResoluteModMap>,
@@ -239,36 +238,26 @@ pub fn discover_mods_by_filename(
 
 			// Get a str representation of the filename
 			let filename = artifact_file.file_name();
-			let filename = match filename.to_str() {
-				Some(filename) => filename,
-				None => {
-					error!(
-						"Error converting artifact file name ({:?}) to string",
-						artifact_file.file_name()
-					);
-					continue;
-				}
+			let Some(filename) = filename.to_str() else {
+				error!("Error converting artifact file name ({:?}) to string", filename);
+				continue;
 			};
 
-			// Create an unrecognized mod
-			let rmod = match existing_rmod {
-				Some(rmod) => {
-					let version = ModVersion::new_unrecognized(filename, dirname, sha256);
-					let semver = version.semver.clone();
+			// Create an unrecognized mod or version
+			let rmod = if let Some(rmod) = existing_rmod {
+				let version = ModVersion::new_unrecognized(filename, dirname, sha256);
+				let semver = version.semver.clone();
 
-					let mut rmod = rmod.clone();
-					rmod.versions.insert(semver.clone(), version);
-					rmod.installed_version = Some(semver.clone());
+				let mut rmod = rmod.clone();
+				rmod.versions.insert(semver.clone(), version);
+				rmod.installed_version = Some(semver.clone());
 
-					debug!("Created unrecognized version {} for existing mod {}", semver, rmod);
-					rmod
-				}
-
-				None => {
-					let rmod = ResoluteMod::new_unrecognized(filename, dirname, sha256);
-					debug!("Created unrecognized mod {}", rmod);
-					rmod
-				}
+				debug!("Created unrecognized version {} for existing mod {}", semver, rmod);
+				rmod
+			} else {
+				let rmod = ResoluteMod::new_unrecognized(filename, dirname, sha256);
+				debug!("Created unrecognized mod {}", rmod);
+				rmod
 			};
 
 			discovered.insert(rmod.id.clone(), rmod);

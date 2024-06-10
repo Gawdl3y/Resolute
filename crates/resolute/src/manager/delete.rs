@@ -4,11 +4,13 @@ use std::path::{Path, PathBuf};
 use log::info;
 
 use crate::mods::{ModArtifact, ModVersion};
-use crate::{Error, Result};
+use crate::Error;
 
 use super::artifacts::{self, ArtifactAction, ArtifactError, ArtifactErrorVec, MappableToArtifactError};
 
 /// Handles deleting mods
+#[derive(Debug)]
+#[non_exhaustive]
 pub struct Deleter {
 	pub base_dest: PathBuf,
 }
@@ -21,7 +23,7 @@ impl Deleter {
 	}
 
 	/// Deletes all installed artifacts for a specific mod version
-	pub async fn delete_version(&self, version: &ModVersion) -> core::result::Result<(), ArtifactErrorVec> {
+	pub async fn delete_version(&self, version: &ModVersion) -> Result<(), ArtifactErrorVec> {
 		// Delete all artifacts and track any failed ones
 		let mut failed = ArtifactErrorVec::new();
 		for artifact in &version.artifacts {
@@ -38,7 +40,7 @@ impl Deleter {
 	}
 
 	/// Deletes a single artifact
-	pub async fn delete_artifact(&self, artifact: &ModArtifact) -> core::result::Result<PathBuf, ArtifactError> {
+	pub async fn delete_artifact(&self, artifact: &ModArtifact) -> Result<PathBuf, ArtifactError> {
 		let path = artifact
 			.dest_within(&self.base_dest)
 			.map_pathless_artifact_err(ArtifactAction::Delete)?;
@@ -53,16 +55,16 @@ impl Deleter {
 		&self,
 		old_artifacts: impl IntoIterator<Item = &ModArtifact>,
 		new_artifacts: impl IntoIterator<Item = &ModArtifact>,
-	) -> Result<()> {
+	) -> crate::Result<()> {
 		// Build a list of paths for both the new and old artifacts
 		let new_paths = new_artifacts
 			.into_iter()
 			.map(|artifact| artifact.dest_within(&self.base_dest))
-			.collect::<Result<HashSet<PathBuf>>>()?;
+			.collect::<crate::Result<HashSet<PathBuf>>>()?;
 		let old_paths: HashSet<PathBuf> = old_artifacts
 			.into_iter()
 			.map(|artifact| artifact.dest_within(&self.base_dest))
-			.collect::<Result<HashSet<PathBuf>>>()?;
+			.collect::<crate::Result<HashSet<PathBuf>>>()?;
 
 		// Determine the paths that are no longer needed
 		let unnecessary_paths: Vec<&PathBuf> = old_paths.difference(&new_paths).collect();

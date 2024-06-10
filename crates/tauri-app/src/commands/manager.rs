@@ -3,7 +3,7 @@ use resolute::{
 	manager::{LoadedMods, ModManager},
 	mods::{ModVersion, ResoluteMod},
 };
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
 use crate::{build_manifest_config, settings};
@@ -12,7 +12,7 @@ use crate::{build_manifest_config, settings};
 #[tauri::command]
 pub(crate) async fn load_all_mods(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 	bypass_cache: bool,
 ) -> Result<LoadedMods, String> {
 	let mods = manager
@@ -20,21 +20,19 @@ pub(crate) async fn load_all_mods(
 		.await
 		.get_all_mods(build_manifest_config(&app)?, bypass_cache)
 		.await
-		.map_err(|err| format!("Unable to get all mods from manager: {}", err))?;
+		.map_err(|err| format!("Unable to get all mods from manager: {err}"))?;
 	Ok(mods)
 }
 
 /// Loads installed mods from the manager
 #[tauri::command]
-pub(crate) async fn load_installed_mods(
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
-) -> Result<LoadedMods, String> {
+pub(crate) async fn load_installed_mods(manager: State<'_, Mutex<ModManager<'_>>>) -> Result<LoadedMods, String> {
 	let mods = manager
 		.lock()
 		.await
 		.get_installed_mods()
 		.await
-		.map_err(|err| format!("Unable to get installed mods from manager: {}", err))?;
+		.map_err(|err| format!("Unable to get installed mods from manager: {err}"))?;
 	Ok(mods)
 }
 
@@ -42,7 +40,7 @@ pub(crate) async fn load_installed_mods(
 #[tauri::command]
 pub(crate) async fn install_mod_version(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 	rmod: ResoluteMod,
 	version: ModVersion,
 ) -> Result<(), String> {
@@ -58,8 +56,8 @@ pub(crate) async fn install_mod_version(
 		.install_mod(&rmod, version.semver.to_string(), |_, _| {})
 		.await
 		.map_err(|err| {
-			error!("Failed to download mod {} v{}: {}", rmod.name, version.semver, err);
-			format!("Unable to download mod version: {}", err)
+			error!("Failed to download mod {} v{}: {err}", rmod.name, version.semver);
+			format!("Unable to download mod version: {err}")
 		})?;
 
 	info!("Successfully installed mod {} v{}", rmod.name, version.semver);
@@ -70,7 +68,7 @@ pub(crate) async fn install_mod_version(
 #[tauri::command]
 pub(crate) async fn replace_mod_version(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 	rmod: ResoluteMod,
 	version: ModVersion,
 ) -> Result<(), String> {
@@ -81,14 +79,11 @@ pub(crate) async fn replace_mod_version(
 	manager.set_base_dest(resonite_path);
 
 	// Ensure the mod is installed
-	let old_version = match &rmod.installed_version {
-		Some(version) => version,
-		None => {
-			return Err(format!(
-				"Mod {} doesn't have an installed version to replace",
-				rmod.name
-			))
-		}
+	let Some(old_version) = &rmod.installed_version else {
+		return Err(format!(
+			"Mod {} doesn't have an installed version to replace",
+			rmod.name
+		));
 	};
 
 	// Update the mod to the given version
@@ -98,10 +93,10 @@ pub(crate) async fn replace_mod_version(
 		.await
 		.map_err(|err| {
 			error!(
-				"Failed to replace mod {} v{} with v{}: {}",
-				rmod.name, old_version, version.semver, err
+				"Failed to replace mod {} v{} with v{}: {err}",
+				rmod.name, old_version, version.semver
 			);
-			format!("Unable to replace mod version: {}", err)
+			format!("Unable to replace mod version: {err}")
 		})?;
 
 	info!(
@@ -115,7 +110,7 @@ pub(crate) async fn replace_mod_version(
 #[tauri::command]
 pub(crate) async fn uninstall_mod(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 	rmod: ResoluteMod,
 ) -> Result<(), String> {
 	let mut manager = manager.lock().await;
@@ -125,21 +120,18 @@ pub(crate) async fn uninstall_mod(
 	manager.set_base_dest(resonite_path);
 
 	// Ensure the mod is installed
-	let old_version = match &rmod.installed_version {
-		Some(version) => version,
-		None => {
-			return Err(format!(
-				"Mod {} doesn't have an installed version to uninstall",
-				rmod.name
-			))
-		}
+	let Some(old_version) = &rmod.installed_version else {
+		return Err(format!(
+			"Mod {} doesn't have an installed version to uninstall",
+			rmod.name
+		));
 	};
 
 	// Uninstall the mod
 	info!("Uninstalling mod {} v{}", rmod.name, old_version);
 	manager.uninstall_mod(&rmod).await.map_err(|err| {
-		error!("Failed to uninstall mod {} v{}: {}", rmod.name, old_version, err);
-		format!("Unable to uninstall mod: {}", err)
+		error!("Failed to uninstall mod {} v{}: {err}", rmod.name, old_version);
+		format!("Unable to uninstall mod: {err}")
 	})?;
 
 	info!("Successfully uninstalled mod {} v{}", rmod.name, old_version);
