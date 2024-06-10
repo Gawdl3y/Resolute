@@ -27,7 +27,7 @@ jobs:
           save-if: false
 
       - name: Run Clippy
-        run: cargo clippy
+        run: cargo clippy --all-targets
         env:
           RUSTFLAGS: -Dwarnings
 
