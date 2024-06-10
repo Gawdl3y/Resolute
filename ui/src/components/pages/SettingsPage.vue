@@ -89,7 +89,7 @@ const rules = {
 
 		try {
 			return Boolean(new URL(val));
-		} catch (_err) {
+		} catch {
 			return 'Invalid URL';
 		}
 	},
