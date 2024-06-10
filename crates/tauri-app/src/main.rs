@@ -1,14 +1,85 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![deny(macro_use_extern_crate, meta_variable_misuse, unit_bindings)]
+#![warn(
+	explicit_outlives_requirements,
+	// missing_docs,
+	missing_debug_implementations,
+	single_use_lifetimes,
+	trivial_casts,
+	trivial_numeric_casts,
+	unreachable_pub,
+	unused_crate_dependencies,
+	unused_import_braces,
+	unused_lifetimes,
+	unused_qualifications,
+	variant_size_differences,
+	clippy::pedantic,
+	clippy::absolute_paths,
+	clippy::arithmetic_side_effects,
+	clippy::clone_on_ref_ptr,
+	clippy::cognitive_complexity,
+	clippy::create_dir,
+	clippy::dbg_macro,
+	clippy::empty_enum_variants_with_brackets,
+	clippy::empty_structs_with_brackets,
+	clippy::exhaustive_enums,
+	clippy::exhaustive_structs,
+	clippy::filetype_is_file,
+	clippy::float_cmp_const,
+	clippy::missing_const_for_fn,
+	clippy::fn_to_numeric_cast_any,
+	clippy::format_push_string,
+	clippy::get_unwrap,
+	clippy::if_then_some_else_none,
+	clippy::infinite_loop,
+	clippy::integer_division,
+	clippy::lossy_float_literal,
+	clippy::map_err_ignore,
+	// clippy::missing_docs_in_private_items,
+	clippy::mixed_read_write_in_expression,
+	clippy::multiple_inherent_impl,
+	clippy::mutex_atomic,
+	clippy::negative_feature_names,
+	clippy::panic_in_result_fn,
+	clippy::print_stderr,
+	clippy::print_stdout,
+	clippy::pub_without_shorthand,
+	clippy::rc_buffer,
+	clippy::rc_mutex,
+	clippy::redundant_feature_names,
+	clippy::redundant_type_annotations,
+	clippy::ref_patterns,
+	clippy::rest_pat_in_fully_bound_structs,
+	clippy::same_name_method,
+	clippy::self_named_module_files,
+	clippy::semicolon_inside_block,
+	clippy::str_to_string,
+	clippy::string_lit_chars_any,
+	clippy::string_to_string,
+	clippy::suspicious_xor_used_as_pow,
+	clippy::tests_outside_test_module,
+	clippy::try_err,
+	clippy::undocumented_unsafe_blocks,
+	clippy::unnecessary_safety_comment,
+	clippy::unnecessary_safety_doc,
+	clippy::unnecessary_self_imports,
+	clippy::unneeded_field_pattern,
+	clippy::unwrap_in_result,
+	clippy::unwrap_used,
+	clippy::verbose_file_reads,
+	clippy::wildcard_dependencies,
+)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
-use std::{env, io, time::Duration};
+use std::{env, error::Error, io, thread, time::Duration};
 
 use anyhow::{anyhow, Context};
-use log::{debug, error, info, warn};
+use log::{debug, error, info, warn, LevelFilter};
 use native_db::DatabaseBuilder;
 use once_cell::sync::Lazy;
 use resolute::{db::ResoluteDatabase, discover, manager::ModManager, manifest};
-use tauri::{AppHandle, Manager, WindowEvent};
+use tauri::{async_runtime, App, AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
 use tokio::{fs, join, sync::Mutex};
@@ -35,7 +106,8 @@ fn main() -> anyhow::Result<()> {
 		.plugin(tauri_plugin_store::Builder::default().build())
 		.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
 			debug!("{}, {argv:?}, {cwd}", app.package_info().name);
-			app.emit("single-instance", Payload { args: argv, cwd }).unwrap();
+			app.emit("single-instance", Payload { args: argv, cwd })
+				.expect("Unable to emit single-instance event with payload");
 		}))
 		.plugin(
 			tauri_plugin_window_state::Builder::default()
@@ -52,7 +124,7 @@ fn main() -> anyhow::Result<()> {
 						Target::new(TargetKind::LogDir { file_name: None }),
 					])
 					.max_file_size(1024 * 1024)
-					.level_for("rustls", log::LevelFilter::Debug)
+					.level_for("rustls", LevelFilter::Debug)
 					.build()
 			},
 			#[cfg(not(debug_assertions))]
@@ -93,40 +165,11 @@ fn main() -> anyhow::Result<()> {
 			commands::settings::resonite_path_changed,
 			commands::settings::connect_timeout_changed,
 		])
-		.setup(|app| {
-			let window = app.get_webview_window("main").ok_or("unable to get main window")?;
-
-			// Workaround for poor resize performance on Windows
-			window.on_window_event(|event| {
-				if let WindowEvent::Resized(..) = event {
-					std::thread::sleep(std::time::Duration::from_nanos(5))
-				}
-			});
-
-			// Rename the window and open the dev console in development
-			#[cfg(debug_assertions)]
-			{
-				let mut title = window.title()?;
-				title.push_str(" (debug)");
-				window.set_title(&title)?;
-
-				window.open_devtools();
-			}
-
-			// Initialize the app
-			let handle = app.app_handle().clone();
-			tauri::async_runtime::spawn(async move {
-				if let Err(err) = init(&handle).await {
-					error!("Initialization failed: {}", err);
-					build_error_window(&handle, err);
-				}
-			});
-
-			Ok(())
-		})
+		.setup(setup)
 		.run(
 			#[cfg(debug_assertions)]
 			{
+				#[allow(clippy::str_to_string)]
 				let mut context = tauri::generate_context!();
 				context.config_mut().identifier += ".debug";
 				context
@@ -137,6 +180,38 @@ fn main() -> anyhow::Result<()> {
 			},
 		)
 		.with_context(|| "Unable to initialize Tauri application")
+}
+
+fn setup(app: &mut App) -> Result<(), Box<dyn Error>> {
+	let window = app.get_webview_window("main").ok_or("unable to get main window")?;
+
+	// Workaround for poor resize performance on Windows
+	window.on_window_event(|event| {
+		if let WindowEvent::Resized(..) = event {
+			thread::sleep(Duration::from_nanos(5));
+		}
+	});
+
+	// Rename the window and open the dev console in development
+	#[cfg(debug_assertions)]
+	{
+		let mut title = window.title()?;
+		title.push_str(" (debug)");
+		window.set_title(&title)?;
+
+		window.open_devtools();
+	}
+
+	// Initialize the app
+	let handle = app.app_handle().clone();
+	async_runtime::spawn(async move {
+		if let Err(err) = init(&handle).await {
+			error!("Initialization failed: {}", err);
+			build_error_window(&handle, err);
+		}
+	});
+
+	Ok(())
 }
 
 /// Initializes the app
@@ -160,14 +235,14 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 
 	// Discover the Resonite path in the background if it isn't configured already
 	let handle = app.clone();
-	tauri::async_runtime::spawn(async move {
+	async_runtime::spawn(async move {
 		if let Err(err) = autodiscover_resonite_path(&handle).await {
 			warn!("Unable to autodiscover Resonite path: {}", err);
 		}
 	});
 
 	let handle = app.clone();
-	tauri::async_runtime::spawn_blocking(move || {
+	async_runtime::spawn_blocking(move || {
 		// Open the database
 		let resolver = handle.path();
 		let db_path = resolver
@@ -178,9 +253,9 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 
 		// Get the Resonite path setting
 		info!("Retrieving Resonite path from settings store");
-		let resonite_path = settings::get(&handle, "resonitePath")
+		let resonite_path: String = settings::get(&handle, "resonitePath")
 			.context("Unable to get resonitePath setting")?
-			.unwrap_or_else(|| "".to_owned());
+			.unwrap_or_default();
 		info!("Resonite path: {}", &resonite_path);
 
 		// Set up the shared mod manager
@@ -206,17 +281,17 @@ async fn create_app_dirs(app: &AppHandle) -> Result<(), String> {
 		fs::create_dir(
 			resolver
 				.app_data_dir()
-				.map_err(|err| format!("unable to get data dir: {}", err))?
+				.map_err(|err| format!("unable to get data dir: {err}"))?
 		),
 		fs::create_dir(
 			resolver
 				.app_config_dir()
-				.map_err(|err| format!("unable to get config dir: {}", err))?
+				.map_err(|err| format!("unable to get config dir: {err}"))?
 		),
 		fs::create_dir(
 			resolver
 				.app_cache_dir()
-				.map_err(|err| format!("unable to get cache dir: {}", err))?
+				.map_err(|err| format!("unable to get cache dir: {err}"))?
 		),
 	)
 	.into();
@@ -224,7 +299,7 @@ async fn create_app_dirs(app: &AppHandle) -> Result<(), String> {
 	// Filter out all successful (or already existing) results
 	let errors: Vec<io::Error> = results
 		.into_iter()
-		.filter(|res| res.is_err())
+		.filter(Result::is_err)
 		.map(|res| res.expect_err("somehow had a non-error error when checking app dir creation for errors"))
 		.filter(|err| err.kind() != io::ErrorKind::AlreadyExists)
 		.collect();
@@ -235,7 +310,7 @@ async fn create_app_dirs(app: &AppHandle) -> Result<(), String> {
 		Err(errors
 			.into_iter()
 			.map(|err| err.to_string())
-			.collect::<Vec<String>>()
+			.collect::<Vec<_>>()
 			.join(", "))
 	}
 }
@@ -249,7 +324,7 @@ async fn autodiscover_resonite_path(app: &AppHandle) -> Result<(), anyhow::Error
 		info!("Resonite path not configured, running autodiscovery");
 
 		// Run discovery
-		let resonite_dir = tauri::async_runtime::spawn_blocking(|| discover::discover_resonite(None))
+		let resonite_dir = async_runtime::spawn_blocking(|| discover::resonite(None))
 			.await
 			.context("Unable to spawn blocking task for Resonite path autodiscovery")??;
 
@@ -273,9 +348,10 @@ async fn autodiscover_resonite_path(app: &AppHandle) -> Result<(), anyhow::Error
 }
 
 /// Builds the error window for a given error, then closes the main window
+#[allow(clippy::needless_pass_by_value)]
 fn build_error_window(app: &AppHandle, err: anyhow::Error) {
-	let init_script = format!("globalThis.error = `{:?}`;", err);
-	tauri::WebviewWindowBuilder::new(app, "error", tauri::WebviewUrl::App("error.html".into()))
+	let init_script = format!("globalThis.error = `{err:?}`;");
+	WebviewWindowBuilder::new(app, "error", WebviewUrl::App("error.html".into()))
 		.title("Resolute")
 		.center()
 		.resizable(false)
@@ -292,15 +368,13 @@ fn build_error_window(app: &AppHandle, err: anyhow::Error) {
 /// Builds a manifest config that takes the user-configured settings into account
 pub(crate) fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config, String> {
 	// Build the base config
-	let mut config = manifest::Config {
-		cache_file_path: Some(
-			app.path()
-				.app_cache_dir()
-				.map_err(|err| format!("Unable to locate cache directory: {}", err))?
-				.join("resonite-mod-manifest.json"),
-		),
-		..manifest::Config::default()
-	};
+	let mut config = manifest::Config::default();
+	config.cache_file_path = Some(
+		app.path()
+			.app_cache_dir()
+			.map_err(|err| format!("Unable to locate cache directory: {err}"))?
+			.join("resonite-mod-manifest.json"),
+	);
 
 	// Override the manifest URL if the user has configured a custom one
 	let manifest_url: Option<String> = settings::get(app, "manifestUrl").map_err(|err| err.to_string())?;

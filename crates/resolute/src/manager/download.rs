@@ -1,5 +1,6 @@
 use std::{
-	fmt::Display,
+	fmt,
+	io::ErrorKind,
 	path::{Path, PathBuf},
 };
 
@@ -19,6 +20,7 @@ use super::artifacts::{self, ArtifactAction, ArtifactError, MappableToArtifactEr
 
 /// Handles mod downloads
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Downloader {
 	pub base_dest: PathBuf,
 	pub http_client: Client,
@@ -92,7 +94,7 @@ impl Downloader {
 		}
 
 		// Delete the old artifacts
-		for final_artifact in finalized.into_iter().filter(|artifact| artifact.has_old()) {
+		for final_artifact in finalized.into_iter().filter(FinalizedArtifact::has_old) {
 			let artifact = final_artifact.artifact;
 			if let Err(err) = final_artifact.delete_old().await {
 				error!("Error deleting old artifact ({}.old): {}", artifact, err);
@@ -125,7 +127,7 @@ impl Downloader {
 
 		// If the directory creation failed, ignore the error it if it's just because it already exists
 		if let Err(err) = result {
-			if err.kind() != std::io::ErrorKind::AlreadyExists {
+			if err.kind() != ErrorKind::AlreadyExists {
 				return Err(Error::Artifact(ArtifactError {
 					action: ArtifactAction::Download,
 					path: Some(tmp_dest),
@@ -183,7 +185,7 @@ impl Downloader {
 
 		// Verify the integrity of the downloaded file - if it doesn't match, delete the file
 		let digest = hasher.finalize();
-		let actual = format!("{:x}", digest);
+		let actual = format!("{digest:x}");
 		if actual != checksum.to_lowercase() {
 			let _ = fs::remove_file(dest).await;
 			return Err(Error::Checksum {
@@ -207,23 +209,27 @@ pub struct DownloaderBuilder {
 
 impl DownloaderBuilder {
 	/// Creates a new builder with defaults set
+	#[must_use]
 	pub fn new() -> Self {
 		Self::default()
 	}
 
 	/// Sets the base destination of mod artifacts
+	#[must_use]
 	pub fn base(mut self, base_dest: impl AsRef<Path>) -> Self {
-		self.base_dest = base_dest.as_ref().to_owned();
+		base_dest.as_ref().clone_into(&mut self.base_dest);
 		self
 	}
 
 	/// Sets the HTTP client to use
-	pub fn http_client(mut self, http_client: reqwest::Client) -> Self {
+	#[must_use]
+	pub fn http_client(mut self, http_client: Client) -> Self {
 		self.http_client = http_client;
 		self
 	}
 
 	/// Creates a Client using this builder's configuration and HTTP client
+	#[must_use]
 	pub fn build(self) -> Downloader {
 		Downloader::new(self.base_dest, self.http_client)
 	}
@@ -278,9 +284,9 @@ impl<'a> DownloadedArtifact<'a> {
 	}
 }
 
-impl Display for DownloadedArtifact<'_> {
+impl fmt::Display for DownloadedArtifact<'_> {
 	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		self.artifact.fmt(f)
 	}
 }
@@ -325,14 +331,15 @@ impl FinalizedArtifact<'_> {
 	}
 
 	/// Checks whether there is an old artifact file present that was renamed
-	pub fn has_old(&self) -> bool {
+	#[must_use]
+	pub const fn has_old(&self) -> bool {
 		self.old_dest.is_some()
 	}
 }
 
-impl Display for FinalizedArtifact<'_> {
+impl fmt::Display for FinalizedArtifact<'_> {
 	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		self.artifact.fmt(f)
 	}
 }

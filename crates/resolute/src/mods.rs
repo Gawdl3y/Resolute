@@ -1,7 +1,7 @@
 use std::{
 	collections::HashMap,
 	ffi::OsString,
-	fmt::Display,
+	fmt,
 	path::{Path, PathBuf},
 };
 
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[cfg(feature = "db")]
-use native_db::*;
+use native_db::{native_db, InnerKeyValue};
 #[cfg(feature = "db")]
 use native_model::{native_model, Model};
 
@@ -41,6 +41,7 @@ pub static UNRECOGNIZED_ARTIFACT_BASE_URL: Lazy<Url> = Lazy::new(|| {
 });
 
 /// Builds a mod map from the given raw manifest data
+#[must_use]
 pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
 	manifest
 		.objects
@@ -125,13 +126,14 @@ fn build_mod_version_artifacts(artifacts: Vec<ManifestEntryArtifact>, category: 
 		.collect()
 }
 
-/// ResoniteMods mapped by their ID
+/// `ResoluteMod`s mapped by their ID
 pub type ResoluteModMap = HashMap<String, ResoluteMod>;
 
 /// A single Resonite mod with all information relevant to it
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "db", native_model(id = 1, version = 1))]
 #[cfg_attr(feature = "db", native_db)]
+#[non_exhaustive]
 pub struct ResoluteMod {
 	// The primary_key and secondary_key macros don't work with cfg_attr for whatever reason
 	#[cfg(feature = "db")]
@@ -163,12 +165,14 @@ pub struct ResoluteMod {
 
 impl ResoluteMod {
 	/// Gets the latest version available for the mod
+	#[must_use]
 	pub fn latest_version(&self) -> Option<&ModVersion> {
 		self.versions.values().max_by(|a, b| a.semver.cmp(&b.semver))
 	}
 
 	/// Checks whether there is a newer version of the mod available than the installed version.
 	/// If the mod isn't installed, None is returned.
+	#[must_use]
 	pub fn has_update(&self) -> Option<bool> {
 		match &self.installed_version {
 			Some(installed_version) => Some(self.latest_version()?.semver.gt(installed_version)),
@@ -176,7 +180,8 @@ impl ResoluteMod {
 		}
 	}
 
-	/// Checks whether this mod is unrecognized (ID begins with [UNRECOGNIZED_GROUP])
+	/// Checks whether this mod is unrecognized (ID begins with [`UNRECOGNIZED_GROUP`])
+	#[must_use]
 	pub fn is_unrecognized(&self) -> bool {
 		self.id.starts_with(UNRECOGNIZED_GROUP)
 	}
@@ -189,13 +194,10 @@ impl ResoluteMod {
 	) -> Self {
 		let artifact_filename = artifact_filename.as_ref();
 		let artifact_path = PathBuf::from(artifact_filename);
-		let artifact_stem = artifact_path
-			.file_stem()
-			.map(|stem| {
-				stem.to_str()
-					.expect("unable to convert artifact filename stem to string")
-			})
-			.unwrap_or(artifact_filename);
+		let artifact_stem = artifact_path.file_stem().map_or(artifact_filename, |stem| {
+			stem.to_str()
+				.expect("unable to convert artifact filename stem to string")
+		});
 
 		let mut versions = HashMap::new();
 		let version = ModVersion::new_unrecognized(artifact_filename, &artifact_install_location, artifact_sha256);
@@ -219,14 +221,15 @@ impl ResoluteMod {
 	}
 }
 
-impl Display for ResoluteMod {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ResoluteMod {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{} ({})", self.name, self.id)
 	}
 }
 
 /// Details for an author of a mod
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ModAuthor {
 	pub name: String,
 	pub url: Option<Url>,
@@ -236,6 +239,7 @@ pub struct ModAuthor {
 
 impl ModAuthor {
 	/// Creates a new unknown author
+	#[must_use]
 	pub fn unknown() -> Self {
 		Self {
 			name: "Unknown".to_owned(),
@@ -246,14 +250,15 @@ impl ModAuthor {
 	}
 }
 
-impl Display for ModAuthor {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ModAuthor {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)
 	}
 }
 
 /// Details for a released version of a mod
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ModVersion {
 	pub semver: Version,
 	pub artifacts: Vec<ModArtifact>,
@@ -264,7 +269,8 @@ pub struct ModVersion {
 }
 
 impl ModVersion {
-	/// Checks whether this version is unrecognized (semver equals [UNRECOGNIZED_SEMVER])
+	/// Checks whether this version is unrecognized (semver equals [`UNRECOGNIZED_SEMVER`])
+	#[must_use]
 	pub fn is_unrecognized(&self) -> bool {
 		self.semver.eq(&UNRECOGNIZED_SEMVER)
 	}
@@ -302,14 +308,15 @@ impl ModVersion {
 	}
 }
 
-impl Display for ModVersion {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ModVersion {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.semver)
 	}
 }
 
 /// Details for a release artifact
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ModArtifact {
 	pub url: Url,
 	pub sha256: String,
@@ -320,9 +327,10 @@ pub struct ModArtifact {
 
 impl ModArtifact {
 	/// Gets the filename from the end of the artifact's URL
+	#[must_use]
 	pub fn infer_filename(&self) -> Option<OsString> {
 		let path = Path::new(self.url.path());
-		path.file_name().map(|filename| filename.to_owned())
+		path.file_name().map(ToOwned::to_owned)
 	}
 
 	/// Gets the default install location for the artifact, influenced by the category of the mod if available
@@ -337,6 +345,7 @@ impl ModArtifact {
 	}
 
 	/// Gets the filename or inferred filename. Panics if neither can be obtained.
+	#[must_use]
 	pub fn usable_filename(&self) -> OsString {
 		self.filename
 			.as_ref()
@@ -345,7 +354,8 @@ impl ModArtifact {
 			.expect("unable to get filename of artifact")
 	}
 
-	/// Checks whether this artifact is unrecognized (URL begins with [UNRECOGNIZED_ARTIFACT_BASE_URL])
+	/// Checks whether this artifact is unrecognized (URL begins with [`UNRECOGNIZED_ARTIFACT_BASE_URL`])
+	#[must_use]
 	pub fn is_unrecognized(&self) -> bool {
 		self.url.as_str().starts_with(UNRECOGNIZED_ARTIFACT_BASE_URL.as_str())
 	}
@@ -370,7 +380,7 @@ impl ModArtifact {
 			None => self
 				.infer_filename()
 				.ok_or_else(|| Error::Path(format!("unable to infer filename from url: {}", self.url)))?
-				.to_owned(),
+				.clone(),
 		};
 		dest.push(&filename);
 
@@ -401,12 +411,12 @@ impl ModArtifact {
 			.push(install_location)
 			.push(filename);
 
-		let install_location = if !install_location.starts_with('/') {
+		let install_location = if install_location.starts_with('/') {
+			install_location.to_owned()
+		} else {
 			let mut install_location = install_location.to_owned();
 			install_location.insert(0, '/');
 			install_location
-		} else {
-			install_location.to_owned()
 		};
 
 		ModArtifact {
@@ -414,6 +424,18 @@ impl ModArtifact {
 			sha256: sha256.to_owned(),
 			filename: Some(filename.to_owned()),
 			install_location: Some(install_location),
+		}
+	}
+
+	fn from_manifest_and_category(value: ManifestEntryArtifact, category: &str) -> Self {
+		Self {
+			url: value.url,
+			sha256: value.sha256,
+			filename: value.filename,
+			install_location: value.install_location.or_else(|| match category {
+				"Plugins" => Some("/Libraries".to_owned()),
+				_ => None,
+			}),
 		}
 	}
 
@@ -452,8 +474,8 @@ impl ModArtifact {
 	}
 }
 
-impl Display for ModArtifact {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ModArtifact {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let name = self
 			.filename
 			.clone()
@@ -461,26 +483,12 @@ impl Display for ModArtifact {
 				Path::new(self.url.path())
 					.file_name()
 					.and_then(|name| name.to_str())
-					.map(|name| name.to_owned())
+					.map(ToOwned::to_owned)
 			})
 			.or_else(|| Some(self.url.to_string()))
-			.unwrap();
+			.ok_or(fmt::Error)?;
 
-		write!(f, "{}", name)
-	}
-}
-
-impl ModArtifact {
-	fn from_manifest_and_category(value: ManifestEntryArtifact, category: &str) -> Self {
-		Self {
-			url: value.url,
-			sha256: value.sha256,
-			filename: value.filename,
-			install_location: value.install_location.or_else(|| match category {
-				"Plugins" => Some("/Libraries".to_owned()),
-				_ => None,
-			}),
-		}
+		write!(f, "{name}")
 	}
 }
 

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use log::debug;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use tokio::task;
 
 #[cfg(feature = "db")]
 use crate::db::ResoluteDatabase;
@@ -18,6 +19,7 @@ pub use self::download::Downloader;
 pub use self::download::DownloaderBuilder;
 
 /// Main entry point for all mod-related operations that need to be persisted
+#[allow(missing_debug_implementations, clippy::module_name_repetitions)]
 pub struct ModManager<#[cfg(feature = "db")] 'a> {
 	#[cfg(feature = "db")]
 	pub db: ResoluteDatabase<'a>,
@@ -60,8 +62,9 @@ impl_ModManager_with_without_db! {
 
 		/// Gets all mods that have a version installed
 		#[cfg(feature = "db")]
+		#[allow(clippy::unused_async)]
 		pub async fn get_installed_mods(&self) -> Result<LoadedMods> {
-			let mods = tokio::task::block_in_place(move || -> Result<LoadedMods> {
+			let mods = task::block_in_place(move || -> Result<LoadedMods> {
 				let mods = self
 					.db
 					.get_installed_mods()?
@@ -80,15 +83,15 @@ impl_ModManager_with_without_db! {
 			let manifest = manifest::Client::new(manifest_config, self.http_client.clone());
 
 			// Retrieve the manifest JSON
-			let json = if !bypass_cache {
-				manifest.retrieve().await
-			} else {
+			let json = if bypass_cache {
 				debug!("Forcing download of manifest");
 				manifest.download().await
+			} else {
+				manifest.retrieve().await
 			}?;
 
 			// Parse the JSON into raw manifest data, load that into a mod map
-			let mut mods = tokio::task::spawn_blocking(move || -> Result<ResoluteModMap> {
+			let mut mods = task::spawn_blocking(move || -> Result<ResoluteModMap> {
 				let data = manifest.parse(&json)?;
 				let mods = mods::load_manifest(data);
 				Ok(mods)
@@ -127,7 +130,7 @@ impl_ModManager_with_without_db! {
 				if let Some(installed) = installed_mods.get(id) {
 					// Set the installed version from the stored mod
 					let semver = installed.installed_version.clone();
-					rmod.installed_version = semver.clone();
+					rmod.installed_version.clone_from(&semver);
 
 					// Add the version to the mod's version map if it doesn't have it
 					if let Some(semver) = semver {
@@ -146,16 +149,15 @@ impl_ModManager_with_without_db! {
 
 				if !unrecognized_mods.is_empty() {
 					// Get the latest version of the known mod
-					let latest_version = match rmod.latest_version() {
-						Some(version) => version,
-						None => continue,
+					let Some(latest_version) = rmod.latest_version() else {
+						continue;
 					};
 
 					// Build a set of artifact filenames for the known mod
 					let expected_artifact_names: HashSet<OsString> = latest_version
 						.artifacts
 						.iter()
-						.map(|artifact| artifact.usable_filename())
+						.map(ModArtifact::usable_filename)
 						.collect();
 
 					// Find unrecognized mods that contain any of the filenames
@@ -163,16 +165,15 @@ impl_ModManager_with_without_db! {
 						.iter()
 						.filter(|umod| {
 							// Get the latest version of the unrecognized mod
-							let latest_version = match umod.latest_version() {
-								Some(version) => version,
-								None => return false,
+							let Some(latest_version) = umod.latest_version() else {
+								return false;
 							};
 
 							// Build a set of artifact filenames for the unrecognized mod
 							let artifact_names: HashSet<OsString> = latest_version
 								.artifacts
 								.iter()
-								.map(|artifact| artifact.usable_filename())
+								.map(ModArtifact::usable_filename)
 								.collect();
 
 							// Include this unrecognized mod only if all of its artifacts are included in the known mod's
@@ -189,7 +190,7 @@ impl_ModManager_with_without_db! {
 					let unrecognized_artifacts: Vec<ModArtifact> = unrecognized_matches
 						.iter()
 						.flat_map(|umod| {
-							let latest_version = umod.latest_version().unwrap();
+							let latest_version = umod.latest_version().expect("no latest version for unrecognized mod");
 							latest_version.artifacts.iter().cloned()
 						})
 						.collect();
@@ -201,14 +202,15 @@ impl_ModManager_with_without_db! {
 					rmod.installed_version = Some(semver);
 
 					// Replace the unrecognized mods with the known mod in the database
-					tokio::task::block_in_place(|| -> Result<()> {
+					task::block_in_place(|| -> Result<()> {
 						removed_mods.reserve(unrecognized_matches.len());
 
 						for umod in unrecognized_matches {
 							debug!(
-										"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
-										umod, rmod
-									);
+								"Removing unrecognized mod {} from the database during installed mod marking, repacing with {}",
+								umod,
+								rmod,
+							);
 							self.db.remove_mod_by_id(&umod.id)?;
 							removed_mods.insert(umod.id.clone(), umod.clone());
 						}
@@ -246,7 +248,7 @@ impl_ModManager_with_without_db! {
 			{
 				let mut rmod = rmod.clone();
 				rmod.installed_version = Some(version.semver.clone());
-				tokio::task::block_in_place(|| self.db.store_mod(rmod))?;
+				task::block_in_place(|| self.db.store_mod(rmod))?;
 			}
 
 			Ok(())
@@ -261,9 +263,8 @@ impl_ModManager_with_without_db! {
 		) -> Result<()> {
 			// Ensure the mod is actually installed and determine which version
 			let old_version = {
-				let version = match &rmod.installed_version {
-					Some(version) => version,
-					None => return Err(Error::ModNotInstalled(Box::new(rmod.clone()))),
+				let Some(version) = &rmod.installed_version else {
+					return Err(Error::ModNotInstalled(Box::new(rmod.clone())));
 				};
 				rmod.versions
 					.get(version)
@@ -300,7 +301,7 @@ impl_ModManager_with_without_db! {
 			// Delete the version artifacts and remove the mod from the database
 			self.deleter.delete_version(installed_version).await?;
 			#[cfg(feature = "db")]
-			tokio::task::block_in_place(|| self.db.remove_mod_by_id(&rmod.id))?;
+			task::block_in_place(|| self.db.remove_mod_by_id(&rmod.id))?;
 
 			Ok(())
 		}
@@ -310,10 +311,10 @@ impl_ModManager_with_without_db! {
 			let LoadedMods { mods: all_mods, .. } = self.get_all_mods(manifest_config, false).await?;
 
 			let resonite_path = self.base_dest.clone();
-			let discovered = tokio::task::block_in_place(|| discover::discover_mods(resonite_path, all_mods))?;
+			let discovered = task::block_in_place(|| discover::mods(resonite_path, &all_mods))?;
 
 			#[cfg(feature = "db")]
-			tokio::task::block_in_place(|| {
+			task::block_in_place(|| {
 				for rmod in discovered.values() {
 					debug!("Storing discovered mod {}", rmod);
 					self.db.store_mod(rmod.clone())?;
@@ -327,9 +328,9 @@ impl_ModManager_with_without_db! {
 		/// Changes the base destination of mods for the manager
 		pub fn set_base_dest(&mut self, path: impl AsRef<Path>) {
 			let path = path.as_ref();
-			self.base_dest = path.to_owned();
-			self.downloader.base_dest = path.to_owned();
-			self.deleter.base_dest = path.to_owned();
+			path.clone_into(&mut self.base_dest);
+			path.clone_into(&mut self.downloader.base_dest);
+			path.clone_into(&mut self.deleter.base_dest);
 		}
 
 		/// Changes the HTTP client to use for downloads
@@ -341,7 +342,8 @@ impl_ModManager_with_without_db! {
 }
 
 /// A set of loaded mods from a manager
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::exhaustive_structs)]
 pub struct LoadedMods {
 	pub mods: ResoluteModMap,
 	pub removed: Option<ResoluteModMap>,

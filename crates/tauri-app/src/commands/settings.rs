@@ -1,6 +1,6 @@
 use log::info;
 use resolute::manager::ModManager;
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
 use crate::{build_http_client, settings};
@@ -9,7 +9,7 @@ use crate::{build_http_client, settings};
 #[tauri::command]
 pub(crate) async fn resonite_path_changed(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 ) -> Result<(), String> {
 	let resonite_path: String = settings::require(&app, "resonitePath").map_err(|err| err.to_string())?;
 	manager.lock().await.set_base_dest(&resonite_path);
@@ -21,7 +21,7 @@ pub(crate) async fn resonite_path_changed(
 #[tauri::command]
 pub(crate) async fn connect_timeout_changed(
 	app: AppHandle,
-	manager: tauri::State<'_, Mutex<ModManager<'_>>>,
+	manager: State<'_, Mutex<ModManager<'_>>>,
 ) -> Result<(), String> {
 	let http_client = build_http_client(&app).map_err(|err| err.to_string())?;
 	manager.lock().await.set_http_client(http_client);
