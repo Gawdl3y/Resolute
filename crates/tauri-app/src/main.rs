@@ -139,11 +139,8 @@ fn main() -> anyhow::Result<()> {
 					])
 					.rotation_strategy(RotationStrategy::KeepAll)
 					.max_file_size(1024 * 256)
-					.level(log::LevelFilter::Debug)
-					.level_for(
-						"tao::platform_impl::platform::event_loop::runner",
-						log::LevelFilter::Error,
-					)
+					.level(LevelFilter::Debug)
+					.level_for("tao::platform_impl::platform::event_loop::runner", LevelFilter::Error)
 					.build()
 			},
 		)
