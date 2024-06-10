@@ -22,14 +22,17 @@ log = "0.4"
 sha2 = "0.10"
 native_db = "0.6"
 once_cell = "1.19"
-itertools = "0.12"
+itertools = "0.13"
 path-clean = "1.0"
-opener = "0.6"
-reqwest = { version = "0.11", features = [
-	"rustls-tls",
+opener = "0.7"
+reqwest = { version = "0.12", features = [
 	"stream",
+	"rustls-tls",
+	"http2",
+	"charset",
 	"gzip",
 	"brotli",
+	"zstd",
 	"deflate",
 ], default-features = false }
 tauri = { version = "2.0.0-beta.22", features = [] }

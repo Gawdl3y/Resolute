@@ -1,1 +1,1 @@
-allowed-duplicate-crates = ["bitflags", "redb"]
+allowed-duplicate-crates = ["bitflags", "redb", "winreg"]
