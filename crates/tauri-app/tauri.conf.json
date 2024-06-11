@@ -34,6 +34,12 @@
 		]
 	},
 	"plugins": {
+		"deep-link": {
+			"desktop": {
+				"schemes": ["resolute"]
+			},
+			"mobile": []
+		},
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFREFBMzMxM0Q2MjNDNTUKUldSVlBHSTlNYVBhZmlOcjFScm80c2dYSElvS2o0MTlGQ3VRU0tvTXdiY3FDdnp4WWVQelJ3cm0K",
 			"endpoints": [

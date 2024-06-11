@@ -32,6 +32,8 @@ app
 				{ path: '/', redirect: { path: '/mods' } },
 				{ path: '/mods', component: AllModsPage },
 				{ path: '/mods/installed', component: InstalledModsPage },
+				{ path: '/mods/installed/:mod', component: InstalledModsPage },
+				{ path: '/mods/:mod', component: AllModsPage },
 				{ path: '/author-tools', component: ModAuthorToolsPage },
 				{ path: '/log', component: SessionLogPage },
 				{ path: '/about', component: AboutPage },

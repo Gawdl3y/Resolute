@@ -4,6 +4,7 @@
 	"description": "Capability for the main window",
 	"windows": ["main"],
 	"permissions": [
+		"deep-link:default",
 		"dialog:allow-ask",
 		"dialog:allow-message",
 		"dialog:allow-open",

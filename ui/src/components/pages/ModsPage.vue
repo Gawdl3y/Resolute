@@ -51,9 +51,11 @@
 	</v-main>
 
 	<ModDetailsDialog
-		v-if="modDetails"
-		:mod="modDetails"
+		v-if="route.params.mod && mods?.[route.params.mod]"
+		:mod="mods[route.params.mod]"
 		:disabled="disabled || !resonitePathExists"
+		:close-on-back="false"
+		@after-leave="closeModDetails"
 	/>
 </template>
 
@@ -66,6 +68,7 @@ import {
 	onMounted,
 	onUnmounted,
 } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { invoke } from '@tauri-apps/api/core';
 import {
 	mdiArrowCollapseVertical,
@@ -81,22 +84,30 @@ import ModTable from '../mods/ModTable.vue';
 import ModDetailsDialog from '../mods/ModDetailsDialog.vue';
 import IconButton from '../IconButton.vue';
 
-defineExpose({ adjustTableHeight, toggleAllGroups, showModDetails });
+defineExpose({
+	adjustTableHeight,
+	toggleAllGroups,
+	showModDetails,
+	closeModDetails,
+});
 const props = defineProps({
 	title: { type: String, required: true },
 	mods: { type: Object, default: null },
 	loadMods: { type: Function, required: true },
+	baseRoute: { type: String, required: true },
 	disabled: { type: Boolean, default: false },
 	grouped: { type: Boolean, default: true },
 	noDataText: { type: String, default: undefined },
 });
+
+const router = useRouter();
+const route = useRoute();
 
 const settings = useSettings();
 const modStore = useModStore();
 
 const loading = ref(false);
 const resonitePathExists = ref(true);
-const modDetails = ref(null);
 
 const alerts = ref(null);
 const alertHeight = ref(0);
@@ -158,14 +169,14 @@ async function loadModsFromFn(bypassCache = false) {
  * @param {ResoluteMod} mod
  */
 function showModDetails(mod) {
-	if (mod === modDetails.value) {
-		modDetails.value = null;
-		setTimeout(() => {
-			modDetails.value = mod;
-		}, 0);
-	} else {
-		modDetails.value = mod;
-	}
+	router.replace(`${props.baseRoute}/${mod.id}`);
+}
+
+/**
+ * Closes the mod details dialog if it is being shown
+ */
+function closeModDetails() {
+	router.replace(props.baseRoute);
 }
 
 /**
