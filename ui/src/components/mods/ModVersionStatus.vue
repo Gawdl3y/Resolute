@@ -1,5 +1,5 @@
 <template>
-	<v-tooltip :open-delay="500" model-value>
+	<v-tooltip :open-delay="500">
 		<template #activator="{ props: tooltipProps }">
 			<div class="d-flex h-100 position-relative">
 				<v-scroll-y-transition>
