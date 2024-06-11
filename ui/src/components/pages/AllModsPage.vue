@@ -2,6 +2,7 @@
 	<ModsPage
 		title="Mod Index"
 		no-data-text="No mod data is available."
+		base-route="/mods"
 		:mods="modStore.mods"
 		:load-mods="loadMods"
 		:grouped="settings.current.groupModIndex"
