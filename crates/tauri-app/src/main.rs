@@ -74,15 +74,18 @@
 
 use std::{env, error::Error, io, thread, time::Duration};
 
-use anyhow::{anyhow, Context};
+use anyhow::{bail, Context};
+use clap::Parser;
 use log::{debug, error, info, warn, LevelFilter};
 use native_db::DatabaseBuilder;
 use once_cell::sync::Lazy;
 use resolute::{db::ResoluteDatabase, discover, manager::ModManager, manifest};
-use tauri::{async_runtime, App, AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{async_runtime, App, AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
 use tokio::{fs, join, sync::Mutex};
+use url::Url;
 
 mod commands;
 mod settings;
@@ -94,7 +97,17 @@ static DB_BUILDER: Lazy<DatabaseBuilder> = Lazy::new(|| {
 	builder
 });
 
+#[derive(Debug, Parser)]
+#[command(version)]
+struct Cli {
+	/// Resolute URL (resolute://<path>) to open
+	#[arg()]
+	open_url: Option<Url>,
+}
+
 fn main() -> anyhow::Result<()> {
+	let cli = Cli::parse();
+
 	// Set up and run the Tauri app
 	tauri::Builder::default()
 		.plugin(tauri_plugin_dialog::init())
@@ -104,11 +117,8 @@ fn main() -> anyhow::Result<()> {
 		.plugin(tauri_plugin_shell::init())
 		.plugin(tauri_plugin_updater::Builder::new().build())
 		.plugin(tauri_plugin_store::Builder::default().build())
-		.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-			debug!("{}, {argv:?}, {cwd}", app.package_info().name);
-			app.emit("single-instance", Payload { args: argv, cwd })
-				.expect("Unable to emit single-instance event with payload");
-		}))
+		.plugin(tauri_plugin_deep_link::init())
+		.plugin(tauri_plugin_single_instance::init(handle_single_instance))
 		.plugin(
 			tauri_plugin_window_state::Builder::default()
 				.with_state_flags(StateFlags::POSITION | StateFlags::SIZE | StateFlags::MAXIMIZED)
@@ -162,7 +172,7 @@ fn main() -> anyhow::Result<()> {
 			commands::settings::resonite_path_changed,
 			commands::settings::connect_timeout_changed,
 		])
-		.setup(setup)
+		.setup(setup(cli.open_url))
 		.run(
 			#[cfg(debug_assertions)]
 			{
@@ -179,36 +189,48 @@ fn main() -> anyhow::Result<()> {
 		.with_context(|| "Unable to initialize Tauri application")
 }
 
-fn setup(app: &mut App) -> Result<(), Box<dyn Error>> {
-	let window = app.get_webview_window("main").ok_or("unable to get main window")?;
+/// Sets up the app's windows and runs initialization
+fn setup(url: Option<Url>) -> impl FnOnce(&mut App) -> Result<(), Box<dyn Error>> {
+	move |app| {
+		let mut window = app.get_webview_window("main").ok_or("unable to get main window")?;
 
-	// Workaround for poor resize performance on Windows
-	window.on_window_event(|event| {
-		if let WindowEvent::Resized(..) = event {
-			thread::sleep(Duration::from_nanos(5));
+		// Workaround for poor resize performance on Windows
+		window.on_window_event(|event| {
+			if let WindowEvent::Resized(..) = event {
+				thread::sleep(Duration::from_nanos(5));
+			}
+		});
+
+		// Rename the window and open the dev console in development
+		#[cfg(debug_assertions)]
+		{
+			let mut title = window.title()?;
+			title.push_str(" (debug)");
+			window.set_title(&title)?;
+
+			window.open_devtools();
 		}
-	});
 
-	// Rename the window and open the dev console in development
-	#[cfg(debug_assertions)]
-	{
-		let mut title = window.title()?;
-		title.push_str(" (debug)");
-		window.set_title(&title)?;
+		// Initialize the app
+		let handle = app.app_handle().clone();
+		async_runtime::spawn(async move {
+			match init(&handle).await {
+				Ok(..) => {
+					if let Some(url) = url {
+						if let Err(err) = window.open_url(&url) {
+							error!("Error navigating to URL ({url}): {err}");
+						}
+					}
+				}
+				Err(err) => {
+					error!("Initialization failed: {}", err);
+					build_error_window(&handle, err);
+				}
+			}
+		});
 
-		window.open_devtools();
+		Ok(())
 	}
-
-	// Initialize the app
-	let handle = app.app_handle().clone();
-	async_runtime::spawn(async move {
-		if let Err(err) = init(&handle).await {
-			error!("Initialization failed: {}", err);
-			build_error_window(&handle, err);
-		}
-	});
-
-	Ok(())
 }
 
 /// Initializes the app
@@ -266,8 +288,51 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 	.await
 	.context("Error running blocking task for initialization")??;
 
+	// Register for deep links
+	if app.deep_link().is_registered("resolute").unwrap_or_default() {
+		info!("Already registered for deep links");
+	} else {
+		info!("Not registered for deep links; attempting registration");
+		match app.deep_link().register("resolute") {
+			Ok(..) => info!("Registered for deep links"),
+			Err(err) => error!("Error registering for deep links: {err}"),
+		};
+	}
+
 	info!("Resolute initialized");
 	Ok(())
+}
+
+/// Handles single-instance data and forwards usable events as needed
+#[allow(clippy::needless_pass_by_value)]
+fn handle_single_instance(app: &AppHandle, argv: Vec<String>, cwd: String) {
+	info!("Received data from another launched instance: argv = {argv:?}, cwd = {cwd}");
+
+	// Parse the arguments
+	let cli = match Cli::try_parse_from(argv) {
+		Ok(cli) => cli,
+		Err(err) => {
+			error!("Unable to parse argv data: {err}");
+			return;
+		}
+	};
+
+	// Request a UI navigation if a URL was given
+	let Some(url) = cli.open_url else {
+		return;
+	};
+	match app.clone().open_url(&url) {
+		Ok(..) => {
+			let Some(window) = app.get_webview_window("main") else {
+				error!("Unable to get main window to set focus on");
+				return;
+			};
+			if let Err(err) = window.set_focus() {
+				error!("Unable to set focus on main window: {err}");
+			}
+		}
+		Err(err) => error!("Error navigating to URL ({url}): {err}"),
+	}
 }
 
 /// Creates any missing app directories
@@ -378,7 +443,7 @@ pub(crate) fn build_manifest_config(app: &AppHandle) -> Result<manifest::Config,
 	if let Some(url) = manifest_url {
 		config
 			.set_remote_url(url.as_ref())
-			.map_err(|_err| "Unable to parse custom manifest URL".to_owned())?;
+			.map_err(|err| format!("Unable to parse custom manifest URL: {err}"))?;
 	}
 
 	Ok(config)
@@ -392,14 +457,8 @@ pub(crate) fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyh
 
 	// Grab some details about the application
 	let config = &app.config();
-	let name = config
-		.product_name
-		.as_ref()
-		.ok_or_else(|| anyhow!("Unable to get app product name"))?;
-	let version = config
-		.version
-		.as_ref()
-		.ok_or_else(|| anyhow!("Unable to get app version"))?;
+	let name = config.product_name.as_ref().context("Unable to get app product name")?;
+	let version = config.version.as_ref().context("Unable to get app version")?;
 
 	// Build the client
 	reqwest::Client::builder()
@@ -410,9 +469,37 @@ pub(crate) fn build_http_client(app: &AppHandle) -> Result<reqwest::Client, anyh
 		.context("Unable to build HTTP client")
 }
 
-/// Payload for a single-instance event
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-	args: Vec<String>,
-	cwd: String,
+/// Allows requesting navigation in the UI
+trait Navigate {
+	/// Opens a resolute:// URL in the UI
+	fn open_url(&mut self, url: &Url) -> anyhow::Result<()> {
+		match url.scheme() {
+			"resolute" => self.open_route(url.path()),
+			scheme => bail!("Unknown URL scheme: {scheme}"),
+		}
+	}
+
+	/// Requests the UI to navigate to a given route
+	fn open_route(&mut self, route: &str) -> anyhow::Result<()>;
+}
+
+impl Navigate for WebviewWindow {
+	fn open_route(&mut self, route: &str) -> anyhow::Result<()> {
+		let mut url = self.url()?;
+		url.set_fragment(Some(route));
+
+		info!("Navigating: route = {route}, url = {url}");
+		self.navigate(url);
+
+		Ok(())
+	}
+}
+
+impl Navigate for AppHandle {
+	fn open_route(&mut self, route: &str) -> anyhow::Result<()> {
+		let mut window = self
+			.get_webview_window("main")
+			.context("Unable to get main window while navigating")?;
+		window.open_route(route)
+	}
 }
