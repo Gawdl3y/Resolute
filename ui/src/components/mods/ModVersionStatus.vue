@@ -1,5 +1,5 @@
 <template>
-	<v-tooltip :open-delay="500">
+	<v-tooltip :open-delay="500" model-value>
 		<template #activator="{ props: tooltipProps }">
 			<div class="d-flex h-100 position-relative">
 				<v-scroll-y-transition>
@@ -53,6 +53,6 @@ const tooltipWidth = computed(() => {
 	const anyUnrecognized =
 		mod.installedVersion?.isUnrecognized || mod.latestVersion.isUnrecognized;
 	if (anyUnrecognized) return '8.75em';
-	return '7.25em';
+	return '8.25em';
 });
 </script>
