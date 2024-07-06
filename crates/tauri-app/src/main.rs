@@ -77,8 +77,6 @@ use std::{env, error::Error, io, thread, time::Duration};
 use anyhow::{bail, Context};
 use clap::Parser;
 use log::{debug, error, info, warn, LevelFilter};
-use native_db::DatabaseBuilder;
-use once_cell::sync::Lazy;
 use resolute::{db::ResoluteDatabase, discover, manager::ModManager, manifest};
 use tauri::{async_runtime, App, AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -89,13 +87,6 @@ use url::Url;
 
 mod commands;
 mod settings;
-
-/// Lazily-initialized database builder for the Resolute DB
-static DB_BUILDER: Lazy<DatabaseBuilder> = Lazy::new(|| {
-	let mut builder = DatabaseBuilder::new();
-	ResoluteDatabase::define_models(&mut builder).expect("unable to define models on database builder");
-	builder
-});
 
 #[derive(Debug, Parser)]
 #[command(version)]
@@ -268,7 +259,7 @@ async fn init(app: &AppHandle) -> Result<(), anyhow::Error> {
 			.app_data_dir()
 			.context("Unable to get data dir")?
 			.join("resolute.db");
-		let db = ResoluteDatabase::open(&DB_BUILDER, db_path).context("Unable to open database")?;
+		let db = ResoluteDatabase::open(db_path).context("Unable to open database")?;
 
 		// Get the Resonite path setting
 		info!("Retrieving Resonite path from settings store");

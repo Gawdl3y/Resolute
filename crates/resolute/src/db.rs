@@ -1,10 +1,11 @@
 use std::{io::ErrorKind, path::Path};
 
 use log::{info, warn};
-use native_db::{db_type::Error as NativeDbError, Database, DatabaseBuilder};
+use native_db::{db_type::Error as NativeDbError, Builder, Database, Models};
+use once_cell::sync::Lazy;
 use redb::{DatabaseError, StorageError};
 
-use crate::{mods::ResoluteMod, Error, Result};
+use crate::{mods::ResoluteMod, Error, Result as ResoluteResult};
 
 /// Wrapper for interacting with a Resolute database
 #[allow(missing_debug_implementations)]
@@ -12,21 +13,22 @@ pub struct ResoluteDatabase<'a> {
 	db: Database<'a>,
 }
 
-impl<'a> ResoluteDatabase<'a> {
+impl ResoluteDatabase<'_> {
 	/// Opens a database using a provided builder.
 	/// If the database doesn't already exist at the given path, it will be created.
-	pub fn open(builder: &'a DatabaseBuilder, db_path: impl AsRef<Path>) -> Result<Self> {
+	pub fn open(db_path: impl AsRef<Path>) -> ResoluteResult<Self> {
 		info!("Opening database at {}", db_path.as_ref().display());
 
 		// Try to open an already-existing database
-		let db = match builder.open(&db_path) {
+		let builder = Builder::new();
+		let db = match builder.open(&MODELS, &db_path) {
 			// If it fails because it doesn't exist, then go ahead and create one instead
 			Err(
 				NativeDbError::Io(err)
 				| NativeDbError::RedbDatabaseError(DatabaseError::Storage(StorageError::Io(err))),
 			) if err.kind() == ErrorKind::NotFound => {
 				warn!("Database doesn't exist; creating");
-				builder.create(&db_path)?
+				builder.create(&MODELS, &db_path)?
 			}
 
 			Ok(db) => db,
@@ -37,40 +39,36 @@ impl<'a> ResoluteDatabase<'a> {
 		Ok(Self { db })
 	}
 
-	/// Defines the database models on a builder
-	pub fn define_models(builder: &mut DatabaseBuilder) -> Result<()> {
-		builder.define::<ResoluteMod>()?;
-		Ok(())
-	}
-
 	/// Retrieves all mods stored in the database
-	pub fn get_mods(&self) -> Result<Vec<ResoluteMod>> {
+	pub fn get_mods(&self) -> ResoluteResult<Vec<ResoluteMod>> {
 		let read = self.db.r_transaction()?;
-		let mods = read.scan().primary()?.all().collect();
+		let mods = read.scan().primary()?.all().collect::<Result<_, _>>()?;
 		Ok(mods)
 	}
 
 	/// Retrieves all mods from the database that have an installed version
-	pub fn get_installed_mods(&self) -> Result<Vec<ResoluteMod>> {
+	pub fn get_installed_mods(&self) -> ResoluteResult<Vec<ResoluteMod>> {
 		let read = self.db.r_transaction()?;
 		let mods = read
 			.scan()
 			.primary()?
 			.all()
+			.collect::<Result<Vec<_>, _>>()?
+			.into_iter()
 			.filter(|rmod: &ResoluteMod| rmod.installed_version.is_some())
 			.collect();
 		Ok(mods)
 	}
 
 	/// Retrieves a single mod from the database by its ID
-	pub fn get_mod(&self, id: impl AsRef<str>) -> Result<Option<ResoluteMod>> {
+	pub fn get_mod(&self, id: impl AsRef<str>) -> ResoluteResult<Option<ResoluteMod>> {
 		let read = self.db.r_transaction()?;
-		let rmod = read.get().primary(id.as_ref().to_owned())?;
+		let rmod = read.get().primary(id.as_ref())?;
 		Ok(rmod)
 	}
 
 	/// Stores a mod in the database (overwrites any existing entry for the same mod)
-	pub fn store_mod(&self, rmod: ResoluteMod) -> Result<()> {
+	pub fn store_mod(&self, rmod: ResoluteMod) -> ResoluteResult<()> {
 		let mod_name = rmod.to_string();
 
 		let rw = self.db.rw_transaction()?;
@@ -82,7 +80,7 @@ impl<'a> ResoluteDatabase<'a> {
 	}
 
 	/// Removes a mod from the database
-	pub fn remove_mod(&self, rmod: ResoluteMod) -> Result<()> {
+	pub fn remove_mod(&self, rmod: ResoluteMod) -> ResoluteResult<()> {
 		let mod_name = rmod.to_string();
 
 		// Remove the mod
@@ -95,13 +93,25 @@ impl<'a> ResoluteDatabase<'a> {
 	}
 
 	/// Removes a mod from the database by its ID
-	pub fn remove_mod_by_id(&self, id: impl AsRef<str>) -> Result<()> {
+	pub fn remove_mod_by_id(&self, id: impl AsRef<str>) -> ResoluteResult<()> {
 		// Find the item in the database
-		let id = id.as_ref().to_owned();
+		let id = id.as_ref();
 		let read = self.db.r_transaction()?;
-		let rmod: ResoluteMod = read.get().primary(id.clone())?.ok_or_else(|| Error::ItemNotFound(id))?;
+		let rmod: ResoluteMod = read
+			.get()
+			.primary(id)?
+			.ok_or_else(|| Error::ItemNotFound(id.to_owned()))?;
 
 		// Remove it
 		self.remove_mod(rmod)
 	}
 }
+
+/// Models that a [`ResoluteDatabase`] interacts with
+pub static MODELS: Lazy<Models> = Lazy::new(|| {
+	let mut models = Models::new();
+	models
+		.define::<ResoluteMod>()
+		.expect("Unable to define ResoluteMod model");
+	models
+});
