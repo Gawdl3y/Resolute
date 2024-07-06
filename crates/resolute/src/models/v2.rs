@@ -428,12 +428,16 @@ impl ModArtifact {
 			install_location
 		};
 
-		let override_filename = filename.ends_with(".disabled").then(|| filename.to_owned());
+		let (filename, override_filename) = if let Some(stripped) = filename.strip_suffix(".disabled") {
+			(stripped.to_owned(), Some(filename.to_owned()))
+		} else {
+			(filename.to_owned(), None)
+		};
 
 		ModArtifact {
 			url,
 			sha256: sha256.to_owned(),
-			filename: Some(filename.to_owned()),
+			filename: Some(filename),
 			install_location: Some(install_location),
 			override_filename,
 		}
