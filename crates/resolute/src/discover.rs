@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use steamlocate::SteamDir;
 
 use crate::{
-	mods::{ModVersion, ResoluteMod, ResoluteModMap},
+	models::{ModVersion, ResoluteMod, ResoluteModMap},
 	Result,
 };
 

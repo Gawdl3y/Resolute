@@ -1,7 +1,7 @@
 use log::{error, info};
 use resolute::{
 	manager::{LoadedMods, ModManager},
-	mods::{ModVersion, ResoluteMod},
+	models::{ModVersion, ResoluteMod},
 };
 use tauri::{AppHandle, State};
 use tokio::sync::Mutex;

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use log::info;
 
-use crate::mods::{ModArtifact, ModVersion};
+use crate::models::{ModArtifact, ModVersion};
 use crate::Error;
 
 use super::artifacts::{self, ArtifactAction, ArtifactError, ArtifactErrorVec, MappableToArtifactError};

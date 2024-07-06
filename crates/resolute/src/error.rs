@@ -9,7 +9,7 @@ use tokio::task;
 
 use crate::{
 	manager::artifacts::{ArtifactError, ArtifactErrorVec},
-	mods::ResoluteMod,
+	models::ResoluteMod,
 };
 
 /// Error returned from a Downloader

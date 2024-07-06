@@ -1,5 +1,5 @@
 use log::{error, info};
-use resolute::{discover, manager::ModManager, mods::ResoluteModMap};
+use resolute::{discover, manager::ModManager, models::ResoluteModMap};
 use tauri::{async_runtime, AppHandle, State};
 use tokio::sync::Mutex;
 

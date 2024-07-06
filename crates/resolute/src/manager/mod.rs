@@ -11,7 +11,7 @@ use tokio::task;
 
 #[cfg(feature = "db")]
 use crate::db::ResoluteDatabase;
-use crate::mods::{self, ResoluteMod, ResoluteModMap};
+use crate::models::{self, ResoluteMod, ResoluteModMap};
 use crate::{discover, manifest, Error, Result};
 
 pub use self::delete::Deleter;
@@ -93,7 +93,7 @@ impl_ModManager_with_without_db! {
 			// Parse the JSON into raw manifest data, load that into a mod map
 			let mut mods = task::spawn_blocking(move || -> Result<ResoluteModMap> {
 				let data = manifest.parse(&json)?;
-				let mods = mods::load_manifest(data);
+				let mods = models::load_manifest(data);
 				Ok(mods)
 			})
 			.await??;
@@ -113,7 +113,7 @@ impl_ModManager_with_without_db! {
 		pub async fn mark_installed_mods(&self, mods: &mut ResoluteModMap) -> Result<Option<ResoluteModMap>> {
 			use std::{collections::HashSet, ffi::OsString};
 
-			use crate::mods::{ModArtifact, ModVersion};
+			use crate::models::{ModArtifact, ModVersion};
 
 			// Load the installed mods
 			let LoadedMods {
