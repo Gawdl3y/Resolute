@@ -2734,9 +2734,9 @@ dependencies = [
 
 [[package]]
 name = "native_db"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ab2628b11ef6a479db783b2fabefbd4d2f3ffbe825cc2154cfe3d3c9c779734"
+checksum = "ed54dc7c04d201260247cbd1de99d459297fe80f0a79daa4598ef9c6ce4d7782"
 dependencies = [
  "native_db_macro",
  "native_model",
@@ -2749,9 +2749,9 @@ dependencies = [
 
 [[package]]
 name = "native_db_macro"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e80d1609e8eb0404ea5de614883cdf159b6d875c370c0c1bfbc21d80772399e"
+checksum = "163533e9cf510dfdc1f417462beb3651fccdcb9dd027533d85f780081ee212e8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3941,8 +3941,6 @@ dependencies = [
  "clap",
  "itertools",
  "log",
- "native_db",
- "once_cell",
  "opener",
  "path-clean",
  "reqwest",

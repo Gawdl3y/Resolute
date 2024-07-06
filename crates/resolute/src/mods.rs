@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[cfg(feature = "db")]
-use native_db::{native_db, InnerKeyValue};
+use native_db::{native_db, ToKey};
 #[cfg(feature = "db")]
 use native_model::{native_model, Model};
 
