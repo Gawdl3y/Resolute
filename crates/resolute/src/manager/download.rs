@@ -13,7 +13,7 @@ use tokio::{
 	io::{AsyncWriteExt, BufWriter},
 };
 
-use crate::mods::{ModArtifact, ModVersion};
+use crate::models::{ModArtifact, ModVersion};
 use crate::{Error, Result};
 
 use super::artifacts::{self, ArtifactAction, ArtifactError, MappableToArtifactError};

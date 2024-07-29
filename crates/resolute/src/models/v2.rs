@@ -5,16 +5,15 @@ use std::{
 	path::{Path, PathBuf},
 };
 
+#[cfg(feature = "db")]
+use native_db::{native_db, ToKey};
+#[cfg(feature = "db")]
+use native_model::{native_model, Model};
 use once_cell::sync::Lazy;
 use path_clean::PathClean;
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use url::Url;
-
-#[cfg(feature = "db")]
-use native_db::{native_db, ToKey};
-#[cfg(feature = "db")]
-use native_model::{native_model, Model};
 
 use crate::{
 	manifest::{
@@ -71,6 +70,7 @@ pub fn load_manifest(manifest: ManifestData) -> ResoluteModMap {
 					flags: entry.flags,
 					platforms: entry.platforms,
 					installed_version: None,
+					active: false,
 				}
 			})
 		})
@@ -101,6 +101,7 @@ fn build_mod_versions_map(versions: ManifestEntryVersions, category: &str) -> Ha
 			conflicts: build_mod_version_dependencies(version.conflicts),
 			artifacts: build_mod_version_artifacts(version.artifacts, category),
 			release_url: version.release_url,
+			changelog: version.changelog,
 		})
 		.map(|version| (version.semver.clone(), version))
 		.collect()
@@ -131,7 +132,8 @@ pub type ResoluteModMap = HashMap<String, ResoluteMod>;
 
 /// A single Resonite mod with all information relevant to it
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "db", native_model(id = 1, version = 1))]
+#[cfg_attr(all(feature = "db", feature = "models_v1"), native_model(id = 1, version = 2, from = super::v1::ResoluteMod))]
+#[cfg_attr(all(feature = "db", not(feature = "models_v1")), native_model(id = 1, version = 2))]
 #[cfg_attr(feature = "db", native_db)]
 #[non_exhaustive]
 pub struct ResoluteMod {
@@ -161,6 +163,7 @@ pub struct ResoluteMod {
 	pub versions: HashMap<Version, ModVersion>,
 	#[serde(rename = "installedVersion")]
 	pub installed_version: Option<Version>,
+	pub active: bool,
 }
 
 impl ResoluteMod {
@@ -217,6 +220,7 @@ impl ResoluteMod {
 			platforms: None,
 			versions,
 			installed_version: Some(semver),
+			active: true,
 		}
 	}
 }
@@ -266,6 +270,7 @@ pub struct ModVersion {
 	pub conflicts: ModDependencyMap,
 	#[serde(rename = "releaseUrl")]
 	pub release_url: Option<Url>,
+	pub changelog: Option<String>,
 }
 
 impl ModVersion {
@@ -293,6 +298,7 @@ impl ModVersion {
 			dependencies: ModDependencyMap::new(),
 			conflicts: ModDependencyMap::new(),
 			release_url: None,
+			changelog: None,
 		}
 	}
 
@@ -304,6 +310,7 @@ impl ModVersion {
 			dependencies: ModDependencyMap::new(),
 			conflicts: ModDependencyMap::new(),
 			release_url: None,
+			changelog: None,
 		}
 	}
 }
@@ -323,6 +330,8 @@ pub struct ModArtifact {
 	pub filename: Option<String>,
 	#[serde(rename = "installLocation")]
 	pub install_location: Option<String>,
+	#[serde(rename = "overrideFilename")]
+	pub override_filename: Option<String>,
 }
 
 impl ModArtifact {
@@ -419,11 +428,18 @@ impl ModArtifact {
 			install_location
 		};
 
+		let (filename, override_filename) = if let Some(stripped) = filename.strip_suffix(".disabled") {
+			(stripped.to_owned(), Some(filename.to_owned()))
+		} else {
+			(filename.to_owned(), None)
+		};
+
 		ModArtifact {
 			url,
 			sha256: sha256.to_owned(),
-			filename: Some(filename.to_owned()),
+			filename: Some(filename),
 			install_location: Some(install_location),
+			override_filename,
 		}
 	}
 
@@ -436,6 +452,7 @@ impl ModArtifact {
 				"Plugins" => Some("/Libraries".to_owned()),
 				_ => None,
 			}),
+			override_filename: None,
 		}
 	}
 
@@ -499,6 +516,7 @@ impl From<ManifestEntryArtifact> for ModArtifact {
 			sha256: value.sha256,
 			filename: value.filename,
 			install_location: value.install_location,
+			override_filename: None,
 		}
 	}
 }

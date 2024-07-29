@@ -282,6 +282,7 @@ pub struct ManifestEntryVersion {
 	pub conflicts: Option<ManifestEntryDependencies>,
 	#[serde(rename = "releaseUrl")]
 	pub release_url: Option<Url>,
+	pub changelog: Option<String>,
 }
 
 /// Represents a single "artifacts" entry in the manifest JSON
