@@ -1,8 +1,10 @@
 <template>
 	<v-table>
 		<thead>
-			<th scope="col" class="text-start ps-4">Mod</th>
-			<th scope="col" class="text-start ps-4">Version</th>
+			<tr>
+				<th scope="col" class="text-start ps-4">Mod</th>
+				<th scope="col" class="text-start ps-4">Version</th>
+			</tr>
 		</thead>
 		<tbody>
 			<tr v-for="depend of depends" :key="depend.id">

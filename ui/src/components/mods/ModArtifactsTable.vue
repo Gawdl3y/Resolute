@@ -1,10 +1,12 @@
 <template>
 	<v-table>
 		<thead>
-			<th scope="col">Filename</th>
-			<th scope="col">Destination</th>
-			<th scope="col">URL</th>
-			<th scope="col">SHA-256 Checksum</th>
+			<tr>
+				<th scope="col">Filename</th>
+				<th scope="col">Destination</th>
+				<th scope="col">URL</th>
+				<th scope="col">SHA-256 Checksum</th>
+			</tr>
 		</thead>
 		<tbody>
 			<tr v-for="artifact of artifacts" :key="artifact.sha256">
