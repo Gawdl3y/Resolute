@@ -177,7 +177,7 @@ impl_ModManager_with_without_db! {
 								.collect();
 
 							// Include this unrecognized mod only if all of its artifacts are included in the known mod's
-							return artifact_names.difference(&expected_artifact_names).count() == 0;
+							artifact_names.difference(&expected_artifact_names).count() == 0
 						})
 						.copied()
 						.collect();
