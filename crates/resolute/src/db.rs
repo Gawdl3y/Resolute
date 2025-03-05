@@ -82,7 +82,7 @@ impl ResoluteDatabase<'_> {
 		let mod_name = rmod.to_string();
 
 		let rw = self.db.rw_transaction()?;
-		rw.insert(rmod)?;
+		rw.upsert(rmod)?;
 		rw.commit()?;
 
 		info!("Stored mod {} in the database", mod_name);
