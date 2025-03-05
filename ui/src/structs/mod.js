@@ -81,6 +81,12 @@ export class ResoluteMod {
 		this.installedVersion = data.installedVersion
 			? this.versions[data.installedVersion]
 			: null;
+
+		/**
+		 * Whether the mod is enabled
+		 * @type {bool}
+		 */
+		this.active = data.active;
 	}
 
 	/**
