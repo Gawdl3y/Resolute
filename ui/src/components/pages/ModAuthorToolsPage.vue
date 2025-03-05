@@ -62,18 +62,18 @@ let unlistenToDragHover;
 let unlistenToDragCancelled;
 
 onMounted(async () => {
-	unlistenToDragDrop = await listen('tauri://drop', (evt) => {
+	unlistenToDragDrop = await listen('tauri://drag-drop', (evt) => {
 		console.debug('File drop received', evt);
 		fileHovering.value = false;
 		hashFile(evt.payload.paths[0]);
 	});
 
-	unlistenToDragHover = await listen('tauri://drop-over', (evt) => {
+	unlistenToDragHover = await listen('tauri://drag-over', (evt) => {
 		console.debug('File hover received', evt);
 		if (evt.payload) fileHovering.value = true;
 	});
 
-	unlistenToDragCancelled = await listen('tauri://drag-cancelled', (evt) => {
+	unlistenToDragCancelled = await listen('tauri://drag-leave', (evt) => {
 		console.debug('File cancelled received', evt);
 		fileHovering.value = false;
 	});
@@ -91,7 +91,7 @@ onUnmounted(() => {
  */
 async function hashFile(file = null) {
 	// Prompt to choose a file
-	if (!file) file = (await open())?.path;
+	if (!file) file = await open();
 	if (!file) return;
 
 	// Request the backend to checksum the selected file

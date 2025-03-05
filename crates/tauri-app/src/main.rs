@@ -480,7 +480,7 @@ impl Navigate for WebviewWindow {
 		url.set_fragment(Some(route));
 
 		info!("Navigating: route = {route}, url = {url}");
-		self.navigate(url);
+		self.navigate(url)?;
 
 		Ok(())
 	}

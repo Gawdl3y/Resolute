@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { Store } from '@tauri-apps/plugin-store';
+import { LazyStore } from '@tauri-apps/plugin-store';
 import { info } from '@tauri-apps/plugin-log';
 
 let store;
@@ -34,7 +34,7 @@ export function useSettings() {
 
 		// Set up the store and change listener
 		info('Initializing settings store');
-		store = new Store('.settings.dat');
+		store = new LazyStore('.settings.dat');
 		storeUnlisten = await store.onChange((key, val) => {
 			currentSettings[key] = val;
 		});

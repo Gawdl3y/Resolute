@@ -1,34 +1,25 @@
 use anyhow::{anyhow, Context, Result};
 use log::error;
 use serde::{de::DeserializeOwned, ser::Serialize};
-use tauri::{AppHandle, Manager, Wry};
-use tauri_plugin_store::{with_store, StoreCollection};
+use tauri::AppHandle;
+use tauri_plugin_store::StoreExt;
 
 /// Retrieve a setting value from the given app's default setting store
 pub(crate) fn get<T: DeserializeOwned>(app: &AppHandle, setting: &str) -> Result<Option<T>> {
-	let stores = app.state::<StoreCollection<Wry>>();
+	let store = app
+		.store(".settings.dat")
+		.inspect_err(|err| error!("Unable to open settings store to read {setting}: {err}"))
+		.context("Unable to open settings store")?;
 
-	// Retrieve the setting value
-	let val = with_store(app.clone(), stores, ".settings.dat", |store| {
-		Ok(store.get(setting).cloned())
-	})
-	.map_err(|err| {
-		error!("Unable to retrieve {} setting value: {}", setting, err);
-		err
-	})
-	.with_context(|| format!("Unable to retrieve {setting} setting value"))?;
-
-	// Deserialize the value
-	match val {
-		Some(val) => Ok(Some(
+	// Retrieve and deserialize the value
+	if let Some(val) = store.get(setting) {
+		Ok(Some(
 			serde_json::from_value(val)
-				.map_err(|err| {
-					error!("Unable to deserialize {setting} setting value: {err}");
-					err
-				})
+				.inspect_err(|err| error!("Unable to deserialize {setting} setting value: {err}"))
 				.with_context(|| format!("Unable to deserialize {setting} setting value"))?,
-		)),
-		None => Ok(None),
+		))
+	} else {
+		Ok(None)
 	}
 }
 
@@ -36,17 +27,21 @@ pub(crate) fn get<T: DeserializeOwned>(app: &AppHandle, setting: &str) -> Result
 pub(crate) fn require<T: DeserializeOwned>(app: &AppHandle, setting: &str) -> Result<T> {
 	get(app, setting)?.ok_or_else(|| {
 		error!("Setting not configured: {}", setting);
-		anyhow!("setting not configured: {}", setting)
+		anyhow!("Setting not configured: {}", setting)
 	})
 }
 
 /// Store a setting value into the given app's default setting store
 pub(crate) fn set<T: Serialize>(app: &AppHandle, setting: &str, value: T) -> Result<()> {
 	let json_value = serde_json::to_value(value)?;
-	let stores = app.state::<StoreCollection<Wry>>();
+	let store = app
+		.store(".settings.dat")
+		.inspect_err(|err| error!("Unable to open settings store to write {setting}: {err}"))
+		.context("Unable to open settings store")?;
 
-	with_store(app.clone(), stores, ".settings.dat", |store| {
-		store.insert(setting.to_owned(), json_value).and_then(|()| store.save())
-	})
-	.with_context(|| format!("Unable to store {setting} setting"))
+	store.set(setting, json_value);
+	store
+		.save()
+		.inspect_err(|err| error!("Unable to save settings store after writing {setting}: {err}"))
+		.context("Unable to save settings store")
 }
