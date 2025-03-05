@@ -52,7 +52,7 @@ impl ResoluteDatabase<'_> {
 	/// Retrieves all mods stored in the database
 	pub fn get_mods(&self) -> Result<Vec<ResoluteMod>> {
 		let read = self.db.r_transaction()?;
-		let mods = read.scan().primary()?.all().collect::<result::Result<_, _>>()?;
+		let mods = read.scan().primary()?.all()?.collect::<result::Result<_, _>>()?;
 		Ok(mods)
 	}
 
@@ -62,7 +62,7 @@ impl ResoluteDatabase<'_> {
 		let mods = read
 			.scan()
 			.primary()?
-			.all()
+			.all()?
 			.collect::<result::Result<Vec<_>, _>>()?
 			.into_iter()
 			.filter(|rmod: &ResoluteMod| rmod.installed_version.is_some())
